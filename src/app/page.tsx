@@ -1,95 +1,130 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+'use client';
+import React, { useState } from 'react';
+import { Header, ItemHeader, TextHeader, Logo, ItensHeader, MobileMenuWrapper, Section, Link, Container, H1, P, InformationLeft } from '../assets/AppStyled';
+import { ButtonAgendar } from '@/components/ButtonAgendar';
+import LogoPng from '../assets/image/logo100X100.png';
+import { ButtonMenu } from '@/components/ButtonMenu';
+import { FiMenu, FiX } from 'react-icons/fi';
+
+import HomeModern  from '../assets/image/barbudo--sem 1.svg';
+
+;
+// import { Logo } from '../components/Logo'; // Adjust the path as necessary
 
 export default function Home() {
-  return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>src/app/page.tsx</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+
+
+
+  const [menuAberto, setMenuAberto] = useState(false);
+
+  const toggleMenu = () => {
+    setMenuAberto((prevState) => !prevState);
+  };
+
+  const closeMenu = () => {
+    setMenuAberto(false); // fecha o menu
+  };
+
+  return (
+    <div>
+      <Header>
+        <Logo src={LogoPng} alt="Logo da Barbearia" />
+        <ItensHeader>
+
+          <ItemHeader>
+            <TextHeader> 
+            <Link href={"#home"}  >INÍCIO</Link>
+            </TextHeader>
+          </ItemHeader>
+
+          <ItemHeader>
+            <TextHeader>
+            <Link href={"#sobre-nos"}  >SOBRE NÓS</Link>
+            </TextHeader>
+          </ItemHeader>
+
+          <ItemHeader>
+            <TextHeader>
+            <Link href={"#servicos"}  >SERVIÇOS</Link>
+            </TextHeader>
+          </ItemHeader>
+          <ItemHeader>
+            <TextHeader>
+            <Link href={"#contatos"}  >CONSTATOS</Link>
+            </TextHeader>
+          </ItemHeader>
+          <ButtonAgendar style={{ display: "flex", marginLeft: "60px" }}>Agendar horário</ButtonAgendar>
+
+        </ItensHeader>
+
+        <ButtonMenu onClick={toggleMenu}>
+          {menuAberto ? <FiX /> : <FiMenu />}
+
+        </ButtonMenu>
+        {menuAberto && (
+          <MobileMenuWrapper>
+            <ItensHeader style={{ display: "flex", flexDirection: "column" }}>
+
+              <ItemHeader>
+                <TextHeader>
+                  <Link href={"#home"}  onClick={closeMenu}>INÍCIO</Link>
+                </TextHeader>
+              </ItemHeader>
+
+              <ItemHeader>
+                <TextHeader>
+                  <Link href={"#sobre-nos"}  onClick={closeMenu}>SOBRE NÓS</Link>
+                </TextHeader>
+              </ItemHeader>
+
+              <ItemHeader>
+                <TextHeader>
+                  <Link href={"#servicos"}  onClick={closeMenu}>SERVIÇOS</Link>
+                </TextHeader>
+              </ItemHeader>
+
+              <ItemHeader>
+                <TextHeader>
+                  <Link href={"#contatos"}  onClick={closeMenu}>CONTATOS</Link>
+                </TextHeader>
+              </ItemHeader>
+              <ButtonAgendar style={{ display: "flex" }}  onClick={closeMenu}>Agendar horário</ButtonAgendar>
+            </ItensHeader>
+
+          </MobileMenuWrapper>
+        )}
+
+
+
+      </Header>
+
+      <Section id='home'  style={{backgroundColor: "rgb(17, 22, 28)" }}>
+     <Container>
+       <InformationLeft>
+        
+      <H1>MR DYLLAN<br/>
+      BARBEARIA</H1> 
+      <P>Estamos sempre inovando para oferecer as melhores<br/> técnicas e os mais avançados procedimentos.</P> 
+       
+       </InformationLeft>
+     </Container>
+ 
+
+      </Section>
+
+
+      <Section id='sobre-nos' style={{ height: "100vh", backgroundColor: "#3a3a3c" }}>
+        <h1 style={{ color: "#f5f5f7" }}>Sobre nós</h1>
+      </Section>
+      <Section id='servicos' style={{ height: "90vh", backgroundColor: "#3a3a3c" }}>
+        <h1 style={{ color: "#f5f5f7" }}>Serviços</h1>
+      </Section>
+      <Section id='contatos' style={{ height: "90vh", backgroundColor: "#3a3a3c" }}>
+        <h1 style={{ color: "#f5f5f7" }}>Contatos</h1>
+      </Section>
     </div>
   );
 }
+
