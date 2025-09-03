@@ -1,11 +1,18 @@
 // styles/globals.ts
 import { createGlobalStyle } from "styled-components";
-import type { ThemeType } from "../styles/theme";
 
 declare module "styled-components" {
-  export interface DefaultTheme extends ThemeType {
-    // Defina aqui as propriedades do seu tema    
-    placeholder?: string;
+  export interface DefaultTheme {
+    colors: {
+      colorBack: string,
+      colorWhite:string,
+      corSecundaria: string,
+      corItens: string,
+      corSection: string,
+      corTerceira:string,
+      corDegrade1: string,
+      corDegrade2: string
+    };
   }
 }
 
