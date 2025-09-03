@@ -26,8 +26,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       ...prev,
       colors: {
         ...prev.colors,
-        background: prev.colors.background === "#fff" ? "#000" : "#fff",
-        text: prev.colors.text === "#000" ? "#fff" : "#000",
+        colorBlack: prev.colors.colorBlack === "#fff" ? "#000" : "#fff",
+        colorWhite: prev.colors.colorWhite === "#000" ? "#fff" : "#000",
       },
     }));
   };

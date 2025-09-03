@@ -1,20 +1,8 @@
 // styles/globals.ts
 import { createGlobalStyle } from "styled-components";
+import { theme } from "./theme";
 
-declare module "styled-components" {
-  export interface DefaultTheme {
-    colors: {
-      colorBack: string,
-      colorWhite:string,
-      corSecundaria: string,
-      corItens: string,
-      corSection: string,
-      corTerceira:string,
-      corDegrade1: string,
-      corDegrade2: string
-    };
-  }
-}
+export type ThemeType = typeof theme;
 
 export const GlobalStyle = createGlobalStyle`
   :root {
