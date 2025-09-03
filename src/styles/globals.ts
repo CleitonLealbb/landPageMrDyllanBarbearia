@@ -3,7 +3,10 @@ import { createGlobalStyle } from "styled-components";
 import type { ThemeType } from "../styles/theme";
 
 declare module "styled-components" {
-  export interface DefaultTheme extends ThemeType {}
+  export interface DefaultTheme extends ThemeType {
+    // Defina aqui as propriedades do seu tema    
+    placeholder?: string;
+  }
 }
 
 export const GlobalStyle = createGlobalStyle`
