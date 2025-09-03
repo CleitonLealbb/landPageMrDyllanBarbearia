@@ -31,7 +31,7 @@ export const GlobalStyle = createGlobalStyle`
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 
-    background-color: ${({ theme }) => theme.colors.colorBack};
+    background-color: ${({ theme }) => theme.colors.colorBlack};
     color: ${({ theme }) => theme.colors.colorWhite};
 
   }
