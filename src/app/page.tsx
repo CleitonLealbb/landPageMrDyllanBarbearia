@@ -1,21 +1,15 @@
 'use client';
 import React, { useState } from 'react';
-import { Header, ItemHeader, TextHeader, Logo, ItensHeader, MobileMenuWrapper, Section, Link, Container, H1, P, InformationLeft } from '../assets/AppStyled';
+import { Header, ItemHeader, TextHeader, Logo, ItensHeader, MobileMenuWrapper, Section, Link, Container, H1, P, InformationLeft, SectionContainer, ContainerSobreNos, ConteinerGrids, GridItem, Title} from '../assets/AppStyled';
 import { ButtonAgendar } from '@/components/ButtonAgendar';
 import LogoPng from '../assets/image/logo100X100.png';
 import { ButtonMenu } from '@/components/ButtonMenu';
 import { FiMenu, FiX } from 'react-icons/fi';
-
-import HomeModern  from '../assets/image/barbudo--sem 1.svg';
-
-;
-// import { Logo } from '../components/Logo'; // Adjust the path as necessary
+// import  HiHomeModern  from '../assets/image/imagem1.svg';
+// import BarberExecution from '../assets/image/imagem2.svg';
+// import LogoPngForm from '../assets/image/Logo-branco-sem-fundo-AI.png';
 
 export default function Home() {
-
-
-
-
 
   const [menuAberto, setMenuAberto] = useState(false);
 
@@ -115,14 +109,32 @@ export default function Home() {
       </Section>
 
 
-      <Section id='sobre-nos' style={{ height: "100vh", backgroundColor: "#3a3a3c" }}>
-        <h1 style={{ color: "#f5f5f7" }}>Sobre nós</h1>
-      </Section>
+    
+        <SectionContainer>
+       <Title>Bem-Vindo à melhor barbearia de Nova Xavantina</Title>
+       <ContainerSobreNos>
+         
+         <ConteinerGrids>
+            <GridItem>1</GridItem>
+            <GridItem>2</GridItem>
+         </ConteinerGrids>
+         
+         <ConteinerGrids>
+            <GridItem>3</GridItem>
+            <GridItem>
+          4
+            </GridItem>
+         </ConteinerGrids>
+
+       </ContainerSobreNos>
+        </SectionContainer>
+  
+
       <Section id='servicos' style={{ height: "90vh", backgroundColor: "#3a3a3c" }}>
-        <h1 style={{ color: "#f5f5f7" }}>Serviços</h1>
+       
       </Section>
       <Section id='contatos' style={{ height: "90vh", backgroundColor: "#3a3a3c" }}>
-        <h1 style={{ color: "#f5f5f7" }}>Contatos</h1>
+    
       </Section>
     </div>
   );
