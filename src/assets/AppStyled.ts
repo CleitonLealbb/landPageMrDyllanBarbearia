@@ -166,7 +166,7 @@ export const Container = styled.div`
     background-size: cover;
     background-repeat: no-repeat;
     background-position: center;
-    background-position-x: 40%;
+    background-position-x: 85%;
     
   }
   @media (max-width: 480px) {
@@ -245,7 +245,7 @@ export const SectionContainer = styled.div`
 
   }
   @media(max-width: 480px) {
-   height: 100dvh;
+   height: 130dvh;
     width: 100%;
     
   }
@@ -255,7 +255,7 @@ export const Title = styled.h2`
   display: flex;
  font-size: 1.8rem; /* padrão para telas grandes */
  
-
+  @media()
   `;
 
 export const ContainerSobreNos = styled.div`
@@ -267,12 +267,12 @@ margin-top: 20px;
   width: 100%;
   height: 100vh;
   gap: 20px;
-  //border: 1px solid rgb(0, 248, 25);
+  border: 1px solid rgb(0, 248, 25);
   @media (max-width: 768px) {
     flex-direction: column;
     width: 100%;
-    height: 120dvh;
-      margin-bottom: 50px;
+    height: 100dvh;
+    
     }
   @media (max-width: 480px) {
     flex-direction: column;
