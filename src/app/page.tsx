@@ -1,11 +1,11 @@
 'use client';
 import React, { useState } from 'react';
-import { Header, ItemHeader, TextHeader, Logo, ItensHeader, MobileMenuWrapper, Section, Link, Container, H1, P, InformationLeft, SectionContainer, ContainerSobreNos, ConteinerGrids, GridItem, Title} from '../assets/AppStyled';
+import { Header, ItemHeader, TextHeader, Logo, ItensHeader, MobileMenuWrapper, Section, Link, Container, H1, P, InformationLeft, SectionContainer, ContainerSobreNos, ConteinerGrids, GridItem, Title, TitleGrid, ImageGrid} from '../assets/AppStyled';
 import { ButtonAgendar } from '@/components/ButtonAgendar';
 import LogoPng from '../assets/image/logo100X100.png';
 import { ButtonMenu } from '@/components/ButtonMenu';
 import { FiMenu, FiX } from 'react-icons/fi';
-// import  HiHomeModern  from '../assets/image/imagem1.svg';
+ import  HiHomeModern  from '../assets/image/imagem1.svg';
 // import BarberExecution from '../assets/image/imagem2.svg';
 // import LogoPngForm from '../assets/image/Logo-branco-sem-fundo-AI.png';
 
@@ -115,14 +115,18 @@ export default function Home() {
        <ContainerSobreNos>
          
          <ConteinerGrids>
-            <GridItem>1</GridItem>
+            <GridItem>
+
+            <ImageGrid src={HiHomeModern} alt='homem moderno' width={100} height={100}></ImageGrid>
+            </GridItem>
             <GridItem>2</GridItem>
          </ConteinerGrids>
          
          <ConteinerGrids>
             <GridItem>3</GridItem>
             <GridItem>
-          4
+            <TitleGrid>horário de atendimentos</TitleGrid>
+           
             </GridItem>
          </ConteinerGrids>
 
