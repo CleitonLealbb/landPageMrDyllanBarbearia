@@ -6,8 +6,8 @@ import LogoPng from '../assets/image/logo100X100.png';
 import { ButtonMenu } from '@/components/ButtonMenu';
 import { FiMenu, FiX } from 'react-icons/fi';
  import  HiHomeModern  from '../assets/image/imagem1.svg';
-// import BarberExecution from '../assets/image/imagem2.svg';
-// import LogoPngForm from '../assets/image/Logo-branco-sem-fundo-AI.png';
+ import BarberExecution from '../assets/image/imagem2.svg';
+ import LogoPngForm from '../assets/image/Logo-branco-sem-fundo-AI.png';
 
 export default function Home() {
 
@@ -117,13 +117,17 @@ export default function Home() {
          <ConteinerGrids>
             <GridItem>
 
-            <ImageGrid src={HiHomeModern} alt='homem moderno' width={100} height={100}></ImageGrid>
+            <ImageGrid src={HiHomeModern} alt='homem moderno' width={200} height={200}></ImageGrid>
             </GridItem>
-            <GridItem>2</GridItem>
+            <GridItem>
+            <ImageGrid src={LogoPngForm} alt='homem moderno' width={300} height={300}></ImageGrid>
+            </GridItem>
          </ConteinerGrids>
          
          <ConteinerGrids>
-            <GridItem>3</GridItem>
+            <GridItem>
+            <ImageGrid src={BarberExecution} alt='homem moderno' width={300} height={300}></ImageGrid>
+            </GridItem>
             <GridItem>
             <TitleGrid>horário de atendimentos</TitleGrid>
            

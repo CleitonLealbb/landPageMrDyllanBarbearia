@@ -236,19 +236,18 @@ export const SectionContainer = styled.div`
   align-items: center;
   height: 100dvh;
   width: 100%;
-  
   background-color: ${({ theme }) => theme.colors.corTerceira};
   color: #f5f5f7;
   //border: 1px solid rgba(255, 1, 1, 0.67);
   @media(max-width: 768px) {
-    height: 100dvh;
+    height: 140dvh;
     width: 100%;
     flex-direction: column;
     align-items: center;
     justify-content: center;
   }
   @media(max-width: 480px) {
-   height: 100dvh;
+   height: 130dvh;
     width: 100%;
     flex-direction: column;
     align-items: center;
@@ -262,11 +261,10 @@ export const Title = styled.h2`
   @media (max-width: 768px) { 
     font-size: 1.5rem; /* para tablets */
     margin-left: 15px;
-    padding: 10px;
+
   }
   @media (max-width: 480px) {
     font-size: 1.2rem; /* para celulares */
-   
     margin-left: 35px;
     margin-right: 35px;
   }
@@ -275,7 +273,7 @@ export const Title = styled.h2`
 export const ContainerSobreNos = styled.div`
 display: flex;
   flex-direction: row;
-  justify-content: center;
+ justify-content: center;
   align-items: center;
   width: 100%;
   height: 100%;
@@ -314,8 +312,6 @@ export const GridItem = styled.div`
   align-items: center;
   padding: 0px;
   background-color: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease;
   &:hover {
