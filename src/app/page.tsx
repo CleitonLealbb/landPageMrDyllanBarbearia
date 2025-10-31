@@ -154,14 +154,14 @@ export default function Home() {
 
         <ContainerHystory>
           <TitleHystory>Nossa História</TitleHystory>
-          <TextHystory>  
-   Somos uma barbearia localizada em Nova Xavantina, MT, com o objetivo de oferecer aos nossos clientes um ambiente acolhedor e serviços de alta qualidade. Nossa equipe é composta por profissionais experientes e apaixonados pelo que fazem, sempre prontos para atender às suas necessidades.
+          <TextHystory>
+            Somos uma barbearia localizada em Nova Xavantina, MT, com o objetivo de oferecer aos nossos clientes um ambiente acolhedor e serviços de alta qualidade. Nossa equipe é composta por profissionais experientes e apaixonados pelo que fazem, sempre prontos para atender às suas necessidades.
           </TextHystory>
           <TextHystory>
-    Na nossa barbearia, valorizamos a tradição e a modernidade, oferecendo cortes de cabelo clássicos e contemporâneos, além de serviços de barba e cuidados pessoais. Estamos comprometidos em proporcionar uma experiência única e satisfatória para todos os nossos clientes.
+            Na nossa barbearia, valorizamos a tradição e a modernidade, oferecendo cortes de cabelo clássicos e contemporâneos, além de serviços de barba e cuidados pessoais. Estamos comprometidos em proporcionar uma experiência única e satisfatória para todos os nossos clientes.
           </TextHystory>
-         <ButtonAgendar style={{ display: "flex", marginLeft: "0px", marginTop:"10px" }}>Agendar horário</ButtonAgendar>
-        
+          <ButtonAgendar style={{ display: "flex", marginLeft: "0px", marginTop: "10px" }}>Agendar horário</ButtonAgendar>
+
         </ContainerHystory>
 
         <ContainerImagem>
@@ -170,7 +170,7 @@ export default function Home() {
 
       </SectionNewsHystory>
 
-      
+
     </div>
   );
 }

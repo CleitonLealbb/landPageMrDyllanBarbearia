@@ -241,7 +241,8 @@ export const P = styled.p<TextTypesProps>`
   color: ${({ $colorKey, theme }) => $colorKey ? theme.colors[$colorKey] : theme.colors.colorWhite};
   font-family: 'Roboto', sans-serif;
   font-weight: 700;
-  margin: 5px;`;
+  margin: 5px;
+  `;
 
 export const SectionContainer = styled.div`
   display: flex;
@@ -254,14 +255,14 @@ export const SectionContainer = styled.div`
 
   //border: 1px solid rgba(255, 1, 1, 0.67);
   @media(max-width: 768px) {
-    height: 120dvh;
+    height: 130dvh;
     width: 100%;
     flex-direction: column;
     align-items: center;
     justify-content: center;
   }
   @media(max-width: 480px) {
-   height: 100dvh;
+   height: 120dvh;
     width: 100%;
     flex-direction: column;
     align-items: center;
@@ -296,13 +297,13 @@ display: flex;
   @media (max-width: 768px) {
     flex-direction: column;
     width: 100%;
-    height: 100vh;
+    height: 120vh;
     
     }
   @media (max-width: 480px) {
     flex-direction: column;
     width: 100%;
-    height: 100vh;
+    height: 120vh;
   }
   `;
 
