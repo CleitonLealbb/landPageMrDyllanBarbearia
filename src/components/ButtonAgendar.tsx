@@ -7,6 +7,7 @@ interface ButtonProps {
   display?: string;
   menuAberto?: boolean;
   marginLeft?: string;
+  marginTop?: string;
 }
 
 // Styled-component que filtra a prop
@@ -23,7 +24,7 @@ export const ButtonAgendar = styled.button.withConfig({
   transition: background 0.3s ease;
   margin-right: ${({ marginRight }) => marginRight || '0'};
   margin-left: ${({ marginLeft }) => marginLeft || '0'};
-  
+  margin-top: ${({ marginTop }) => marginTop || '0'};
   &:hover {
     background: ${({ theme }) => theme.colors.corItens};
     color: ${({ theme }) => theme.colors.colorWhite};

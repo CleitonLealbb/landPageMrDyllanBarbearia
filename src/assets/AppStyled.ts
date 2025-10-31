@@ -19,8 +19,15 @@ interface SectionProps {
   $colorKey?: keyof typeof theme.colors;
 }
 
+interface NumeroContatoProps {
+  fontSize?: string;
+  marginTop?: string;
+  $colorKey?: keyof typeof theme.colors;
+  fontWeight?: string;
+}
+
 export const Header = styled.div`
-position: fixed;
+ position: fixed;
   height: 59px;
   max-height: 59px;
   width: 100%;
@@ -33,8 +40,13 @@ position: fixed;
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  @media screen {
+  @media (max-width: 768px) {
     justify-content: space-between;
+    position: fixed;
+  }
+  @media (max-width: 480px) { 
+    justify-content: space-between;
+    position: fixed;
   }
  
 `;
@@ -153,20 +165,21 @@ export const Section = styled.section<SectionProps>`
 export const Container = styled.div`
   display: flex;
   justify-content: center;
-  align-items: flex-end;
+  align-items: center;
+  flex-direction: row;
   height: 100vh; /* força altura total da tela */
   width: 100%;
   background-image: url(${BgImagem});
   background-size: cover;
   background-repeat: no-repeat;
-  background-position: left;
+  background-position: center;
    @media (max-width: 768px) {
    width: 100%;
    height: 100dvh;
     background-size: cover;
     background-repeat: no-repeat;
     background-position: center;
-    background-position-x: 85%;
+    background-position-x: 30%;
     
   }
   @media (max-width: 480px) {
@@ -238,16 +251,17 @@ export const SectionContainer = styled.div`
   width: 100%;
   background-color: ${({ theme }) => theme.colors.corTerceira};
   color: #f5f5f7;
+
   //border: 1px solid rgba(255, 1, 1, 0.67);
   @media(max-width: 768px) {
-    height: 140dvh;
+    height: 120dvh;
     width: 100%;
     flex-direction: column;
     align-items: center;
     justify-content: center;
   }
   @media(max-width: 480px) {
-   height: 130dvh;
+   height: 100dvh;
     width: 100%;
     flex-direction: column;
     align-items: center;
@@ -276,19 +290,19 @@ display: flex;
  justify-content: center;
   align-items: center;
   width: 100%;
-  height: 100%;
+  height: 100vh;
   gap: 20px;
  
   @media (max-width: 768px) {
     flex-direction: column;
     width: 100%;
-    height: 100%;
+    height: 100vh;
     
     }
   @media (max-width: 480px) {
     flex-direction: column;
     width: 100%;
-    height: 100%;
+    height: 100vh;
   }
   `;
 
@@ -359,4 +373,197 @@ export const TitleGrid = styled.h3`
     width: 100%;
     height: 100%;
     }
+  `;
+  export const NumeroContato = styled.p<NumeroContatoProps>`
+  font-size: 16px;
+  color:${({ $colorKey, theme }) => $colorKey ? theme.colors[$colorKey] : theme.colors.colorWhite};
+  font-family: 'Roboto', sans-serif;
+  font-weight: 700;
+  margin: 5px;
+  @media (max-width: 768px) {
+    font-size: 12px;
+    margin: 3px;
+    }
+    @media (max-width: 480px) {
+      font-size: 12px;
+      margin: 3px;
+   }
+  `;
+  
+  export const  Line = styled.hr`
+   display: flex;
+  width: 21%;
+  border: 1.2px solid  ${theme.colors.corItens};
+  margin: 10px 0 5px 40px;
+  align-self: flex-start; /* garante o alinhamento à esquerda em containers flex */
+  
+  @media (max-width: 768px) {
+    margin: 10px 0 5px 50px;
+    width: 18%;
+    }
+    @media (max-width: 480px) {
+      margin: 10px 0 5px 60px;
+      width: 15%;
+      }
+      `;
+
+  export const ContainerHorsDays = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  width: 90%;
+  height: 80%;
+  gap: 20px;
+  margin: 10px 0 10px 0;
+
+  @media (max-width: 768px) {
+    width: 60%;
+    height: 50%;
+    gap: 10px;
+    margin: 5px 0 5px 0;
+    }
+    @media (max-width: 480px) {
+      width: 50%;
+      height: 40%;
+      gap: 10px;
+      margin: 5px 0 5px 0;
+      }
+  `;
+
+export const ContainerDays = styled.div`
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: flex-start;
+width: 100%;
+height: 100%;
+gap: 1px;
+`;
+
+  export const ContainerHors = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+  height: 100%;
+  gap: 7px;
+  `;
+  export const DaysHors = styled.p`
+  font-size: 14px;
+  color: #f5f5f7;
+  font-family: 'Roboto', sans-serif;
+  font-weight: 600;
+  margin: 2px;
+  @media (max-width: 768px) {
+    font-size: 12px;
+    margin: 1px;
+    }
+    @media (max-width: 480px) {
+      font-size: 12px;
+      margin: 1px;
+      }
+
+  `;
+
+  export const SectionNewsHystory = styled.section`
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  background-color: ${({ theme }) => theme.colors.colorBlack};
+  color: #f5f5f7;
+  gap: 20px;
+  @media (max-width: 768px) {
+    flex-direction: column;
+    height: 100dvh;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    }
+    @media (max-width: 480px) {
+      flex-direction: column;
+      height: 100dvh;
+      width: 100%;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      }
+  `;
+
+  export const ContainerHystory = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: 55vh;
+  height: 50vh;
+  align-items: flex-start;
+  justify-content: center;
+ 
+  @media (max-width: 768px) {
+    width: 50vh;
+    height: 40vh;
+    
+    }
+    @media (max-width: 480px) {
+      width: 45vh;
+     
+     
+      }
+
+
+ `;
+ export const TitleHystory = styled.h2`
+  font-size: 1.8rem; /* padrão para telas grandes */
+  margin-bottom: 10px;
+  @media (max-width: 768px) {
+    font-size: 1.5rem; /* para tablets */
+    margin-left: 15px;
+    margin-bottom: 5px;
+    }`;
+
+ export const TextHystory = styled.p`
+  font-size: 0.9rem;
+  color: #f5f5f7;
+  font-family: 'Roboto', sans-serif;
+  font-weight: 400;
+  text-indent: 30px;
+  text-align: left;
+  margin: 0.1px;
+
+  @media (max-width: 768px) {
+    font-size: 0.8rem;
+    margin-left: 15px;
+    margin-right: 15px;
+    margin-top: 5px;
+    }
+    @media (max-width: 480px) {
+      font-size: 0.8rem;
+      margin-left: 35px;
+      margin-right: 35px;
+      margin-top: 5px;
+      }
+  `;
+
+  export const ContainerImagem = styled.div`
+  display: flex;
+  width: 55vh;
+  height: 50vh;
+  margin-top: 55px;
+  justify-content: center;
+  align-items: center;
+
+  @media (max-width: 768px) {
+    width: 50vh;
+    height: 40vh;
+    margin-top: 50px;
+    }
+    @media (max-width: 480px) {
+      width: 45vh;
+    height: 30vh;
+      margin-top: 50px;
+      }
   `;
