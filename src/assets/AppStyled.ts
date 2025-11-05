@@ -255,7 +255,7 @@ export const SectionContainer = styled.div`
 
   //border: 1px solid rgba(255, 1, 1, 0.67);
   @media(max-width: 768px) {
-    height: 130dvh;
+    height: 100dvh;
     width: 100%;
     flex-direction: column;
     align-items: center;
@@ -266,7 +266,6 @@ export const SectionContainer = styled.div`
     width: 100%;
     flex-direction: column;
     align-items: center;
-    
   }
   `;
 
@@ -303,7 +302,7 @@ display: flex;
   @media (max-width: 480px) {
     flex-direction: column;
     width: 100%;
-    height: 120vh;
+    height: 130vh;
   }
   `;
 
@@ -480,19 +479,19 @@ gap: 1px;
   gap: 20px;
   @media (max-width: 768px) {
     flex-direction: column;
-    height: 100dvh;
+    height: 90dvh;
     width: 100%;
     justify-content: center;
     align-items: center;
-    gap: 10px;
+    
     }
     @media (max-width: 480px) {
       flex-direction: column;
-      height: 100dvh;
+      height: 80dvh;
       width: 100%;
       justify-content: center;
       align-items: center;
-      gap: 10px;
+      gap: 30px;
       }
   `;
 
@@ -503,19 +502,16 @@ gap: 1px;
   height: 50vh;
   align-items: flex-start;
   justify-content: center;
- 
   @media (max-width: 768px) {
     width: 50vh;
     height: 40vh;
-    
+    margin-top: 20px;
     }
     @media (max-width: 480px) {
       width: 45vh;
-     
-     
+      height: 30vh;
+      margin-top: 20px;
       }
-
-
  `;
  export const TitleHystory = styled.h2`
   font-size: 1.8rem; /* padrão para telas grandes */
@@ -533,7 +529,7 @@ gap: 1px;
   font-weight: 400;
   text-indent: 30px;
   text-align: left;
-  margin: 0.1px;
+  margin: 2px;
 
   @media (max-width: 768px) {
     font-size: 0.8rem;
@@ -560,11 +556,11 @@ gap: 1px;
   @media (max-width: 768px) {
     width: 50vh;
     height: 40vh;
-    margin-top: 50px;
+    margin-top: 5px;
     }
     @media (max-width: 480px) {
       width: 45vh;
     height: 30vh;
-      margin-top: 50px;
+      margin-top: 5px;
       }
   `;
