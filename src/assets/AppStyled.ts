@@ -512,6 +512,7 @@ gap: 1px;
       width: 45vh;
       height: 30vh;
       margin-top: 20px;
+      margin-bottom: 20px;
       }
  `;
  export const TitleHystory = styled.h2`
@@ -558,11 +559,11 @@ gap: 1px;
   @media (max-width: 768px) {
     width: 50vh;
     height: 40vh;
-    margin-top: 20px;
+    
     }
     @media (max-width: 480px) {
       width: 45vh;
     height: 30vh;
-      margin-top: 25px;
+ 
       }
   `;
