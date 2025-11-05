@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import styled from "styled-components";
-import BgImagem from './image/Frame1.svg';
+import BgImagem  from './image/Frame1.webp';
 import { theme } from "../styles/theme";
 import { wrap } from "module";
 
@@ -169,7 +169,7 @@ export const Container = styled.div`
   flex-direction: row;
   height: 100vh; /* força altura total da tela */
   width: 100%;
-  background-image: url(${BgImagem});
+  background-image: url(${BgImagem.src});
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
