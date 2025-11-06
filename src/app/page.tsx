@@ -5,8 +5,8 @@ import { ButtonAgendar } from '@/components/ButtonAgendar';
 import LogoPng from '../assets/image/logo100X100.webp';
 import { ButtonMenu } from '@/components/ButtonMenu';
 import { FiMenu, FiX } from 'react-icons/fi';
-import HiHomeModern from '../assets/image/imagem1.svg';
-import BarberExecution from '../assets/image/imagem2.svg';
+import HiHomeModern from '../assets/image/imagem1.webp';
+import BarberExecution from '../assets/image/imagem2.webp';
 import LogoPngForm from '../assets/image/Logo-branco-sem-fundo-AI.webp';
 import { theme } from '@/styles/theme';
 

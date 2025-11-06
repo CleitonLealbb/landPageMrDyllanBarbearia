@@ -507,12 +507,13 @@ gap: 1px;
     width: 50vh;
     height: 40vh;
     margin-top: 20px;
+    margin-bottom: 2px;
     }
     @media (max-width: 480px) {
       width: 45vh;
       height: 30vh;
       margin-top: 20px;
-      margin-bottom: 20px;
+      margin-bottom: 3px;
       }
  `;
  export const TitleHystory = styled.h2`
