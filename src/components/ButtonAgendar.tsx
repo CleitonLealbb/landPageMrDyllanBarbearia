@@ -8,6 +8,7 @@ interface ButtonProps {
   menuAberto?: boolean;
   marginLeft?: string;
   marginTop?: string;
+  padding?: string;
 }
 
 // Styled-component que filtra a prop

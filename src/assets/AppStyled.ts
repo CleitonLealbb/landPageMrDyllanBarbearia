@@ -1,9 +1,10 @@
 "use client";
 import Image from "next/image";
 import styled from "styled-components";
-import BgImagem  from './image/Frame1.webp';
+import BgImagem from './image/Frame1.webp';
+ import HomemBarba from '../assets/image/human-face-expressions-min.jpg';
 import { theme } from "../styles/theme";
-import { wrap } from "module";
+
 
 interface ItensHeaderProps {
   display?: string;
@@ -41,11 +42,14 @@ export const Header = styled.div`
   align-items: center;
   justify-content: center;
   @media (max-width: 768px) {
-    justify-content: space-between;
+    
+    align-items: center;
+    justify-content: flex-end;
     position: fixed;
   }
   @media (max-width: 480px) { 
-    justify-content: space-between;
+    display: flex;
+    justify-content: flex-end;
     position: fixed;
   }
  
@@ -62,6 +66,10 @@ export const ItensHeader = styled.div<ItensHeaderProps>`
   @media (max-width: 768px) {
     display: ${({ display }) => display || 'none'};
     flex-direction: ${({ flexDirection }) => flexDirection || 'column'};
+    gap: 40px;
+  }
+  @media (max-width: 480px) {
+    gap: 40px;
   }
 `;
 
@@ -96,12 +104,14 @@ margin-left: 10dvw;
 @media (max-width: 768px) {
   width: 50px;
   height: 50px;
-
+  margin-right: 70dvw;
+  
   
 }
 @media (max-width: 480px) {
   width: 45px;
   height: 45px;
+  margin-right: 50dvw;
  
  
 }
@@ -117,19 +127,25 @@ export const MobileMenuWrapper = styled.div`
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    width: 100%; 
-    height: 60dvh;
+    width: 50%; 
+    height: 85dvh;
     z-index: 9999;
     border-radius: 10px;
     background: ${({ theme }) => theme.colors.corTerceira};
     position: fixed;
-    top: 90px;
-    
+    top: 55px;
   box-shadow: -2px 1px 18px 6px rgba(0, 0, 0, 0.55);
+ @media (max-width: 480px) {
+    height: 55dvh;
+    background: blue;
+  }
+
+
+
 `;
 
 export const Link = styled.a`
-
+  
   text-decoration: none;
   font-size: 13px;
   color: #f5f5f7;
@@ -143,10 +159,11 @@ export const Link = styled.a`
     border-bottom: 2px solid ${({ theme }) => theme.colors.corItens};
     transition:  0.3s ease, opacity 0.3s ease;
   } 
+ 
 `;
 
 export const Section = styled.section<SectionProps>`
-  height: 100vh;
+  height: 100dvh; /* força altura total da tela */
   width: 100%;
   justify-content: center;
   align-items: center;
@@ -163,6 +180,7 @@ export const Section = styled.section<SectionProps>`
 
 
 export const Container = styled.div`
+
   display: flex;
   justify-content: center;
   align-items: center;
@@ -247,34 +265,38 @@ export const P = styled.p<TextTypesProps>`
 export const SectionContainer = styled.div`
   display: flex;
   flex-direction: column;
+  
   align-items: center;
   height: 100dvh;
   width: 100%;
-  background-color: ${({ theme }) => theme.colors.corTerceira};
+ background-color: ${({ theme }) => theme.colors.corTerceira};
   color: #f5f5f7;
-
-  //border: 1px solid rgba(255, 1, 1, 0.67);
+padding: 50px 0 50px 0;
+  
   @media(max-width: 768px) {
-    height: 100dvh;
+    height: 180dvh;
     width: 100%;
     flex-direction: column;
-    align-items: center;
     justify-content: center;
+    align-items: center;
   }
   @media(max-width: 480px) {
-   height: 120dvh;
+    height: 100dvh;
     width: 100%;
+    justify-content: center;
     flex-direction: column;
     align-items: center;
   }
   `;
 
 export const Title = styled.h2`
+display: flex;
  font-size: 1.8rem; /* padrão para telas grandes */
  
   @media (max-width: 768px) { 
     font-size: 1.5rem; /* para tablets */
     margin-left: 15px;
+    margin-top: 10px;
 
   }
   @media (max-width: 480px) {
@@ -283,7 +305,7 @@ export const Title = styled.h2`
     margin-right: 35px;
   }
   `;
-
+// aqui fica section sobre nos 
 export const ContainerSobreNos = styled.div`
 display: flex;
   flex-direction: row;
@@ -292,28 +314,41 @@ display: flex;
   width: 100%;
   height: 100vh;
   gap: 20px;
- 
   @media (max-width: 768px) {
     flex-direction: column;
     width: 100%;
-    height: 120vh;
+    height: 150vh;
+    gap: 15px;
     
     }
   @media (max-width: 480px) {
     flex-direction: column;
     width: 100%;
-    height: 130vh;
+    height: 100vh;
+    gap: 15px;
   }
   `;
-
+// aqui ficam os grids
 export const ConteinerGrids = styled.div`
   display: flex;
   flex-direction: column;
   gap: 20px;
   justify-content: center;
   align-items: center;
-
-`;
+  ;
+ 
+  @media (max-width: 768px) {
+    flex-direction: column;
+    flex-wrap: wrap;
+    gap: 15px;
+    }
+  @media (max-width: 480px) {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 15px;
+    }
+`
+  ;
 
 export const GridItem = styled.div`
   display: flex;
@@ -331,13 +366,19 @@ export const GridItem = styled.div`
   &:hover {
     transform: translateY(-10px);
   } 
-  @media (max-width: 768px) {
-    width: 250px;
-    height: 150px;
+  @media (min-width:480px) and ( max-width: 768px) {
+    width: 350px;
+    height: 180px;
+    &:hover{
+      transform: none;
+    }
     }
   @media (max-width: 480px) {
     width: 250px;
     height: 150px;
+    &:hover{
+      transform: none;
+    }
     }
 `;
 
@@ -360,7 +401,7 @@ export const TitleGrid = styled.h3`
     }
   `;
 
-  export const ImageGrid = styled(Image)`
+export const ImageGrid = styled(Image)`
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -374,7 +415,7 @@ export const TitleGrid = styled.h3`
     height: 100%;
     }
   `;
-  export const NumeroContato = styled.p<NumeroContatoProps>`
+export const NumeroContato = styled.p<NumeroContatoProps>`
   font-size: 16px;
   color:${({ $colorKey, theme }) => $colorKey ? theme.colors[$colorKey] : theme.colors.colorWhite};
   font-family: 'Roboto', sans-serif;
@@ -389,8 +430,8 @@ export const TitleGrid = styled.h3`
       margin: 3px;
    }
   `;
-  
-  export const  Line = styled.hr`
+
+export const Line = styled.hr`
    display: flex;
   width: 21%;
   border: 1.2px solid  ${theme.colors.corItens};
@@ -407,7 +448,7 @@ export const TitleGrid = styled.h3`
       }
       `;
 
-  export const ContainerHorsDays = styled.div`
+export const ContainerHorsDays = styled.div`
   display: flex;
   flex-direction: row;
   justify-content: center;
@@ -441,7 +482,7 @@ height: 100%;
 gap: 1px;
 `;
 
-  export const ContainerHors = styled.div`
+export const ContainerHors = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -450,7 +491,7 @@ gap: 1px;
   height: 100%;
   gap: 7px;
   `;
-  export const DaysHors = styled.p`
+export const DaysHors = styled.p`
   font-size: 14px;
   color: #f5f5f7;
   font-family: 'Roboto', sans-serif;
@@ -467,7 +508,7 @@ gap: 1px;
 
   `;
 
-  export const SectionNewsHystory = styled.section`
+export const SectionNewsHystory = styled.section`
   display: flex;
   height: 100vh;
   width: 100%;
@@ -479,24 +520,24 @@ gap: 1px;
   gap: 20px;
   @media (max-width: 768px) {
     flex-direction: column;
-    height: 90dvh;
+    height: 110dvh;
     width: 100%;
     justify-content: center;
     align-items: center;
     gap: 30px;
     ;
-    }
-    @media (max-width: 480px) {
-      flex-direction: column;
-      height: 80dvh;
-      width: 100%;
-      justify-content: center;
-      align-items: center;
-      gap: 50px;
-      }
+  }
+  @media (max-width: 480px) {
+    flex-direction: column;
+    height: 100dvh;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    gap: 50px;
+  }
   `;
 
-  export const ContainerHystory = styled.div`
+export const ContainerHystory = styled.div`
   display: flex;
   flex-direction: column;
   width: 55vh;
@@ -504,28 +545,34 @@ gap: 1px;
   align-items: flex-start;
   justify-content: center;
   @media (max-width: 768px) {
+    margin-top: 40px;
     width: 50vh;
     height: 40vh;
     margin-top: 20px;
     margin-bottom: 2px;
-    }
-    @media (max-width: 480px) {
-      width: 45vh;
-      height: 30vh;
-      margin-top: 20px;
-      margin-bottom: 3px;
-      }
- `;
- export const TitleHystory = styled.h2`
+  }
+  @media (max-width: 480px) {
+    width: 45vh;
+    height: 30vh;
+    margin-top: 20px;
+    margin-bottom: 3px;
+  }
+  `;
+export const TitleHystory = styled.h2`
   font-size: 1.8rem; /* padrão para telas grandes */
   margin-bottom: 10px;
   @media (max-width: 768px) {
     font-size: 1.5rem; /* para tablets */
     margin-left: 15px;
-    margin-bottom: 5px;
-    }`;
+    margin-top: 50px;
+    }
+  @media (max-width: 480px) {
+    font-size: 1.2rem; /* para celulares */
+    margin-left: 35px;
+    margin-top: 35px;
+  }`;
 
- export const TextHystory = styled.p`
+export const TextHystory = styled.p`
   font-size: 0.9rem;
   color: #f5f5f7;
   font-family: 'Roboto', sans-serif;
@@ -549,7 +596,7 @@ gap: 1px;
       }
   `;
 
-  export const ContainerImagem = styled.div`
+export const ContainerImagem = styled.div`
   display: flex;
   width: 55vh;
   height: 50vh;
@@ -568,3 +615,436 @@ gap: 1px;
  
       }
   `;
+
+export const SectionStorys = styled.div <{ $bg: string }>`
+  display: flex;
+  height: 90vh;
+  width: 100%;
+  background-image: url(${(props) => props.$bg});
+  background-size: cover; 
+  background-repeat: no-repeat;
+  background-position: center;
+  transition: background-image 0.7s ease-in-out;
+  @media (max-width: 768px) {
+    height: 100dvh;
+    width: 100%;
+    background-size: cover; 
+    background-repeat: no-repeat;
+    background-position: center;
+    }
+    @media (max-width: 480px) {
+      height: 92dvh;
+      width: 100%;
+      background-size: cover; 
+      background-repeat: no-repeat;
+      background-position: center;
+      }
+  `;
+export const ConteinerButoes = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 20px 50px 20px 50px;
+  @media(max-width: 768px) {
+    padding: 10px 20px 10px 20px;
+  }
+  @media(max-width: 480px) {
+    padding: 10px 15px 10px 15px;
+  }
+  `;
+
+export const SectionServices = styled.section`
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  background-color: ${({ theme }) => theme.colors.corSecundaria};
+  color: ${({ theme }) => theme.colors.colorWhite};
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  @media (max-width: 768px) {
+    height: 215dvh;
+    width: 100%;
+    justify-content: flex-start;
+    align-items: center;
+
+    }
+    @media (max-width: 480px) {
+      height: 150dvh;
+      width: 100%;
+      justify-content: center;
+      align-items: center;
+      } 
+
+
+`;
+
+export const TitleServices = styled.h2`
+  font-size: 1.8rem; /* padrão para telas grandes */
+  margin-bottom: 10px;
+  @media (max-width: 768px) {
+    font-size: 1.5rem; /* para tablets */
+    margin-left: 15px;
+    margin-top: 50px;
+    margin-bottom: 35px;
+    }
+    @media (max-width: 480px) {
+      font-size: 1.2rem; /* para celulares */
+      margin-left: 35px;
+      margin-top: 35px;
+      }
+  `;
+
+export const ConteinerImagensServices = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  gap: 10px;
+  @media (max-width: 768px) {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100dvh;
+    gap: 10px;
+    }
+    @media (max-width: 480px) {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100dvh;
+      gap: 10px;
+
+      } 
+`;
+
+export const ImageServices = styled(Image)`
+  width: 450px;
+  height: 420px;
+  object-fit: cover;
+  border-radius: 10px;
+  @media (max-width: 768px) {
+    width: 300px;
+    height: 300px;
+  }
+  @media (max-width: 480px) {
+    width: 250px;
+    height: 250px;
+  }
+    `;
+
+export const ConteinerGridsServices = styled.div`
+ width: 450px;
+ height: 410px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 15px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 10px;
+  padding: 10px 0 20px 0;
+  @media (max-width: 768px) {
+    width: 350px;
+    height: 350px;
+    gap: 10px;
+    }
+    @media (max-width: 480px) {
+      width: 250px;
+      height: 250px;
+      gap: 10px;
+      }
+`
+
+export const GridItemServices = styled.div`
+  display: flex;
+  width: 200px;
+  height: 205px;
+  flex-direction: column;
+  border-radius: 10px;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 0px;
+  background-color: ${({ theme }) => theme.colors.corItens};
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  @media (max-width: 768px) {
+    width: 300px;
+    height: 200px;
+    }
+    @media (max-width: 480px) {
+      width: 130px;
+      height: 130px;
+      }
+  `;
+
+export const ImagemGrid = styled(Image)`
+  padding-top: 20px;
+  width: 90px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 10px;
+ 
+ `;
+
+export const SectionBannerDesconto = styled.section`
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  background-image: url(${HomemBarba.src}), ${({ theme }) => theme.colors.corDegrade1} ;
+  color: ${({ theme }) => theme.colors.colorWhite};
+  background-size: cover;
+  background-position:  left bottom;
+  background-repeat: no-repeat;
+  justify-content:  flex-end;
+  align-items: center;
+  flex-direction: row;
+  @media (max-width: 768px) {
+    height: 100dvh;
+    width: 100%;
+    background-size: 300px contain, cover;
+    background-position:  left bottom;
+    background-repeat: no-repeat;
+    justify-content: center;
+    align-items: center;
+  }
+  @media (max-width: 480px) {
+    height: 100dvh;
+    width: 100%;
+    background-size: contain, cover;
+    background-position:  left center;
+    background-repeat: no-repeat;
+    justify-content: center;
+    align-items: center;
+
+      }
+ `;
+
+export const ConteinerInformacoesPromo = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: flex-start;
+  width: 130vh;
+  height: 100%;
+  align-items: center;
+  margin: 0 0 0 30px;
+  word-wrap: break-word;
+  line-height: 1;
+  
+`;
+
+export const TitlePromo = styled.h1`
+width: 80%;
+  font-size: 5rem; /* padrão para telas grandes */
+  color: #f5f5f7;
+  font-family: 'Roboto', sans-serif;
+  font-weight: 700;
+  margin-top: 0;
+  @media (max-width: 768px) {
+    font-size: 3.5rem; /* para tablets */
+    margin-left: 15px;
+    margin-top: 50px;
+    }
+    @media (max-width: 480px) {
+      font-size: 2.5rem; /* para celulares */
+      margin-left: 35px;
+      margin-top: 35px;
+      }
+  `;
+export const ConteinerBannerDesconto = styled.div`
+  display: flex;
+  width: 90%;
+  height: 70%;
+  justify-content: flex-start;
+  align-items: flex-start;
+  flex-direction: column;;
+  @media (max-width: 768px) {
+    width: 80%;
+    height: 25%;
+    }
+    @media (max-width: 480px) {
+      width: 90%;
+      height: 20%;
+      }`;
+
+export const SubTitle = styled.h2`
+  font-size: 3.5rem; /* padrão para telas grandes */
+  margin-top: 35px;
+  `;
+
+export const ConfiraDescontoP = styled.p`
+  font-size: 1.2rem;
+  color: #f5f5f7;
+  font-family: 'Roboto', sans-serif;
+  font-weight: 400;
+  text-align: left;
+  margin: 10px 0 10px 0;`;
+
+export const SectionFooter = styled.section`
+  display: flex;
+  height: 50vh;
+  width: 100%;
+  background-color: ${({ theme }) => theme.colors.corTerceira};
+  color: #f5f5f7;
+  justify-content: center;
+  align-items: center;
+flex-direction: row;
+gap: 50px;
+  @media (max-width: 768px) {
+    height: 80dvh;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    }
+    @media (max-width: 480px) {
+      height: 80dvh;
+      width: 100%;
+      justify-content: center;
+      align-items: center;
+      }
+      `;
+
+export const TitleFooter = styled.h2`
+  font-size: 2.4rem; /* padrão para telas grandes */
+  margin-bottom: 10px;
+  @media (max-width: 768px) {
+    font-size: 1.5rem; /* para tablets */
+    margin-left: 15px;
+    margin-top: 50px;
+    }
+    @media (max-width: 480px) {
+      font-size: 1.2rem; /* para celulares */
+      margin-left: 35px;
+      margin-top: 35px;
+      }`;
+
+export const TextFooter = styled.p`
+  display: flex;
+  font-size: 1rem;
+  color: #f5f5f7;
+  font-family: 'Roboto', sans-serif;
+  font-weight: 400;
+  text-align: left;
+  margin: 2px;
+  text-align: center;       /* Necessário para alinhar o texto */
+  word-wrap: break-word;   /* Permite quebra de linha dentro de palavras longas */
+;
+  @media (max-width: 768px) {
+    font-size: 0.8rem;
+    margin-left: 15px;
+    margin-right: 15px;
+    margin-top: 5px;
+    }
+    @media (max-width: 480px) {
+      font-size: 0.8rem;
+      margin-left: 35px;
+      margin-right: 35px; 
+      margin-top: 5px;
+      }
+          `;
+
+export const ContainerHorsDaysFooter = styled.div`
+display: flex;
+flex-direction: row;
+justify-content: center;
+align-items: center;
+margin-top: 1px;
+`;
+
+// aqui fica o horario do footer
+export const ConteinerHorarioFooter = styled.div`
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+width: 350px;
+@media (max-width: 768px) {
+ display: none;
+  }
+  @media (max-width: 480px) {
+    display: none;
+    }
+`;
+export const LogoFooter = styled(Image)`
+width: 80px;
+height: 80px;
+margin-bottom: 5px;
+`;
+
+// aqui fica a localidade do footer
+export const ConteinerLocalidadeFooter = styled.div`
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+text-align: center;
+word-wrap: break-word;
+width:  350px;
+
+`;
+
+export const LinkEmail = styled.a`
+  margin-top: 15px;
+  text-decoration: none;
+  font-size: 20px;
+  color: ${({ theme }) => theme.colors.corItens};
+  font-family: 'Roboto', sans-serif;
+  font-weight: 500;
+  margin-bottom: 10px;
+ `;
+
+export const TextFooterDireitos = styled.p`
+display: flex;
+  font-size: .9rem;
+  color: #f5f5f7;
+  font-family: 'Roboto', sans-serif;
+  font-weight: 400;
+  text-align: left;
+  margin-top: 17px;
+ 
+  text-align: center;       /* Necessário para alinhar o texto */
+  
+;
+  @media (max-width: 768px) {
+    font-size: 0.8rem;
+    margin-left: 15px;
+    margin-right: 15px;
+    margin-top: 5px;
+    }
+    @media (max-width: 480px) {
+      font-size: 0.8rem;
+      margin-left: 35px;
+      margin-right: 35px; 
+      margin-top: 5px;
+      }
+`;
+
+export const ButtonLigar = styled.a`
+  text-decoration: none;
+  font-size: 20px;
+  color: ${({ theme }) => theme.colors.colorWhite};
+  font-family: 'Roboto', sans-serif;
+  font-weight: 500;
+  background-color: ${({ theme }) => theme.colors.corItens};
+  padding: 3px 30px 3px 30px;
+  border-radius: 8px;
+ `;
+
+// aqui fica as redes sociais do footer
+
+export const ConteinerRedesFooter = styled.div`
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+`;
+
+export const LinkWhatsapp = styled.a`
+  margin-top: 1px;
+  text-decoration: none;
+  font-size: 18px;
+  color: ${({ theme }) => theme.colors.corItens};`;
