@@ -240,7 +240,7 @@ export default function Home() {
         </ContainerHystory>
 
         <ContainerImagem>
-          <ImageGrid src={HiHomeModern} alt='homem moderno' width={50} height={50}></ImageGrid>
+          <ImageGrid src={HiHomeModern} alt='homem moderno'  ></ImageGrid>
         </ContainerImagem>
 
       </SectionNewsHystory>
@@ -260,12 +260,12 @@ export default function Home() {
           <ConteinerGridsServices>
             <GridItemServices>
               <ImagemGrid src={Cut} alt='barba' width={50} height={50}></ImagemGrid>
-              <h3>Aparar barba</h3>
+              <h3>Corte de cabelo</h3>
             </GridItemServices>
 
             <GridItemServices>
               <ImagemGrid src={Barbear} alt='barba' width={50} height={50}></ImagemGrid>
-              <h3>Aparar barba</h3>
+              <h3>Barbear</h3>
             </GridItemServices>
 
             <GridItemServices>
