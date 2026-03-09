@@ -1,0 +1,11 @@
+export type ViewKey =
+  | "agenda"
+  | "checkout"
+  | "clientes"
+  | "estoque"
+  | "marketing"
+  | "cartoes"
+  | "dashboard"
+  | "profissionais"
+  | "perfil"
+  | "config"

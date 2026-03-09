@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import { ThemeProvider } from "@/context/ThemeProvider";
 
-import "../styles/globals.css";
+
+import "./globals.css";
 
 export const metadata: Metadata = {
   icons: {
-    icon: "./favicon.ico",
-    shortcut: "./favicon.ico",
-    apple: "./favicon.ico",
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/favicon.ico",
   },
   title: "Mr Dyllan Barbearia",
   description: "Barbearia AI - Corte de cabelo e barba com estilo e tecnologia de ponta.",
@@ -33,12 +34,12 @@ export const metadata: Metadata = {
     "Barbearia tradicional",
     "Cortes de cabelo criativos",
   ],
-  authors: [{ name: "Barbearia AI", url: "https://barbeariaai.com" }],
+  authors: [{ name: "Barbearia AI", url: "https://barbearia.com" }],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR ">
       <body>
         <ThemeProvider>
           {children}
@@ -47,3 +48,5 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   );
 }
+
+

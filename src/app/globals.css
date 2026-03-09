@@ -1,0 +1,102 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@layer base {
+  :root {
+    
+    --background: 240 10% 3.9%;            /* fundo principal preto suave */
+    --foreground: 0 0% 98%;                /* texto branco */
+    
+    --card: 240 10% 6%;                    /* fundo dos cards */
+    --card-foreground: 0 0% 98%;
+    
+    --popover: 240 10% 6%;
+    --popover-foreground: 0 0% 98%;
+    
+    /* dourado premium */
+    --primary: 38 45% 55%;                 /* dourado */
+    --primary-foreground: 240 10% 3.9%;
+    
+    --secondary: 240 5% 12%;               /* cinza escuro */
+    --secondary-foreground: 0 0% 98%;
+    
+    --muted: 240 5% 12%;
+    --muted-foreground: 240 5% 65%;
+    
+    --accent: 38 45% 55%;                  /* dourado */
+    --accent-foreground: 240 10% 3.9%;
+    
+    --border: 240 5% 15%;
+    --input: 240 5% 15%;
+    
+    --ring: 38 45% 55%;                    /* foco dourado */
+    
+    --radius: 0.8rem;
+    
+    /* SIDEBAR */
+    
+    --sidebar-background: 240 10% 5%;
+    --sidebar-foreground: 0 0% 95%;
+    
+    --sidebar-primary: 38 45% 55%;
+    --sidebar-primary-foreground: 240 10% 3.9%;
+    
+    --sidebar-accent: 38 15% 12%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    
+    --sidebar-border: 240 5% 15%;
+    --sidebar-ring: 38 45% 55%;
+  }
+  
+  .dark {
+    
+    --background: 10 10% 4%;
+    --foreground: 0 0% 98%;
+    
+    --card: 0 0% 7%;
+    --card-foreground: 0 0% 98%;
+    
+    --popover: 0 0% 7%;
+    --popover-foreground: 0 0% 98%;
+    
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 65%;
+    
+    --border: 0 0% 12%;
+    --input: 0 0% 12%;
+    
+    /* DOURADO DO AGENDOBARBER */
+    --primary: 42 38% 56%;
+    --primary-foreground: 0 0% 10%;
+    
+    --accent: 42 38% 56%;
+    --accent-foreground: 0 0% 10%;
+    
+    --ring: 42 38% 56%;
+    
+    /* SIDEBAR DARK */
+    --sidebar-background: 0 0% 7%;
+    --sidebar-foreground: 0 0% 98%;
+    
+    
+  }
+  
+  html, body {
+      @apply bg-background text-foreground;
+      height: 100%;
+      overflow-x: hidden;
+      
+    }
+  
+}
+
+/* Esconder scrollbar mas manter scroll funcionando */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE e Edge antigo */
+  scrollbar-width: none; /* Firefox */
+ 
+}

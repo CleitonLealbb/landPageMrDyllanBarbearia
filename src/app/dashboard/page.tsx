@@ -1,0 +1,61 @@
+"use client"
+
+import { useState } from "react"
+import { AppSidebar } from "@/components/app-sidebar"
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
+import { AgendaView } from "@/components/views/agenda-views"
+import { CheckoutView } from "@/components/views/checkout-views"
+import { ClientesView } from "@/components/views/clientes-views"
+import { EstoqueView } from "@/components/views/estoque-views"
+import { MarketingView } from "@/components/views/marketing-views"
+import { CartoesView } from "@/components/views/cartoes-views"
+import { DashboardView } from "@/components/views/dashboard-views"
+import { ProfissionaisView } from "@/components/views/profissionais-views"
+import { PerfilEmpresaView } from "@/components/views/perfil-empresa-views"
+import { ConfiguracoesView } from "@/components/views/configuracoes-views"
+
+
+type ViewKey =
+  | "agenda"
+  | "checkout"
+  | "clientes"
+  | "estoque"
+  | "marketing"
+  | "cartoes"
+  | "dashboard"
+  | "profissionais"
+  | "perfil"
+  | "config"
+
+export default function DashboardPage() {
+  const [view, setView] = useState<ViewKey>("agenda")
+
+  return (
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full">
+
+        <AppSidebar
+          activeView={view}
+          onViewChange={setView}
+        />
+
+        <SidebarInset>
+          <main>
+            {view === "agenda" && <div><AgendaView/></div>}
+            {view === "checkout" && <div><CheckoutView/></div>}
+            {view === "clientes" && <div><ClientesView/></div>}
+            {view === "estoque" && <div><EstoqueView/></div>}
+            {view === "marketing" && <div><MarketingView/></div>}
+            {view === "cartoes" && <div><CartoesView/></div>}
+            {view === "dashboard" && <div><DashboardView/></div>}
+            {view === "profissionais" && <div><ProfissionaisView/></div>}
+            {view === "perfil" && <div><PerfilEmpresaView/></div>}
+            {view === "config" && <div><ConfiguracoesView/></div>}
+            
+          </main>
+        </SidebarInset>
+
+      </div>
+    </SidebarProvider>
+  )
+}
