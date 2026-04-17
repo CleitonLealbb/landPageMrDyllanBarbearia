@@ -17,6 +17,7 @@ export const ButtonAgendar = styled.button.withConfig({
 })<ButtonProps>`
  display: ${({ display }) => display || 'none'};
   background: ${({ theme }) => theme.colors.colorWhite};
+  color: ${({ theme }) => theme.colors.corSecundaria};
   padding: 5px 20px;
   border: none;
   border-radius: 8px;

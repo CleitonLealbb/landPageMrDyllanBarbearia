@@ -7,7 +7,7 @@ import { AgendaTop } from "../agenda/agenda-top"
 import { AgendaGrid } from "../agenda/agenda-grid"
 
 function agendaCols(barbersCount: number): string {
-  return `80px repeat(${barbersCount}, minmax(260px, 1fr))`
+  return `40px repeat(${barbersCount}, minmax(200px, 1fr))`
 }
 
 export function AgendaView() {
@@ -16,7 +16,7 @@ export function AgendaView() {
   // ⚠️ aqui vai vir do seu banco depois
   const barbers: Barber[] = useMemo(
     () => [
-      { id: "b1", name: "Cleiton L.", status: "disponivel" },
+      { id: "b1", name: "Cleiton L.", status: "ocupado" },
       { id: "b2", name: "Fabíola B.", status: "ocupado" },
       { id: "b3", name: "Fabrício B.", status: "disponivel" },
       { id: "b4", name: "José V", status: "disponivel" },
@@ -43,12 +43,14 @@ export function AgendaView() {
         </div>
 
         {/* AGENDA */}
-        <div className="min-h-0 flex-1 overflow-hidden">
+        <div className="min-h-0 flex-1 ">
+        
           {/* ✅ 1 container que controla o scroll horizontal pro header + grid */}
           <div
-            className="h-full overflow-auto"
+            className="h-full overflow-auto scrollbar-hide "
             style={{ ["--agenda-cols" as any]: agendaCols(barbers.length) }}
           >
+          
             <AgendaBarbersRow barbers={barbers} />
             <AgendaGrid barbers={barbers} events={events} />
           </div>
@@ -57,7 +59,8 @@ export function AgendaView() {
 
       {/* DIREITA */}
       {rightOpen && (
-        <aside className="hidden xl:flex w-[340px] shrink-0 bg-background">
+        <aside className="hidden xl:flex w-[340px] shrink-0 bg-gray shadow-sm">
+        
           <div className="h-full w-full pr-6">
             <div className="flex h-full flex-col bg-background">
               <div className="flex items-left justify-end px-4 py-3">
@@ -69,7 +72,7 @@ export function AgendaView() {
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-4 scrollbar-hide">
+              <div className="flex-1 overflow-y-auto p-4 scrollbar-hidden">
                 <AgendaRightPanel />
               </div>
             </div>
