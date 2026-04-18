@@ -14,9 +14,19 @@ export async function POST(req: Request) {
       )
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email },
-    })
+    console.log("DATABASE_URL exists:", !!process.env.DATABASE_URL)
+    console.log("JWT_SECRET exists:", !!process.env.JWT_SECRET)
+    console.log("Iniciando consulta no banco...")
+
+    // const user = await prisma.user.findUnique({
+    //   where: { email },
+    // })
+    const usersCount = await prisma.user.count()
+console.log("Total de usuários:", usersCount)
+
+const user = await prisma.user.findUnique({
+  where: { email },
+})
 
     if (!user) {
       return NextResponse.json(
@@ -78,3 +88,4 @@ export async function POST(req: Request) {
     )
   }
 }
+
