@@ -48,7 +48,11 @@ export function AgendaView() {
           {/* ✅ 1 container que controla o scroll horizontal pro header + grid */}
           <div
             className="h-full overflow-auto scrollbar-hide "
-            style={{ ["--agenda-cols" as any]: agendaCols(barbers.length) }}
+            style={
+              {
+                "--agenda-cols": agendaCols(barbers.length),
+              } as React.CSSProperties
+            }
           >
           
             <AgendaBarbersRow barbers={barbers} />

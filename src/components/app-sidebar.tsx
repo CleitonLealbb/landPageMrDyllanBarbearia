@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import type { ElementType } from "react"
 import { NavMain } from "@/components/nav-main"
 import { NavSecondary } from "@/components/nav-secondary"
 import { NavUser } from "@/components/nav-user"
@@ -53,7 +54,7 @@ const data = {
     { title: "Dashboard", view: "dashboard", icon: MdDashboard },
     { title: "Profissionais", view: "profissionais", icon: MdDiversity2 },
     { title: "Perfil da Empresa", view: "perfil", icon: MdStore },
-  ] as { title: string; view: ViewKey; icon?: any }[],
+  ] as { title: string; view: ViewKey; icon?: ElementType }[],
   navSecondary: [{ title: "Settings", view: "config" as ViewKey, icon: SettingsIcon }],
 }
 

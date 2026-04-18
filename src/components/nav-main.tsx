@@ -1,6 +1,6 @@
 "use client"
 
-import type { ComponentType } from "react"
+import type { ElementType } from "react"
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -10,12 +10,12 @@ import {
 } from "@/components/ui/sidebar"
 import type { ViewKey } from "@/types/view"
 
-type NavIcon = ComponentType<{ className?: string }>
+type NavIcon = ElementType
 
 type NavItem = {
   title: string
   view: ViewKey
-  icon?: NavIcon
+  icon?: ElementType
 }
 
 type NavMainProps = {
