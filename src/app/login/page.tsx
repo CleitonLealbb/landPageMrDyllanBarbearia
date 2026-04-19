@@ -26,7 +26,7 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password, remember }),
       })
 
-      let data: { error?: string } = {};
+      let data: { error?: string } = {}
 
       const contentType = res.headers.get("content-type")
       if (contentType && contentType.includes("application/json")) {
