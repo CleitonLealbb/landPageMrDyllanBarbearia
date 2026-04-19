@@ -1,349 +1,451 @@
-'use client';
-import React, { useState } from 'react';
+"use client";
 
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
-
+import Image from "next/image";
+import { useMemo, useState } from "react";
 import {
-  Header,
-  ItemHeader,
-  TextHeader,
-  Logo,
-  ItensHeader,
-  MobileMenuWrapper,
-  Section,
-  Link,
-  Container,
-  H1,
-  P,
-  InformationLeft,
-  SectionContainer, 
-  ContainerSobreNos, 
-  ConteinerGrids,
-   GridItem, 
-  Title,
-   TitleGrid,
-   ImageGrid, 
-   NumeroContato,
-    Line, 
-    ContainerHorsDays,
-     ContainerHors, 
-     ContainerDays, 
-     DaysHors, 
-     SectionNewsHystory, 
-     ContainerHystory, 
-     TextHystory, 
-     ContainerImagem,
-      TitleHystory, 
-     SectionStorys,
-      ConteinerButoes, 
-      SectionServices, 
-      ConteinerImagensServices, 
-      ImageServices, ConteinerGridsServices, 
-      GridItemServices,
-       ImagemGrid, 
-      TitleServices, 
-      SectionBannerDesconto,
-      SectionFooter,
-      ConteinerInformacoesPromo,
-      TitlePromo,
-      ConteinerBannerDesconto,
-      SubTitle,
-      ConfiraDescontoP,
-      ConteinerHorarioFooter,
-      ConteinerLocalidadeFooter,
-      ConteinerRedesFooter,
-      TitleFooter,
-      TextFooter,
-      LinkEmail,
-      ButtonLigar,
-      TextFooterDireitos,
-      LogoFooter,
-      ContainerHorsDaysFooter,
-      LinkWhatsapp
-      
-      
-} from '../assets/AppStyled';
-import { ButtonAgendar } from '@/components/ButtonAgendar';
-import LogoPng from '../assets/image/logo100X100.webp';
-import { ButtonMenu } from '@/components/ButtonMenu';
-import { FiMenu, FiX } from 'react-icons/fi';
-import HiHomeModern from '../assets/image/imagem1.webp';
-import BarberExecution from '../assets/image/imagem2.webp';
-import LogoPngForm from '../assets/image/Logo-branco-sem-fundo-AI.webp';
-import BgImagem1 from '../assets/image/imagem1.webp';
-import BgImagem2 from '../assets/image/imagem2.webp';
-import Barba from '../assets/image/beard.webp';
-import Baby from '../assets/image/kids.webp';
-import Barbear from '../assets/image/razor.webp';
-import Cut from '../assets/image/scissors.webp';
-import HomemBarba from '../assets/image/foto-de-estudio-de-gengibre-hippie-com-barba-grossa-corte-de-cabelo-da-moda-tem-uma-expressao-seria-aponta-com-o-dedo-indicador-no-canto-superior-direito_273609-18616-removebg-preview.png';
-import { theme } from '@/styles/theme';
-import 'material-symbols';
-import './globals.css'; // se tiver estilos globais
+  FiMenu,
+  FiX,
+  FiClock,
+  FiMapPin,
+  FiPhone,
+  FiScissors,
+  FiStar,
+  FiUsers,
+  FiCalendar,
+  FiMessageCircle,
+} from "react-icons/fi";
 
-
-
+import LogoPng from "../assets/image/logo100X100.webp";
+import LogoPngForm from "../assets/image/Logo-branco-sem-fundo-AI.webp";
+import HiHomeModern from "../assets/image/imagem1.webp";
+import BarberExecution from "../assets/image/imagem2.webp";
+import BgImagem1 from "../assets/image/imagem1.webp";
+import BgImagem2 from "../assets/image/imagem2.webp";
+import Barba from "../assets/image/beard.webp";
+import Baby from "../assets/image/kids.webp";
+import Barbear from "../assets/image/razor.webp";
+import Cut from "../assets/image/scissors.webp";
 
 export default function Home() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [slide, setSlide] = useState(0);
 
-  const [menuAberto, setMenuAberto] = useState(false);
+  const slides = useMemo(() => [BgImagem1, BgImagem2], []);
+  const heroBg = slides[slide];
 
-  const toggleMenu = () => {
-    setMenuAberto((prevState) => !prevState);
-  };
+  const whatsappLink =
+    "https://api.whatsapp.com/send?phone=5566984519856&text=Ol%C3%A1!%20Quero%20agendar%20um%20hor%C3%A1rio.";
 
-  const closeMenu = () => {
-    setMenuAberto(false); // fecha o menu
-  };
+  const nextSlide = () => setSlide((prev) => (prev + 1) % slides.length);
+  const prevSlide = () => setSlide((prev) => (prev - 1 + slides.length) % slides.length);
 
-  const [bgAtual, setBgAtual] = useState(BgImagem1.src);
-
-  const trocarBg = () => {
-    setBgAtual((prev) => (prev === BgImagem1.src ? BgImagem2.src : BgImagem1.src));
-  };
   return (
-    <div>
-      <Header>
-        <Logo src={LogoPng} alt="Logo da Barbearia" />
-        <ItensHeader>
+    <main className="barber-page">
+      <header className="site-header">
+        <div className="container nav">
+          <a href="#home" className="brand">
+            <Image src={LogoPng} alt="Mr Dyllan Barbearia" width={58} height={58} />
+            <div className="brand-text">
+              <strong>MR DYLLAN</strong>
+              <span>BARBEARIA</span>
+            </div>
+          </a>
 
-          <ItemHeader>
-            <TextHeader>
-              <Link href={"#home"}  >INÍCIO</Link>
-            </TextHeader>
-          </ItemHeader>
+          <nav className="desktop-nav">
+            <a href="#home">Início</a>
+            <a href="#sobre">Sobre</a>
+            <a href="#servicos">Serviços</a>
+            <a href="#beneficios">Benefícios</a>
+            <a href="#contato">Contato</a>
+          </nav>
 
-          <ItemHeader>
-            <TextHeader>
-              <Link href={"#sobre-nos"}  >SOBRE NÓS</Link>
-            </TextHeader>
-          </ItemHeader>
+          <div className="nav-actions">
+            <a
+              href={whatsappLink}
+              target="_blank"
+              rel="noreferrer"
+              className="btn btn-primary"
+            >
+              Agendar horário
+            </a>
 
-          <ItemHeader>
-            <TextHeader>
-              <Link href={"#servicos"}  >SERVIÇOS</Link>
-            </TextHeader>
-          </ItemHeader>
-          <ItemHeader>
-            <TextHeader>
-              <Link href={"#contatos"}>CONSTATOS</Link>
-            </TextHeader>
-          </ItemHeader>
-          <ButtonAgendar style={{ display: "flex", marginLeft: "60px" }}>Agendar horário</ButtonAgendar>
+            <button
+              className="menu-toggle"
+              onClick={() => setMenuOpen((prev) => !prev)}
+              aria-label="Abrir menu"
+            >
+              {menuOpen ? <FiX /> : <FiMenu />}
+            </button>
+          </div>
+        </div>
 
-        </ItensHeader>
-
-        <ButtonMenu onClick={toggleMenu}>
-          {menuAberto ? <FiX /> : <FiMenu />}
-
-        </ButtonMenu>
-        {menuAberto && (
-          <MobileMenuWrapper>
-            <ItensHeader style={{ display: "flex", flexDirection: "column" }}>
-
-              <ItemHeader>
-                <TextHeader>
-                  <Link href={"#home"} onClick={closeMenu}>INÍCIO</Link>
-                </TextHeader>
-              </ItemHeader>
-
-              <ItemHeader>
-                <TextHeader>
-                  <Link href={"#sobre-nos"} onClick={closeMenu}>SOBRE NÓS</Link>
-                </TextHeader>
-              </ItemHeader>
-
-              <ItemHeader>
-                <TextHeader>
-                  <Link href={"#servicos"} onClick={closeMenu}>SERVIÇOS</Link>
-                </TextHeader>
-              </ItemHeader>
-
-              <ItemHeader>
-                <TextHeader>
-                  <Link href={"#contatos"} onClick={closeMenu}>CONTATOS</Link>
-                </TextHeader>
-              </ItemHeader>
-              <ButtonAgendar style={{ display: "flex" }} onClick={closeMenu}>Agendar horário</ButtonAgendar>
-            </ItensHeader>
-
-          </MobileMenuWrapper>
+        {menuOpen && (
+          <div className="mobile-menu">
+            <a href="#home" onClick={() => setMenuOpen(false)}>Início</a>
+            <a href="#sobre" onClick={() => setMenuOpen(false)}>Sobre</a>
+            <a href="#servicos" onClick={() => setMenuOpen(false)}>Serviços</a>
+            <a href="#beneficios" onClick={() => setMenuOpen(false)}>Benefícios</a>
+            <a href="#contato" onClick={() => setMenuOpen(false)}>Contato</a>
+            <a
+              href={whatsappLink}
+              target="_blank"
+              rel="noreferrer"
+              className="btn btn-primary"
+              onClick={() => setMenuOpen(false)}
+            >
+              Agendar horário
+            </a>
+          </div>
         )}
-      </Header>
+      </header>
 
-      <Section id='home' style={{ backgroundColor: "rgb(17, 22, 28)" }}>
-        <Container>
-          <InformationLeft>
+      <section
+        id="home"
+        className="hero"
+        style={{
+          backgroundImage: `linear-gradient(rgba(10,10,10,.76), rgba(10,10,10,.84)), url(${heroBg.src})`,
+        }}
+      >
+        <div className="container hero-grid">
+          <div className="hero-content">
+            <div className="eyebrow">Barbearia premium + agendamento rápido</div>
 
-            <H1>MR DYLLAN<br />
-              BARBEARIA</H1>
-            <P>Estamos sempre inovando para oferecer as melhores<br /> técnicas e os mais avançados procedimentos.</P>
+            <h1>
+              ELEVE SEU VISUAL COM A
+              <span> EXPERIÊNCIA CERTA</span>
+            </h1>
 
-          </InformationLeft>
-        </Container>
+            <p>
+              Corte, barba e atendimento profissional em um ambiente moderno.
+              Agende seu horário com rapidez e tenha uma experiência de barbearia
+              com mais estilo, organização e praticidade.
+            </p>
 
+            <div className="hero-cta">
+              <a
+                href={whatsappLink}
+                target="_blank"
+                rel="noreferrer"
+                className="btn btn-primary"
+              >
+                Agendar no WhatsApp
+              </a>
 
-      </Section>
+              <a href="#servicos" className="btn btn-secondary">
+                Ver serviços
+              </a>
+            </div>
 
-      <SectionContainer>
-        <Title>Bem-Vindo à melhor barbearia de Nova Xavantina</Title>
-        <ContainerSobreNos>
+            <div className="hero-meta">
+              <div>
+                <FiPhone />
+                <span>+55 (66) 9 8451-9856</span>
+              </div>
+              <div>
+                <FiStar />
+                <span>Atendimento com qualidade e estilo</span>
+              </div>
+            </div>
+          </div>
 
-          <ConteinerGrids>
-            <GridItem>
+          <div className="hero-side">
+            <div className="hero-card">
+              <Image
+                src={LogoPngForm}
+                alt="Logo Mr Dyllan Barbearia"
+                className="hero-logo"
+              />
+              <p>
+                Visual forte, cuidado profissional e praticidade para agendar sem
+                complicação.
+              </p>
+            </div>
+          </div>
+        </div>
 
-              <ImageGrid src={HiHomeModern} alt='homem moderno' width={200} height={200}></ImageGrid>
-            </GridItem>
-            <GridItem>
-              <ImageGrid src={LogoPngForm} alt='homem moderno' width={300} height={300}></ImageGrid>
-            </GridItem>
-          </ConteinerGrids>
+        <div className="hero-slider-controls">
+          <button onClick={prevSlide} aria-label="Anterior">‹</button>
+          <button onClick={nextSlide} aria-label="Próximo">›</button>
+        </div>
+      </section>
 
-          <ConteinerGrids>
-            <GridItem>
-              <ImageGrid src={BarberExecution} alt='homem moderno' width={300} height={300}></ImageGrid>
-            </GridItem>
-            <GridItem>
-              <NumeroContato style={{ color: theme.colors.corItens }}>+55 (66) 9 8451-9856 </NumeroContato>
-              <TitleGrid>horário de atendimentos</TitleGrid>
-              <Line />
-              <ContainerHorsDays>
-                <ContainerDays>
-                  <DaysHors>SEGUNDA</DaysHors>
-                  <DaysHors> TERÇA À SÁBADO</DaysHors>
-                  <DaysHors> DOMINGO</DaysHors>
-                </ContainerDays>
-                <ContainerHors>
-                  <DaysHors>13 - 20 Hrs</DaysHors>
-                  <DaysHors>08 - 20 Hrs</DaysHors>
-                  <DaysHors> FECHADO</DaysHors>
-                </ContainerHors>
-              </ContainerHorsDays>
+      <section id="sobre" className="section section-dark">
+        <div className="container">
+          <div className="section-heading center">
+            <span className="section-kicker">Quem somos</span>
+            <h2>Sobre a barbearia</h2>
+          </div>
 
-            </GridItem>
-          </ConteinerGrids>
+          <div className="about-grid">
+            <div className="about-text">
+              <p>
+                A Mr Dyllan Barbearia foi pensada para entregar mais do que um
+                corte. A proposta é unir estilo, conforto e atendimento de alto
+                nível em uma experiência realmente marcante.
+              </p>
 
-        </ContainerSobreNos>
-      </SectionContainer>
+              <ul className="check-list">
+                <li>Atendimento profissional e humanizado</li>
+                <li>Ambiente moderno e confortável</li>
+                <li>Agendamento rápido e sem complicação</li>
+                <li>Cuidado com cada detalhe do visual</li>
+              </ul>
 
-      <SectionNewsHystory id='sobre-nos' >
+              <a
+                href={whatsappLink}
+                target="_blank"
+                rel="noreferrer"
+                className="btn btn-primary"
+              >
+                Agendar horário
+              </a>
+            </div>
 
-        <ContainerHystory>
-          <TitleHystory>Nossa História</TitleHystory>
-          <TextHystory>
-            Somos uma barbearia localizada em Nova Xavantina, MT, com o objetivo de oferecer aos nossos clientes um ambiente acolhedor e serviços de alta qualidade. Nossa equipe é composta por profissionais experientes e apaixonados pelo que fazem, sempre prontos para atender às suas necessidades.
-          </TextHystory>
-          <TextHystory>
-            Na nossa barbearia, valorizamos a tradição e a modernidade, oferecendo cortes de cabelo clássicos e contemporâneos, além de serviços de barba e cuidados pessoais. Estamos comprometidos em proporcionar uma experiência única e satisfatória para todos os nossos clientes.
-          </TextHystory>
-          <ButtonAgendar style={{ display: "flex", marginLeft: "0px", marginTop: "10px" }}>Agendar horário</ButtonAgendar>
+            <div className="about-image-frame">
+              <Image
+                src={BarberExecution}
+                alt="Execução de serviço na barbearia"
+                className="about-image"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
 
-        </ContainerHystory>
+      <section id="servicos" className="section section-textured">
+        <div className="container">
+          <div className="section-heading center">
+            <span className="section-kicker">O que fazemos</span>
+            <h2>Serviços de barbearia</h2>
+          </div>
 
-        <ContainerImagem>
-          <ImageGrid src={HiHomeModern} alt='homem moderno'  ></ImageGrid>
-        </ContainerImagem>
-
-      </SectionNewsHystory>
-
-      <SectionStorys $bg={bgAtual}>
-        <ConteinerButoes>
-          <ButtonAgendar onClick={trocarBg} style={{ display: "flex", marginLeft: "0px", marginTop: "10px", padding: "12px 2px" }}> <span className="material-symbols-outlined">arrow_back_ios_new</span></ButtonAgendar>
-          <ButtonAgendar onClick={trocarBg} style={{ display: "flex", marginLeft: "0px", marginTop: "10px", padding: "12px 2px" }}> <span className="material-symbols-outlined">arrow_forward_ios</span></ButtonAgendar>
-        </ConteinerButoes>
-
-      </SectionStorys>
-
-    <SectionServices id='servicos' >
-        <TitleServices>SERVIÇOS DE BARBEARIA</TitleServices>
-        <ConteinerImagensServices>
-          <ImageServices src={BgImagem1} alt="Imagem de serviço de barbearia"></ImageServices>
-          <ConteinerGridsServices>
-            <GridItemServices>
-              <ImagemGrid src={Cut} alt='barba' width={50} height={50}></ImagemGrid>
+          <div className="services-grid">
+            <article className="service-card">
+              <Image src={Cut} alt="Corte de cabelo" width={54} height={54} />
               <h3>Corte de cabelo</h3>
-            </GridItemServices>
+              <p>Cortes modernos e clássicos com acabamento profissional.</p>
+            </article>
 
-            <GridItemServices>
-              <ImagemGrid src={Barbear} alt='barba' width={50} height={50}></ImagemGrid>
+            <article className="service-card">
+              <Image src={Barbear} alt="Barbear" width={54} height={54} />
               <h3>Barbear</h3>
-            </GridItemServices>
+              <p>Barba alinhada com técnica, estilo e presença.</p>
+            </article>
 
-            <GridItemServices>
-              <ImagemGrid src={Barba} alt='barba' width={50} height={50}></ImagemGrid>
+            <article className="service-card">
+              <Image src={Barba} alt="Aparar barba" width={54} height={54} />
               <h3>Aparar barba</h3>
-            </GridItemServices>
+              <p>Manutenção ideal para deixar o visual sempre em dia.</p>
+            </article>
 
-            <GridItemServices>
-              <ImagemGrid src={Baby} alt='barba' width={50} height={50}></ImagemGrid>
-                <h3>Corte de cabelo infantil</h3>
-            </GridItemServices>
+            <article className="service-card">
+              <Image src={Baby} alt="Corte infantil" width={54} height={54} />
+              <h3>Corte infantil</h3>
+              <p>Atendimento pensado para os pequenos com mais conforto.</p>
+            </article>
+          </div>
 
-          </ConteinerGridsServices>
-        </ConteinerImagensServices>
-      </SectionServices>
+          <div className="banner-cta">
+            <Image src={HiHomeModern} alt="Cliente em atendimento" className="banner-bg" />
+            <div className="banner-overlay">
+              <h3>Agende agora e garanta seu horário</h3>
+              <a
+                href={whatsappLink}
+                target="_blank"
+                rel="noreferrer"
+                className="btn btn-primary"
+              >
+                Agendar horário
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
 
-      <SectionBannerDesconto>
-         <ConteinerInformacoesPromo>
-          <TitlePromo>ATÉ 13% <br/> DE<br/>
-         DESC<br/>
-      ONT<br/>
-         O</TitlePromo>
-  <ConteinerBannerDesconto>
-   <SubTitle>Em nossos combos de pacotes</SubTitle>
-   <ConfiraDescontoP>Confira nossos pacotes de serviços e
-   aproveite descontos especiais!</ConfiraDescontoP>
-   <ButtonAgendar 
-   style={{ display: "flex", marginLeft: "0px", marginTop: "10px", }}>Agendar horário</ButtonAgendar>
-  </ConteinerBannerDesconto>
-        </ConteinerInformacoesPromo> 
-        
-              
-      </SectionBannerDesconto>
+      <section id="beneficios" className="section section-dark">
+        <div className="container">
+          <div className="section-heading center">
+            <span className="section-kicker">Diferenciais</span>
+            <h2>Por que escolher a Mr Dyllan</h2>
+          </div>
 
-      <SectionFooter id="contatos">
-        <ConteinerHorarioFooter>
-          <LogoFooter src={LogoPng} alt="Logo da Barbearia" />
-          <TextFooter>Barbearias de serviço completo e cuidados masculinos em Nova Xavantina, Mato-Grosso.</TextFooter>
-            <ContainerHorsDaysFooter>
+          <div className="benefits-grid">
+            <article className="benefit-card">
+              <FiCalendar />
+              <h3>Agendamento simples</h3>
+              <p>Marque seu horário com rapidez e sem burocracia.</p>
+            </article>
 
-         
-                <ContainerDays>
-                  <DaysHors>SEGUNDA</DaysHors>
-                  <DaysHors> TERÇA À SÁBADO</DaysHors>
-                  <DaysHors> DOMINGO</DaysHors>
-                </ContainerDays>
-                <ContainerHors>
-                  <DaysHors>13 - 20 Hrs</DaysHors>
-                  <DaysHors>08 - 20 Hrs</DaysHors>
-                  <DaysHors> FECHADO</DaysHors>
-                </ContainerHors> 
-              
-            </ContainerHorsDaysFooter>   
-          </ConteinerHorarioFooter>
+            <article className="benefit-card">
+              <FiUsers />
+              <h3>Mais organização</h3>
+              <p>Atendimento melhor estruturado e experiência mais fluida.</p>
+            </article>
 
-        <ConteinerLocalidadeFooter>
-          <TitleFooter>Localização</TitleFooter>
-         <TextFooter>Rua Vereador Francisco de Albuquerque,  Nº435, Centro 78690-000, Nova Xavantina, MT </TextFooter> 
-         <LinkEmail href='mailto:mrdyllanbarbearia@gmail.com'>mrdyllanbarbearia@gmail.com</LinkEmail> 
-         <ButtonLigar href='tel:+55(066)98451-9856'>+55 (66) 9 8451-9856</ButtonLigar> 
-         <TextFooterDireitos>Todos direitos reservados © 2025 - Mr Dyllan Barbearia</TextFooterDireitos> 
+            <article className="benefit-card">
+              <FiScissors />
+              <h3>Visual de alto nível</h3>
+              <p>Serviços feitos com atenção, técnica e presença.</p>
+            </article>
 
+            <article className="benefit-card">
+              <FiMessageCircle />
+              <h3>Contato rápido</h3>
+              <p>WhatsApp direto para facilitar o atendimento.</p>
+            </article>
+          </div>
+        </div>
+      </section>
 
+      <section className="section section-orange stats-section">
+        <div className="container">
+          <div className="section-heading center light-on-orange">
+            <span className="section-kicker">Números da barbearia</span>
+            <h2>Alguns destaques</h2>
+          </div>
 
-        </ConteinerLocalidadeFooter>
+          <div className="stats-grid">
+            <div className="stat-item">
+              <strong>1000</strong>
+              <span>Atendimentos realizados</span>
+            </div>
+            <div className="stat-item">
+              <strong>900</strong>
+              <span>Clientes satisfeitos</span>
+            </div>
+            <div className="stat-item">
+              <strong>500</strong>
+              <span>Agendamentos concluídos</span>
+            </div>
+            <div className="stat-item">
+              <strong>100</strong>
+              <span>Novos clientes recorrentes</span>
+            </div>
+          </div>
+        </div>
+      </section>
 
-        <ConteinerRedesFooter>
-          <FontAwesomeIcon icon={faWhatsapp} size='4x' color='#4cb04f'/>
-          <TextFooter>Adicione nosso whatsApp.</TextFooter>
-          <LinkWhatsapp href='https://api.whatsapp.com/send?phone=5566984519856'>Click aqui para adicionar</LinkWhatsapp>
-       
-     
-        </ConteinerRedesFooter>
-        
-      </SectionFooter>
+      <section id="contato" className="section contact-section">
+        <div className="container">
+          <div className="section-heading center">
+            <span className="section-kicker">Fale conosco</span>
+            <h2>Contato</h2>
+          </div>
 
-    </div>
+          <div className="contact-grid">
+            <div className="contact-card">
+              <div className="contact-item">
+                <FiMapPin />
+                <div>
+                  <strong>Endereço</strong>
+                  <p>
+                    Rua Vereador Francisco de Albuquerque, nº 435, Centro,
+                    Nova Xavantina - MT
+                  </p>
+                </div>
+              </div>
+
+              <div className="contact-item">
+                <FiClock />
+                <div>
+                  <strong>Horários</strong>
+                  <p>Segunda: 13h às 20h</p>
+                  <p>Terça a sábado: 08h às 20h</p>
+                  <p>Domingo: fechado</p>
+                </div>
+              </div>
+
+              <div className="contact-item">
+                <FiPhone />
+                <div>
+                  <strong>Telefone</strong>
+                  <p>+55 (66) 9 8451-9856</p>
+                  <p>mrdyllanbarbearia@gmail.com</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="contact-cta">
+              <h3>Pronto para agendar?</h3>
+              <p>
+                Clique no botão abaixo e fale agora pelo WhatsApp para reservar
+                seu horário.
+              </p>
+
+              <a
+                href={whatsappLink}
+                target="_blank"
+                rel="noreferrer"
+                className="btn btn-primary btn-full"
+              >
+                Falar no WhatsApp
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer className="site-footer" id="contato">
+        <div className="container">
+          <div className="footer-grid">
+            <div className="footer-col footer-brand">
+              <h3>MR DYLLAN</h3>
+              <p>
+                Barbearia com atendimento completo, ambiente moderno e foco em
+                experiência premium para quem valoriza estilo e praticidade.
+              </p>
+
+              <div className="footer-socials">
+                <a href="#" aria-label="Instagram">IG</a>
+                <a href="#" aria-label="WhatsApp">WA</a>
+                <a href="#" aria-label="Facebook">FB</a>
+              </div>
+            </div>
+
+            <div className="footer-col">
+              <h4>Navegação</h4>
+              <nav className="footer-links">
+                <a href="#home">Início</a>
+                <a href="#sobre">Sobre</a>
+                <a href="#servicos">Serviços</a>
+                <a href="#beneficios">Benefícios</a>
+                <a href="#contato">Contato</a>
+              </nav>
+            </div>
+
+            <div className="footer-col">
+              <h4>Contato</h4>
+              <div className="footer-contact">
+                <p>Nova Xavantina - MT</p>
+                <a href="tel:+5566984519856">+55 (66) 9 8451-9856</a>
+                <a href="mailto:mrdyllanbarbearia@gmail.com">
+                  mrdyllanbarbearia@gmail.com
+                </a>
+              </div>
+            </div>
+
+            <div className="footer-col footer-cta-box">
+              <span className="footer-badge">Contato rápido</span>
+              <h4>Agende seu horário agora</h4>
+              <p>
+                Fale direto no WhatsApp e marque seu atendimento de forma rápida.
+              </p>
+              <a
+                href="https://api.whatsapp.com/send?phone=5566984519856"
+                target="_blank"
+                rel="noreferrer"
+                className="btn btn-primary btn-full"
+              >
+                Agendar agora
+              </a>
+            </div>
+          </div>
+
+          <div className="footer-bottom">
+            <p>© 2025 Mr Dyllan Barbearia. Todos os direitos reservados.</p>
+          </div>
+        </div>
+      </footer>
+    </main>
   );
 }
