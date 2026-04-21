@@ -41,11 +41,16 @@ export async function POST(req: Request) {
     })
 
     return response
-  } catch (error) {
-    console.error(error)
+  } catch (error: any) {
+    console.error("ERRO LOGIN:", error)
+    console.error("MESSAGE:", error?.message)
+    console.error("STACK:", error?.stack)
+  
     return NextResponse.json(
-      { error: "Erro interno" },
+      { error: error?.message || "Erro interno" },
       { status: 500 }
     )
   }
 }
+console.log("DATABASE_URL exists?", !!process.env.DATABASE_URL)
+console.log("JWT_SECRET exists?", !!process.env.JWT_SECRET)

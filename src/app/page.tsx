@@ -155,10 +155,7 @@ export default function Home() {
                 alt="Logo Mr Dyllan Barbearia"
                 className="hero-logo"
               />
-              <p>
-                Visual forte, cuidado profissional e praticidade para agendar sem
-                complicação.
-              </p>
+             
             </div>
           </div>
         </div>
@@ -362,7 +359,13 @@ export default function Home() {
                   <p>+55 (66) 9 8451-9856</p>
                   <p>mrdyllanbarbearia@gmail.com</p>
                 </div>
+               
               </div>
+               <div className="footer-socials">
+                  <a href="#" aria-label="Instagram">IG</a>
+                  <a href="#" aria-label="WhatsApp">WA</a>
+                  <a href="#" aria-label="Facebook">FB</a>
+                </div>
             </div>
 
             <div className="contact-cta">
@@ -387,59 +390,7 @@ export default function Home() {
 
       <footer className="site-footer" id="contato">
         <div className="container">
-          <div className="footer-grid">
-            <div className="footer-col footer-brand">
-              <h3>MR DYLLAN</h3>
-              <p>
-                Barbearia com atendimento completo, ambiente moderno e foco em
-                experiência premium para quem valoriza estilo e praticidade.
-              </p>
-
-              <div className="footer-socials">
-                <a href="#" aria-label="Instagram">IG</a>
-                <a href="#" aria-label="WhatsApp">WA</a>
-                <a href="#" aria-label="Facebook">FB</a>
-              </div>
-            </div>
-
-            <div className="footer-col">
-              <h4>Navegação</h4>
-              <nav className="footer-links">
-                <a href="#home">Início</a>
-                <a href="#sobre">Sobre</a>
-                <a href="#servicos">Serviços</a>
-                <a href="#beneficios">Benefícios</a>
-                <a href="#contato">Contato</a>
-              </nav>
-            </div>
-
-            <div className="footer-col">
-              <h4>Contato</h4>
-              <div className="footer-contact">
-                <p>Nova Xavantina - MT</p>
-                <a href="tel:+5566984519856">+55 (66) 9 8451-9856</a>
-                <a href="mailto:mrdyllanbarbearia@gmail.com">
-                  mrdyllanbarbearia@gmail.com
-                </a>
-              </div>
-            </div>
-
-            <div className="footer-col footer-cta-box">
-              <span className="footer-badge">Contato rápido</span>
-              <h4>Agende seu horário agora</h4>
-              <p>
-                Fale direto no WhatsApp e marque seu atendimento de forma rápida.
-              </p>
-              <a
-                href="https://api.whatsapp.com/send?phone=5566984519856"
-                target="_blank"
-                rel="noreferrer"
-                className="btn btn-primary btn-full"
-              >
-                Agendar agora
-              </a>
-            </div>
-          </div>
+       
 
           <div className="footer-bottom">
             <p>© 2025 Mr Dyllan Barbearia. Todos os direitos reservados.</p>
