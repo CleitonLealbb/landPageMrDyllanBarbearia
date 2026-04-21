@@ -16,7 +16,7 @@
   --radius: 16px;
   --container: 1180px;
 }
-
+}
 * {
   box-sizing: border-box;
   margin: 0;
@@ -712,4 +712,3 @@ button {
   }
 }
 
-}
