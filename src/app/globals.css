@@ -358,7 +358,7 @@ button {
   overflow: hidden;
   object-fit: cover;
   box-shadow: var(--shadow);
-  height: 65%;
+  height: 100%;
 }
 
 .about-image {

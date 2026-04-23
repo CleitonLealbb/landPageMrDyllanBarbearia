@@ -18,7 +18,7 @@ import {
 import LogoPng from "../assets/image/logo100X100.webp";
 import LogoPngForm from "../assets/image/Logo-branco-sem-fundo-AI.webp";
 import HiHomeModern from "../assets/image/imagem1.webp";
-import BarberExecution from "../assets/image/imagem2.webp";
+import BarberExecution from "../assets/image/imagem-bg.jpg";
 import BgImagem1 from "../assets/image/imagem1.webp";
 import BgImagem2 from "../assets/image/imagem2.webp";
 import Barba from "../assets/image/beard.webp";
@@ -176,13 +176,16 @@ export default function Home() {
           <div className="about-grid">
             <div className="about-text">
               <p>
-                A Mr Dyllan Barbearia foi pensada para entregar mais do que um
-                corte. A proposta é unir estilo, conforto e atendimento de alto
-                nível em uma experiência realmente marcante.
+                A Mr Dyllan Barbearia foi criada para no ano de 2019 no intuito entregar o melhor
+                do serviço de barbearia com um atendimento mais prático profissional, organizado e moderno.
+                 Nosso foco é oferecer uma experiência de qualidade,
+                 onde cada cliente se sinta valorizado e bem cuidado. 
+                 Com um ambiente acolhedor e uma equipe dedicada,
+                  buscamos transformar cada visita em um momento de relaxamento e estilo.
               </p>
 
               <ul className="check-list">
-                <li>Atendimento profissional e humanizado</li>
+                <li>Atendimento profissional</li>
                 <li>Ambiente moderno e confortável</li>
                 <li>Agendamento rápido e sem complicação</li>
                 <li>Cuidado com cada detalhe do visual</li>
