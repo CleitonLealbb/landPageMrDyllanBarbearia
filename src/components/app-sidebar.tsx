@@ -1,5 +1,4 @@
 "use client"
-
 import * as React from "react"
 import type { ElementType } from "react"
 import { NavMain } from "@/components/nav-main"
@@ -84,7 +83,7 @@ export function AppSidebar({
       <span className="text-base font-bold whitespace-nowrap">
         Mr Dyllan Barbearia
       </span>
-      <span className="text-[hsl(var(--accent))] font-light whitespace-nowrap">
+      <span className="text-[var(--primary)] font-light whitespace-nowrap">
         Painel Admin
       </span>
     </span>

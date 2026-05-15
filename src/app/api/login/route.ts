@@ -13,7 +13,7 @@ export async function POST(req: Request) {
 
     if (!user) {
       return NextResponse.json(
-        { error: "Usuário não encontrado" },
+        { error: "E-mail ou senha inválidos" },
         { status: 401 }
       )
     }
@@ -22,18 +22,29 @@ export async function POST(req: Request) {
 
     if (!valid) {
       return NextResponse.json(
-        { error: "Senha inválida" },
+        { error: "E-mail ou senha inválidos" },
         { status: 401 }
       )
     }
 
     const token = jwt.sign(
-      { userId: user.id },
+      { userId: user.id,
+        role: user.role,
+       },
+
       process.env.JWT_SECRET!,
       { expiresIn: "7d" }
     )
 
-    const response = NextResponse.json({ success: true })
+    const response = NextResponse.json({ 
+      success: true,
+      user: {  
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+      },
+      })
 
     response.cookies.set("token", token, {
       httpOnly: true,
@@ -42,9 +53,6 @@ export async function POST(req: Request) {
 
     return response
   } catch (error: any) {
-    console.error("ERRO LOGIN:", error)
-    console.error("MESSAGE:", error?.message)
-    console.error("STACK:", error?.stack)
   
     return NextResponse.json(
       { error: error?.message || "Erro interno" },

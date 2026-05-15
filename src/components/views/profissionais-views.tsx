@@ -1,17 +1,22 @@
 "use client"
+import { ProfissionaisTop } from "../profissionais/profissionais-top"
 
 export function ProfissionaisView() {
+  
+
   return (
-    <div className="flex flex-col gap-4">
-
-      <h2 className="text-xl font-semibold">
-        Profissionais
-      </h2>
-
-      <div className="border rounded-lg p-4">
-        Aqui vai calendário, horários, lista de agendamentos etc.
-      </div>
-
-    </div>
+   <div className="flex h-screen w-full overflow-hidden">
+         {/* ESQUERDA */}
+         <div className="flex min-w-0 flex-1 flex-col">
+           {/* Topo fixo */}
+           <div className="shrink-0 justify-center">
+             <ProfissionaisTop/>
+           </div>
+   
+         
+         </div>
+   
+       
+       </div>
   )
 }

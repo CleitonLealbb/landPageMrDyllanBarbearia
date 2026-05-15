@@ -14,7 +14,7 @@ datasource db {
 }
 
 enum Role {
-  ADMIN
+  OWNER
   BARBER
 }
 
