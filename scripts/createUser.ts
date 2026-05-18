@@ -12,7 +12,7 @@ async function main() {
       name:"Admin",
       email:"admin@admin.com",
       password:hash,
-      role:"ADMIN"
+      role:"OWNER"
     }
   })
 
