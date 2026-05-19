@@ -53,12 +53,10 @@ export async function POST(req: Request) {
 
     return response
   } catch (error: any) {
-  
+    console.error("ERRO LOGIN:", error)
     return NextResponse.json(
       { error: error?.message || "Erro interno" },
       { status: 500 }
     )
   }
 }
-console.log("DATABASE_URL exists?", !!process.env.DATABASE_URL)
-console.log("JWT_SECRET exists?", !!process.env.JWT_SECRET)
