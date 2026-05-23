@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ThemeProvider } from "@/context/ThemeProvider";
 import "./globals.css";
+import { Toaster } from "@/components/ui/sonner"
 
 export const metadata: Metadata = {
   icons: {
@@ -33,6 +34,7 @@ export default function RootLayout({
     <html lang="pt-BR">
       <body>
         <ThemeProvider>{children}</ThemeProvider>
+        <Toaster richColors />
       </body>
     </html>
   );

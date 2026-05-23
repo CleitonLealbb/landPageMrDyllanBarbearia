@@ -20,3 +20,19 @@ enum Role {
   OWNER
   BARBER
 }
+
+model Professional {
+  id              String   @id @default(uuid())
+  name            String
+  email           String?  @unique
+  role            String
+  permissionLevel String?
+  commission      Int
+  specialties     String[]
+  photoUrl        String?
+  status          String   @default("PENDING")
+  password        String?
+  inviteToken     String?
+  inviteExpires   DateTime?
+  createdAt       DateTime @default(now())
+}
