@@ -5,6 +5,8 @@ import { Button } from "../ui/button"
 import { Badge } from "../ui/badge"
 import { toast, Toaster } from "sonner"
 import Cropper from "react-easy-crop"
+import { canAccess } from "@/lib/permissions"
+
 import {
   Edit,
   Trash2,
@@ -82,15 +84,30 @@ export function ProfissionaisView() {
 
   const [permissionLevel, setPermissionLevel] = useState("")
   /*{ carregar os profissionais}*/
+  const [userRole, setUserRole] = useState("")
 
   useEffect(() => {
+    const storedUser = localStorage.getItem("user")
+  
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser)
+  
+      setUserRole(parsedUser.role)
+    }
+  
     async function carregarProfissionais() {
       const response = await fetch("/api/professionals")
+  
+      if (!response.ok) {
+        toast.error("Erro ao carregar profissionais.")
+        return
+      }
+  
       const data = await response.json()
-
+  
       setProfissionais(data)
     }
-
+  
     carregarProfissionais()
   }, [])
 
@@ -145,9 +162,28 @@ export function ProfissionaisView() {
 
     const finalPhotoUrl = imageSrc || photoUrl
 
+    let uploadedPhotoUrl = photoUrl
+
+    if (photoFile) {
+      const formData = new FormData()
+      formData.append("file", photoFile)
+
+      const uploadResponse = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!uploadResponse.ok) {
+        toast.error("Erro ao enviar imagem.")
+        return
+      }
+
+      const uploadData = await uploadResponse.json()
+      uploadedPhotoUrl = uploadData.url
+    }
+
     const response = await fetch(url, {
       method,
-
       headers: {
         "Content-Type": "application/json",
       },
@@ -155,10 +191,10 @@ export function ProfissionaisView() {
         name: professionalName.trim(),
         email: email.trim(),
         role,
-        permissionLevel,
+        permissionLevel, 
         commission: Number(commission),
         specialties,
-        photoUrl: imageSrc || photoUrl,
+        photoUrl: uploadedPhotoUrl,
       }),
     })
 
@@ -218,6 +254,8 @@ export function ProfissionaisView() {
     setImageSrc("")
     setPhotoFile(null)
   }
+
+
   async function handleDelete(id: string) {
     const response = await fetch(`/api/professionals/${id}`, {
       method: "DELETE",
@@ -293,6 +331,7 @@ export function ProfissionaisView() {
 
             <DialogTrigger asChild>
               <DialogTrigger asChild>
+              { canAccess(userRole, "professionals:create")  && (
                 <Button
                   onClick={() => {
                     setEditingProfessional(null)
@@ -302,14 +341,13 @@ export function ProfissionaisView() {
                     setRole("")
                     setCommission("")
                     setSpecialties([])
-
                     setOpen(true)
                   }}
                   className="gap-2 bg-[var(--primary)] text-black hover:bg-[var(--primary-strong)]"
                 >
                   <UserPlus className="h-4 w-4" />
                   Adicionar Novo Profissional
-                </Button>
+                </Button>)}
               </DialogTrigger>
             </DialogTrigger>
             <DialogContent className="max-w-7xl border-white/10 bg-[#171717] text-white max-h-[90vh] overflow-hidden flex flex-col">
@@ -618,14 +656,14 @@ export function ProfissionaisView() {
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
-
+{ canAccess(userRole, "professionals:create") && (  
                         <Button
                           variant="ghost"
                           size="icon"
                           onClick={() => handleDelete(item.id)}
                         >
                           <Trash2 className="h-4 w-4" />
-                        </Button>
+                        </Button>)}
                       </div>
                     </TableCell>
 

@@ -26,7 +26,16 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password, remember }),
       })
 
-      let data: { error?: string } = {}
+      let data: {
+        error?: string
+        user?: {
+          id: string
+          name: string
+          email: string
+          role: string
+          type: string
+        }
+      } = {}
 
       const contentType = res.headers.get("content-type")
       if (contentType && contentType.includes("application/json")) {
@@ -41,7 +50,14 @@ export default function LoginPage() {
         setError(data.error || "Erro ao fazer login")
         return
       }
-
+      
+      if (data.user) {
+        localStorage.setItem(
+          "user",
+          JSON.stringify(data.user)
+        )
+      }
+      
       router.push("/dashboard")
       router.refresh()
     } catch (error) {
@@ -51,6 +67,7 @@ export default function LoginPage() {
       setLoading(false)
     }
   }
+
 
   return (
     <div className="relative min-h-screen flex items-center justify-center">

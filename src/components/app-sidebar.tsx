@@ -42,7 +42,7 @@ type ViewKey =
   | "config"
 
 const data = {
-  user: { name: "shadcn", email: "m@example.com", avatar: "/avatar/shadcn.jpg" },
+  user: { name: "shadcn", email: "m@example.com", photoUrl: "/android-chrome-512x512.png" },
   navMain: [
     { title: "Agenda", view: "agenda", icon: MdCalendarToday },
     { title: "Checkout", view: "checkout", icon: MdPointOfSale },

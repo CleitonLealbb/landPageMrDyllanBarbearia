@@ -7,32 +7,58 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String   @id @default(uuid())
-  name      String
-  email     String   @unique
-  password  String
-  role      Role     @default(BARBER)
-  createdAt DateTime @default(now())
+enum Role {
+  SUPER_ADMIN
+  OWNER
+  BARBERSHOP_OWNER
+  BARBER
+  ASSISTANT
 }
 
-enum Role {
-  OWNER
-  BARBER
+model User {
+  id          String           @id @default(uuid())
+  name        String
+  email       String           @unique
+  password    String
+  role        Role             @default(BARBER)
+  photoUrl    String?
+  createdAt   DateTime         @default(now())
+  memberships BarbershopUser[]
 }
 
 model Professional {
-  id              String   @id @default(uuid())
+  id              String    @id @default(uuid())
   name            String
-  email           String?  @unique
+  email           String?   @unique
   role            String
   permissionLevel String?
   commission      Int
   specialties     String[]
   photoUrl        String?
-  status          String   @default("PENDING")
+  status          String    @default("PENDING")
   password        String?
   inviteToken     String?
   inviteExpires   DateTime?
-  createdAt       DateTime @default(now())
+  createdAt       DateTime  @default(now())
+}
+
+model Barbershop {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  members BarbershopUser[]
+}
+
+model BarbershopUser {
+  id           String   @id @default(uuid())
+  userId       String
+  barbershopId String
+  role         Role
+  createdAt    DateTime @default(now())
+
+  user       User       @relation(fields: [userId], references: [id])
+  barbershop Barbershop @relation(fields: [barbershopId], references: [id])
+
+  @@unique([userId, barbershopId])
 }
