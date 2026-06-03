@@ -1,7 +1,7 @@
 "use client"
 
+import { Suspense, useState } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
-import { useState } from "react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,6 +9,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 
 export default function PrimeiroAcessoPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex min-h-screen items-center justify-center bg-[#111111] text-white">
+          Carregando...
+        </main>
+      }
+    >
+      <PrimeiroAcessoContent />
+    </Suspense>
+  )
+}
+
+function PrimeiroAcessoContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -64,7 +78,6 @@ export default function PrimeiroAcessoPage() {
     }
 
     toast.success("Senha criada com sucesso.")
-
     router.push("/login")
   }
 

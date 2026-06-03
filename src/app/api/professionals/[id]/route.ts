@@ -1,17 +1,15 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 
-type RouteParams = {
-  params: Promise<{
-    id: string
-  }>
-}
+type Params = Promise<{
+  id: string
+}>
 
 export async function PUT(
   req: Request,
-  { params }: RouteParams
+  context: { params: Params }
 ) {
-  const { id } = await params
+  const { id } = await context.params
   const body = await req.json()
 
   const professional = await prisma.professional.update({
@@ -32,9 +30,9 @@ export async function PUT(
 
 export async function DELETE(
   req: Request,
-  { params }: RouteParams
+  context: { params: Params }
 ) {
-  const { id } = await params
+  const { id } = await context.params
 
   await prisma.professional.delete({
     where: { id },
