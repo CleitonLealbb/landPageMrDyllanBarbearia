@@ -58,7 +58,11 @@ export default function LoginPage() {
         )
       }
       
-      router.push("/dashboard")
+      if (data.user?.role === "SUPER_ADMIN") {
+        router.push("/super-admin")
+      } else {
+        router.push("/dashboard")
+      }
       router.refresh()
     } catch (error) {
       console.error("Erro no login:", error)

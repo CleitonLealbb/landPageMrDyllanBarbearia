@@ -9,7 +9,6 @@ datasource db {
 
 enum Role {
   SUPER_ADMIN
-  OWNER
   BARBERSHOP_OWNER
   BARBER
   ASSISTANT
@@ -45,6 +44,10 @@ model Professional {
 model Barbershop {
   id        String   @id @default(uuid())
   name      String
+  phone     String?
+  email     String?
+  address   String?
+  status    String   @default("ACTIVE")
   createdAt DateTime @default(now())
 
   members BarbershopUser[]
