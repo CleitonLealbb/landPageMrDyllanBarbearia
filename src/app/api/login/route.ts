@@ -93,6 +93,7 @@ export async function POST(req: Request) {
       httpOnly: true,
       path: "/",
     })
+    console.log("EMAIL =", cleanEmail)
 
     return response
   } catch (error: any) {
