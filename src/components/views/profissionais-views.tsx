@@ -181,7 +181,7 @@ export function ProfissionaisView() {
 
     const method = editingProfessional ? "PUT" : "POST"
 
-    if (!editingProfessional && !barbershopId) {
+    if (!barbershopId) {
       toast.warning("Barbearia nÃ£o encontrada para cadastrar profissional.")
       return
     }
@@ -221,7 +221,7 @@ export function ProfissionaisView() {
         commission: Number(commission),
         specialties,
         photoUrl: uploadedPhotoUrl,
-        ...(!editingProfessional ? { barbershopId } : {}),
+        barbershopId,
       }),
     })
 
@@ -284,7 +284,12 @@ export function ProfissionaisView() {
 
 
   async function handleDelete(id: string) {
-    const response = await fetch(`/api/professionals/${id}`, {
+    if (!barbershopId) {
+      toast.warning("Barbearia nÃ£o encontrada para excluir profissional.")
+      return
+    }
+
+    const response = await fetch(`/api/professionals/${id}?barbershopId=${barbershopId}`, {
       method: "DELETE",
     })
 

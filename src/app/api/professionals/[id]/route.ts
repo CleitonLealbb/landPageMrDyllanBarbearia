@@ -12,6 +12,27 @@ export async function PUT(
   const { id } = await context.params
   const body = await req.json()
 
+  if (!body.barbershopId) {
+    return NextResponse.json(
+      { message: "Barbearia Ã© obrigatÃ³ria." },
+      { status: 400 }
+    )
+  }
+
+  const exists = await prisma.professional.findFirst({
+    where: {
+      id,
+      barbershopId: body.barbershopId,
+    },
+  })
+
+  if (!exists) {
+    return NextResponse.json(
+      { message: "Profissional nÃ£o encontrado." },
+      { status: 404 }
+    )
+  }
+
   const professional = await prisma.professional.update({
     where: { id },
     data: {
@@ -33,6 +54,29 @@ export async function DELETE(
   context: { params: Params }
 ) {
   const { id } = await context.params
+  const { searchParams } = new URL(req.url)
+  const barbershopId = searchParams.get("barbershopId")
+
+  if (!barbershopId) {
+    return NextResponse.json(
+      { message: "Barbearia Ã© obrigatÃ³ria." },
+      { status: 400 }
+    )
+  }
+
+  const exists = await prisma.professional.findFirst({
+    where: {
+      id,
+      barbershopId,
+    },
+  })
+
+  if (!exists) {
+    return NextResponse.json(
+      { message: "Profissional nÃ£o encontrado." },
+      { status: 404 }
+    )
+  }
 
   await prisma.professional.delete({
     where: { id },
