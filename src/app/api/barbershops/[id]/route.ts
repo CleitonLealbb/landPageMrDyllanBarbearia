@@ -32,6 +32,29 @@ export async function DELETE(
 ) {
   const { id } = await context.params
 
+  const [linkedUsers, linkedProfessionals] = await Promise.all([
+    prisma.barbershopUser.count({
+      where: {
+        barbershopId: id,
+      },
+    }),
+    prisma.professional.count({
+      where: {
+        barbershopId: id,
+      },
+    }),
+  ])
+
+  if (linkedUsers > 0 || linkedProfessionals > 0) {
+    return NextResponse.json(
+      {
+        message:
+          "Esta barbearia possui usuÃ¡rios ou profissionais vinculados e nÃ£o pode ser excluÃ­da.",
+      },
+      { status: 409 }
+    )
+  }
+
   await prisma.barbershop.delete({
     where: { id },
   })

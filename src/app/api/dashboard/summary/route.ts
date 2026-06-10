@@ -2,12 +2,22 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { getCurrentBarbershop, getSession } from "@/lib/auth/session"
 
+const emptySummary = {
+  barbershops: 0,
+  owners: 0,
+  professionals: 0,
+  revenue: 0,
+}
+
 export async function GET() {
   const session = await getSession()
 
   if (!session) {
     return NextResponse.json(
-      { message: "NÃ£o autenticado." },
+      {
+        ...emptySummary,
+        message: "Nao autenticado.",
+      },
       { status: 401 }
     )
   }
@@ -34,16 +44,27 @@ export async function GET() {
 
   if (!barbershop) {
     return NextResponse.json(
-      { message: "Barbearia nÃ£o vinculada ao usuÃ¡rio." },
+      {
+        ...emptySummary,
+        message: "Barbearia nao vinculada ao usuario.",
+      },
       { status: 404 }
     )
   }
+
+  const professionals = await prisma.professional.count({
+    where: {
+      barbershopId: barbershop.id,
+    },
+  })
 
   return NextResponse.json({
     role: session.role,
     barbershopId: barbershop.id,
     barbershopName: barbershop.name,
-    professionals: 0,
+    barbershops: 1,
+    owners: 0,
+    professionals,
     clients: 0,
     appointments: 0,
     revenue: 0,
