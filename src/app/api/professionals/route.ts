@@ -7,7 +7,7 @@ import { Resend } from "resend"
 export async function POST(req: Request) {
   const body = await req.json()
 
-  if (!body.name || !body.email || !body.role) {
+  if (!body.name || !body.email || !body.role || !body.barbershopId) {
     return NextResponse.json(
       { message: "Nome, e-mail e cargo são obrigatórios." },
       { status: 400 }
@@ -48,6 +48,7 @@ export async function POST(req: Request) {
   const professional = await prisma.professional.create({
     data: {
       name: body.name.trim(),
+      barbershopId: body.barbershopId,
       email: body.email.trim(),
       role: body.role,
       permissionLevel: body.permissionLevel,
@@ -90,8 +91,16 @@ export async function POST(req: Request) {
 }
 
 
-export async function GET() {
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url)
+  const barbershopId = searchParams.get("barbershopId")
+
   const professionals = await prisma.professional.findMany({
+    where: barbershopId
+      ? {
+          barbershopId,
+        }
+      : undefined,
     orderBy: {
       createdAt: "desc",
     },

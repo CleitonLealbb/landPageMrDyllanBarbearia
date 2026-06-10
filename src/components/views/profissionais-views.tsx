@@ -49,6 +49,7 @@ import { useEffect, useState } from "react"
 
 type Profissional = {
   id: string
+  barbershopId: string
   name: string
   email: string
   role: string
@@ -85,6 +86,7 @@ export function ProfissionaisView() {
   const [permissionLevel, setPermissionLevel] = useState("")
   /*{ carregar os profissionais}*/
   const [userRole, setUserRole] = useState("")
+  const [barbershopId, setBarbershopId] = useState("")
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user")
@@ -95,8 +97,12 @@ export function ProfissionaisView() {
       setUserRole(parsedUser.role)
     }
   
-    async function carregarProfissionais() {
-      const response = await fetch("/api/professionals")
+    async function carregarProfissionais(currentBarbershopId: string) {
+      const url = currentBarbershopId
+        ? `/api/professionals?barbershopId=${currentBarbershopId}`
+        : "/api/professionals"
+
+      const response = await fetch(url)
   
       if (!response.ok) {
         toast.error("Erro ao carregar profissionais.")
@@ -108,7 +114,22 @@ export function ProfissionaisView() {
       setProfissionais(data)
     }
   
-    carregarProfissionais()
+    async function loadDashboardSummary() {
+      const response = await fetch("/api/dashboard/summary")
+
+      if (!response.ok) {
+        carregarProfissionais("")
+        return
+      }
+
+      const data = await response.json()
+      const currentBarbershopId = data.barbershopId ?? ""
+
+      setBarbershopId(currentBarbershopId)
+      carregarProfissionais(currentBarbershopId)
+    }
+
+    loadDashboardSummary()
   }, [])
 
   async function handleSubmit(e: React.FormEvent) {
@@ -160,6 +181,11 @@ export function ProfissionaisView() {
 
     const method = editingProfessional ? "PUT" : "POST"
 
+    if (!editingProfessional && !barbershopId) {
+      toast.warning("Barbearia nÃ£o encontrada para cadastrar profissional.")
+      return
+    }
+
     const finalPhotoUrl = imageSrc || photoUrl
 
     let uploadedPhotoUrl = photoUrl
@@ -195,6 +221,7 @@ export function ProfissionaisView() {
         commission: Number(commission),
         specialties,
         photoUrl: uploadedPhotoUrl,
+        ...(!editingProfessional ? { barbershopId } : {}),
       }),
     })
 
