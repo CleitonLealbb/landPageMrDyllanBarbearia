@@ -6,6 +6,22 @@ export async function GET() {
     orderBy: {
       createdAt: "desc",
     },
+    include: {
+      members: {
+        where: {
+          role: "BARBERSHOP_OWNER",
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+      },
+    },
   })
 
   return NextResponse.json(barbershops)

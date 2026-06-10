@@ -27,6 +27,7 @@ model User {
 
 model Professional {
   id              String    @id @default(uuid())
+  barbershopId    String
   name            String
   email           String?   @unique
   role            String

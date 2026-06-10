@@ -1,6 +1,28 @@
+"use client"
 import { BarbershopsView } from "@/components/views/barbershops-view"
+import { useEffect, useState } from "react"
 
 export default function SuperAdminPage() {
+  const [summary, setSummary] = useState({
+    barbershops: 0,
+    owners: 0,
+    professionals: 0,
+    revenue: 0,
+  })
+  useEffect(() => {
+    async function loadSummary() {
+      const response = await fetch("/api/dashboard/summary")
+  
+      if (!response.ok) return
+  
+      const data = await response.json()
+  
+      setSummary(data)
+    }
+  
+    loadSummary()
+  }, [])
+
   return (
     <main className="min-h-screen bg-[#111111] p-6 text-white">
       <div className="mb-8">
@@ -12,10 +34,10 @@ export default function SuperAdminPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
-        <Card title="Barbearias" value="0" />
-        <Card title="Donos" value="0" />
-        <Card title="Profissionais" value="0" />
-        <Card title="Receita SaaS" value="R$ 0,00" />
+        <Card title="Barbearias"  value={summary.barbershops.toString()} />
+        <Card title="Donos"  value={summary.owners.toString()} />
+        <Card title="Profissionais"  value={summary.professionals.toString()} />
+        <Card title="Receita SaaS" value={`R$ ${summary.revenue.toFixed(2)}`} />
       </div>
 
       <section className="mt-8 rounded-2xl border border-white/10 bg-[#171717] p-6">
