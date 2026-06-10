@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { getCurrentBarbershop, getSession } from "@/lib/auth/session"
 
 type Params = Promise<{
   id: string
@@ -9,26 +10,36 @@ export async function PUT(
   req: Request,
   context: { params: Params }
 ) {
-  const { id } = await context.params
-  const body = await req.json()
+  const session = await getSession()
+  const barbershop = await getCurrentBarbershop()
 
-  if (!body.barbershopId) {
+  if (!session) {
     return NextResponse.json(
-      { message: "Barbearia Ã© obrigatÃ³ria." },
-      { status: 400 }
+      { message: "Nao autenticado." },
+      { status: 401 }
     )
   }
+
+  if (!barbershop) {
+    return NextResponse.json(
+      { message: "Barbearia nao vinculada ao usuario." },
+      { status: 404 }
+    )
+  }
+
+  const { id } = await context.params
+  const body = await req.json()
 
   const exists = await prisma.professional.findFirst({
     where: {
       id,
-      barbershopId: body.barbershopId,
+      barbershopId: barbershop.id,
     },
   })
 
   if (!exists) {
     return NextResponse.json(
-      { message: "Profissional nÃ£o encontrado." },
+      { message: "Profissional nao encontrado." },
       { status: 404 }
     )
   }
@@ -53,27 +64,35 @@ export async function DELETE(
   req: Request,
   context: { params: Params }
 ) {
-  const { id } = await context.params
-  const { searchParams } = new URL(req.url)
-  const barbershopId = searchParams.get("barbershopId")
+  const session = await getSession()
+  const barbershop = await getCurrentBarbershop()
 
-  if (!barbershopId) {
+  if (!session) {
     return NextResponse.json(
-      { message: "Barbearia Ã© obrigatÃ³ria." },
-      { status: 400 }
+      { message: "Nao autenticado." },
+      { status: 401 }
     )
   }
+
+  if (!barbershop) {
+    return NextResponse.json(
+      { message: "Barbearia nao vinculada ao usuario." },
+      { status: 404 }
+    )
+  }
+
+  const { id } = await context.params
 
   const exists = await prisma.professional.findFirst({
     where: {
       id,
-      barbershopId,
+      barbershopId: barbershop.id,
     },
   })
 
   if (!exists) {
     return NextResponse.json(
-      { message: "Profissional nÃ£o encontrado." },
+      { message: "Profissional nao encontrado." },
       { status: 404 }
     )
   }
@@ -83,6 +102,6 @@ export async function DELETE(
   })
 
   return NextResponse.json({
-    message: "Profissional excluído com sucesso.",
+    message: "Profissional excluido com sucesso.",
   })
 }
