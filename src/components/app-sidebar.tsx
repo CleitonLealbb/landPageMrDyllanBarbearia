@@ -41,6 +41,12 @@ type ViewKey =
   | "perfil"
   | "config"
 
+type UserRole =
+  | "SUPER_ADMIN"
+  | "BARBERSHOP_OWNER"
+  | "BARBER"
+  | "ASSISTANT"
+
 const data = {
   user: { name: "shadcn", email: "m@example.com", photoUrl: "/android-chrome-512x512.png" },
   navMain: [
@@ -57,6 +63,33 @@ const data = {
   navSecondary: [{ title: "Settings", view: "config" as ViewKey, icon: SettingsIcon }],
 }
 
+const menuPermissions: Record<UserRole, ViewKey[]> = {
+  SUPER_ADMIN: [],
+  BARBERSHOP_OWNER: [
+    "dashboard",
+    "agenda",
+    "checkout",
+    "clientes",
+    "estoque",
+    "marketing",
+    "cartoes",
+    "profissionais",
+    "perfil",
+    "config",
+  ],
+  BARBER: ["agenda", "clientes", "perfil"],
+  ASSISTANT: ["agenda", "checkout", "clientes", "perfil"],
+}
+
+function canViewMenuItem(
+  role: string | null,
+  view: ViewKey
+) {
+  if (!role) return false
+
+  return menuPermissions[role as UserRole]?.includes(view) ?? false
+}
+
 export function AppSidebar({
   activeView,
   onViewChange,
@@ -65,6 +98,26 @@ export function AppSidebar({
   activeView: ViewKey
   onViewChange: (view: ViewKey) => void
 }) {
+  const [userRole, setUserRole] = React.useState<string | null>(null)
+
+  React.useEffect(() => {
+    const storedUser = localStorage.getItem("user")
+
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser)
+
+      setUserRole(parsedUser.role ?? null)
+    }
+  }, [])
+
+  const navMain = data.navMain.filter((item) =>
+    canViewMenuItem(userRole, item.view)
+  )
+
+  const navSecondary = data.navSecondary.filter((item) =>
+    canViewMenuItem(userRole, item.view)
+  )
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -96,13 +149,13 @@ export function AppSidebar({
 
       <SidebarContent className="overflow-y-auto scrollbar-hide">
         <NavMain
-          items={data.navMain}
+          items={navMain}
           activeView={activeView}
           onViewChange={onViewChange}
         />
 
         <NavSecondary
-          items={data.navSecondary}
+          items={navSecondary}
           activeView={activeView}
           onViewChange={onViewChange}
           className="mt-auto"
