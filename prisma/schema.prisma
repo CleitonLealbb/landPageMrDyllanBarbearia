@@ -21,6 +21,8 @@ model User {
   password    String
   role        Role             @default(BARBER)
   photoUrl    String?
+  resetToken  String?
+  resetExpires DateTime?
   createdAt   DateTime         @default(now())
   memberships BarbershopUser[]
 }
@@ -39,6 +41,8 @@ model Professional {
   password        String?
   inviteToken     String?
   inviteExpires   DateTime?
+  resetToken      String?
+  resetExpires    DateTime?
   createdAt       DateTime  @default(now())
 }
 

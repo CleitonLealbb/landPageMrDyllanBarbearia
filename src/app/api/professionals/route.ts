@@ -89,19 +89,49 @@ export async function POST(req: Request) {
   const resend = new Resend(process.env.RESEND_API_KEY)
 
   await resend.emails.send({
-    from: "Mr Dyllan Barbearia <onboarding@resend.dev>",
+    from: process.env.MAIL_FROM!,
     to: body.email.trim(),
-    subject: "Crie sua senha de acesso",
+    subject: "Crie sua senha de acesso ao Agendo Barber",
     html: `
-      <h2>Ola, ${body.name}</h2>
-      <p>Voce foi cadastrado no sistema da Mr Dyllan Barbearia.</p>
-      <p>Clique no link abaixo para criar sua senha:</p>
-      <p>
-        <a href="${inviteLink}">
-          Criar minha senha
-        </a>
-      </p>
-      <p>Esse link expira em 24 horas.</p>
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2>Bem-vindo ao Agendo Barber</h2>
+
+        <p>Ola, ${body.name}.</p>
+
+        <p>
+          Voce foi convidado para acessar o sistema
+          ${barbershop.name ? `da barbearia <strong>${barbershop.name}</strong>` : "da sua barbearia"}.
+        </p>
+
+        <p>Clique no botao abaixo para criar sua senha de acesso:</p>
+
+        <p>
+          <a
+            href="${inviteLink}"
+            style="
+              background:#facc15;
+              color:#000;
+              padding:12px 20px;
+              text-decoration:none;
+              border-radius:8px;
+              display:inline-block;
+              font-weight:bold;
+            "
+          >
+            Criar minha senha
+          </a>
+        </p>
+
+        <p>Este link expira em 24 horas.</p>
+
+        <p>Se voce nao reconhece este convite, ignore este e-mail.</p>
+
+        <hr />
+
+        <small>
+          ${barbershop.name ?? "Agendo Barber"}
+        </small>
+      </div>
     `,
   })
 

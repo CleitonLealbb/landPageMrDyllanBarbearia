@@ -117,7 +117,7 @@ export default function LoginPage() {
               <label className="flex items-center gap-2">
                 <Lock size={16} className="text-[#C2A96A]" /> Senha
               </label>
-              <a href="#" className="text-[#C2A96A] hover:underline">
+              <a href="/forgot-password" className="text-[#C2A96A] hover:underline">
                 Esqueci minha senha
               </a>
             </div>
