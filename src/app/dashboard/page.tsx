@@ -5,7 +5,7 @@ import { AppSidebar } from "@/components/layout/app-sidebar"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { AgendaView } from "@/components/views/agenda-views"
 import { CheckoutView } from "@/components/views/checkout-views"
-import { ClientesView } from "@/components/views/clientes-views"
+import { CustomerView } from "@/features/customers/components/customer-view"
 import { EstoqueView } from "@/components/views/estoque-views"
 import { MarketingView } from "@/components/views/marketing-views"
 import { CartoesView } from "@/components/views/cartoes-views"
@@ -43,7 +43,7 @@ export default function DashboardPage() {
           <main>
             {view === "agenda" && <div><AgendaView/></div>}
             {view === "checkout" && <div><CheckoutView/></div>}
-            {view === "clientes" && <div><ClientesView/></div>}
+            {view === "clientes" && <div><CustomerView/></div>}
             {view === "estoque" && <div><EstoqueView/></div>}
             {view === "marketing" && <div><MarketingView/></div>}
             {view === "cartoes" && <div><CartoesView/></div>}

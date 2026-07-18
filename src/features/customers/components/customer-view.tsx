@@ -1,6 +1,6 @@
 "use client"
 
-export function ClientesView() {
+export function CustomerView() {
   return (
     <div className="flex flex-col gap-4">
 
