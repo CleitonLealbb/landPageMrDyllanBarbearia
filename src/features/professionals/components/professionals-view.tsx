@@ -1,8 +1,8 @@
 "use client"
-import { ProfissionaisTop } from "../profissionais/profissionais-top"
-import { Card, CardContent } from "../ui/card"
-import { Button } from "../ui/button"
-import { Badge } from "../ui/badge"
+import { ProfissionaisTop } from "@/features/professionals/components/professionals-top"
+import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { toast, Toaster } from "sonner"
 import Cropper from "react-easy-crop"
 import { canAccess } from "@/lib/permissions"
@@ -26,7 +26,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../ui/table"
+} from "@/components/ui/table"
 import {
   Dialog,
   DialogContent,
@@ -34,16 +34,16 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogDescription,
-} from "../ui/dialog"
-import { Input } from "../ui/input"
-import { Label } from "../ui/label"
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../ui/select"
+} from "@/components/ui/select"
 import { useEffect, useState } from "react"
 
 

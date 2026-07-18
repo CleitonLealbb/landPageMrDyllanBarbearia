@@ -1,9 +1,9 @@
 "use client"
 import * as React from "react"
 import type { ElementType } from "react"
-import { NavMain } from "@/components/nav-main"
-import { NavSecondary } from "@/components/nav-secondary"
-import { NavUser } from "@/components/nav-user"
+import { NavMain } from "@/components/layout/nav-main"
+import { NavSecondary } from "@/components/layout/nav-secondary"
+import { NavUser } from "@/components/layout/nav-user"
 import {
   Sidebar,
   SidebarContent,
@@ -13,7 +13,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { LogoMr } from "./ui/logo"
+import { LogoMr } from "@/components/ui/logo"
 import { SettingsIcon } from "lucide-react"
 
 import {
@@ -81,10 +81,7 @@ const menuPermissions: Record<UserRole, ViewKey[]> = {
   ASSISTANT: ["agenda", "checkout", "clientes", "perfil"],
 }
 
-function canViewMenuItem(
-  role: string | null,
-  view: ViewKey
-) {
+function canViewMenuItem(role: string | null, view: ViewKey) {
   if (!role) return false
 
   return menuPermissions[role as UserRole]?.includes(view) ?? false

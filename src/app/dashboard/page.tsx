@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { AppSidebar } from "@/components/app-sidebar"
+import { AppSidebar } from "@/components/layout/app-sidebar"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { AgendaView } from "@/components/views/agenda-views"
 import { CheckoutView } from "@/components/views/checkout-views"
@@ -10,7 +10,7 @@ import { EstoqueView } from "@/components/views/estoque-views"
 import { MarketingView } from "@/components/views/marketing-views"
 import { CartoesView } from "@/components/views/cartoes-views"
 import { DashboardView } from "@/components/views/dashboard-views"
-import { ProfissionaisView } from "@/components/views/profissionais-views"
+import { ProfissionaisView } from "@/features/professionals/components/professionals-view"
 import { PerfilEmpresaView } from "@/components/views/perfil-empresa-views"
 import { ConfiguracoesView } from "@/components/views/configuracoes-views"
 

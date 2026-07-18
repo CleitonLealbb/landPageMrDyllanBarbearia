@@ -1,7 +1,7 @@
 import {  Search } from "lucide-react"
 
-import { SidebarTrigger } from "../ui/sidebar"
-import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/input-group"
+import { SidebarTrigger } from "@/components/ui/sidebar"
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
 
 
 export const ProfissionaisTop = () => (

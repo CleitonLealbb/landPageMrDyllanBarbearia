@@ -1,6 +1,6 @@
 "use client"
 
-import { BarbershopsView } from "@/components/views/barbershops-view"
+import { BarbershopsView } from "@/features/barbershops/components/barbershops-view"
 import { useEffect, useState } from "react"
 
 export function SuperAdminClient() {
