@@ -51,6 +51,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { SidebarTrigger } from "@/components/ui/sidebar"
 
 // Types
 type CustomerStatus = "ACTIVE" | "INACTIVE"
@@ -391,11 +392,15 @@ export function CustomerView() {
   const inactiveCustomers = customers.length - activeCustomers
 
   return (
+    <div >
+
+
+     <SidebarTrigger className="mt-5 ml-5"/>
     <div className="flex w-full min-w-0 max-w-full flex-col gap-7 overflow-x-hidden p-4 text-foreground md:p-6 lg:p-8">
       {/* Header */}
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Clientes</h2>
+          <h2 className="text-3xl font-bold tracking-tight"> Clientes</h2>
           <p className="mt-1 text-base text-muted-foreground">
             Consulte e gerencie os clientes da sua barbearia.
           </p>
@@ -481,7 +486,7 @@ export function CustomerView() {
                         key={customer.id}
                         onClick={() => setSelectedCustomerId(customer.id)}
                         className={`group relative grid w-full min-w-0 grid-cols-[2.75rem_minmax(0,1fr)_auto] items-center gap-4 px-5 py-4 text-left transition-colors duration-150 hover:bg-muted/50 focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-inset ${isSelected
-                            ? "bg-primary/[0.07] shadow-[inset_3px_0_0_var(--primary)]"
+                            ? "bg-primary/[0.07] shadow-[inset_3px_0_0_hsl(var(--primary))]"
                             : ""
                           }`}
                       >
@@ -672,6 +677,7 @@ export function CustomerView() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+    </div>
     </div>
   )
 }

@@ -343,7 +343,7 @@ export function ProfissionaisView() {
                     setSpecialties([])
                     setOpen(true)
                   }}
-                  className="gap-2 bg-[var(--primary)] text-black hover:bg-[var(--primary-strong)]"
+                  className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
                 >
                   <UserPlus className="h-4 w-4" />
                   Adicionar Novo Profissional
@@ -713,7 +713,7 @@ function MetricCard({
           <h3 className="mt-2 text-2xl font-bold">{value}</h3>
         </div>
 
-        <div className="rounded-md bg-[var(--primary)]/30 p-3 text-[var(--primary-strong)]">
+        <div className="rounded-md bg-primary/30 p-3 text-primary">
           <Icon className="h-5 w-5" />
         </div>
       </CardContent>

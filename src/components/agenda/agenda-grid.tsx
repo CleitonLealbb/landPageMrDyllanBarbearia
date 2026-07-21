@@ -92,12 +92,12 @@ export function AgendaGrid({
                   key={e.id}
                   className={[
                     "absolute left-2 right-2 rounded-lg p-2 text-xs shadow-sm border",
-                    isBlock ? "bg-muted" : "bg-[var(--primary)] text-primary",
+                    isBlock ? "bg-muted" : "bg-primary text-primary-foreground",
                   ].join(" ")}
                   style={{ top, height }}
                 >
                   <div className="font-semibold leading-tight">{e.title}</div>
-                  <div className={isBlock ? "text-[var(--accent)]" : "opacity-90"}>
+                  <div className={isBlock ? "text-accent" : "opacity-90"}>
                     {e.start}–{e.end}
                   </div>
                 </div>

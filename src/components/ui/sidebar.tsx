@@ -619,18 +619,18 @@ const SidebarMenuAction = React.forwardRef<
       className={cn(
         // Base
         "absolute right-1 flex aspect-glass w-8 items-center justify-center rounded-sm p-0",
-        "text-[var(--primary)] outline-none ring-sidebar-ring transition-transform",
+        "text-primary outline-none ring-sidebar-ring transition-transform",
       
         // Hover / focus
-        "hover:bg-[var(--primary)]",
-        "hover:text-[var(--primary)]",
+        "hover:bg-primary",
+        "hover:text-primary-foreground",
         "focus-visible:ring-2",
       
         // SVG
         "[&>svg]:size-4 [&>svg]:shrink-0",
       
         // Peer hover
-        "peer-hover/menu-button:text-[var(--primary)]",
+        "peer-hover/menu-button:text-primary",
       
         // Mobile hit area
         "after:absolute after:-inset-2 after:md:hidden",
@@ -649,7 +649,7 @@ const SidebarMenuAction = React.forwardRef<
             "group-focus-within/menu-item:opacity-100",
             "group-hover/menu-item:opacity-100",
             "data-[state=open]:opacity-100",
-            "peer-data-[active=true]/menu-button:text-[var(--accent)]",
+            "peer-data-[active=true]/menu-button:text-accent",
             "md:opacity-0",
           ]
       )}
@@ -759,7 +759,7 @@ const SidebarMenuSubButton = React.forwardRef<
       data-active={isActive}
       className={cn(
         "flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sidebar-foreground outline-none ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-sidebar-accent-foreground",
-        "data-[active=true]:bg-[var(--primary)] data-[active=true]:text-sidebar-accent-foreground",
+        "data-[active=true]:bg-primary data-[active=true]:text-sidebar-accent-foreground",
         size === "sm" && "text-xs",
         size === "md" && "text-sm",
         "group-data-[collapsible=icon]:hidden",

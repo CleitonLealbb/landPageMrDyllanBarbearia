@@ -38,8 +38,10 @@ export function AgendaTop({ onToggleRight }: AgendaTopProps) {
   }
 
   return (
+    <div className="mt-5 ml-5">
+     <SidebarTrigger />
     <div className="flex items-center justify-between gap-3  px-4 py-3">
-      <SidebarTrigger />
+
       {/* Esquerda: navegação + data */}
       <div className="flex items-center gap-2 min-w-0">
         <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => addDays(-1)}>
@@ -96,12 +98,13 @@ export function AgendaTop({ onToggleRight }: AgendaTopProps) {
 
               <div className="mt-4">
                 <AgendaRightPanel />
-               
+
               </div>
             </SheetContent>
           </Sheet>
         </div>
       </div>
+    </div>
     </div>
   )
 }

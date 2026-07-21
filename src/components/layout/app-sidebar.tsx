@@ -133,7 +133,7 @@ export function AppSidebar({
       <span className="text-base font-bold whitespace-nowrap">
         Mr Dyllan Barbearia
       </span>
-      <span className="text-[var(--primary)] font-light whitespace-nowrap">
+      <span className="text-primary font-light whitespace-nowrap">
         Painel Admin
       </span>
     </span>
