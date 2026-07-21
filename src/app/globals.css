@@ -3,19 +3,64 @@
 @tailwind utilities;
 @layer base {
  
-:root {
-  --bg: #111111;
-  --bg-soft: #191919;
-  --bg-card: rgba(255, 255, 255, 0.04);
-  --text: #f5f5f5;
-  --muted: #b5b5b5;
-  --line: rgba(255, 255, 255, 0.1);
-  --primary: #d98b2b;
-  --primary-strong: #f2a23d;
-  --shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
-  --radius: 16px;
-  --container: 1180px;
-}
+  :root {
+    --bg: #111111;
+    --bg-soft: #191919;
+    --bg-card: rgba(255, 255, 255, 0.04);
+  
+    --text: #f5f5f5;
+    --muted: #b5b5b5;
+  
+    --line: rgba(255, 255, 255, 0.1);
+  
+    --primary: hsl(33 70% 51%);
+    --primary-strong: #f2a23d;
+  
+    --shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+  
+    --radius: 16px;
+    --container: 1180px;
+  
+    --accent: 38 45% 55%;
+  
+    /* =========================
+       SHADCN / SIDEBAR TOKENS
+    ========================== */
+  
+    --background: 0 0% 7%;
+    --foreground: 0 0% 96%;
+  
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 96%;
+  
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 96%;
+  
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 96%;
+  
+    --muted-foreground: 0 0% 70%;
+  
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
+    --ring: 33 70% 51%;
+  
+    /* =========================
+       SIDEBAR
+    ========================== */
+  
+    --sidebar: 0 0% 9%;
+    --sidebar-foreground:0 0% 96%;
+  
+    --sidebar-primary: 33 70% 51%;
+    --sidebar-primary-foreground: 0 0% 100%;
+  
+    --sidebar-accent:33, 87%, 59%, 0.50;
+    --sidebar-accent-foreground: 0 0% 100%;
+  
+    --sidebar-border: 0 0% 18%;
+    --sidebar-ring: 33 70% 51%;
+  }
 }
 * {
   box-sizing: border-box;
@@ -358,7 +403,7 @@ button {
   overflow: hidden;
   object-fit: cover;
   box-shadow: var(--shadow);
-  height: 65%;
+  height: 100%;
 }
 
 .about-image {

@@ -5,14 +5,14 @@ const prisma = new PrismaClient()
 
 async function main() {
 
-  const hash = await bcrypt.hash("123456",10)
+  const hash = await bcrypt.hash("git checkout -b feature/barbershop-owner",10)
 
   const user = await prisma.user.create({
     data:{
-      name:"Admin",
-      email:"admin@admin.com",
+      name:"Cleiton Leal",
+      email:"admin.admin@gmail.com",
       password:hash,
-      role:"ADMIN"
+      role:"SUPER_ADMIN"
     }
   })
 

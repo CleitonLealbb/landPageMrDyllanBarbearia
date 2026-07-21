@@ -1,28 +1,72 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 enum Role {
-  ADMIN
+  SUPER_ADMIN
+  BARBERSHOP_OWNER
   BARBER
+  ASSISTANT
 }
 
 model User {
+  id          String           @id @default(uuid())
+  name        String
+  email       String           @unique
+  password    String
+  role        Role             @default(BARBER)
+  photoUrl    String?
+  resetToken  String?
+  resetExpires DateTime?
+  createdAt   DateTime         @default(now())
+  memberships BarbershopUser[]
+}
+
+model Professional {
+  id              String    @id @default(uuid())
+  barbershopId    String
+  name            String
+  email           String?   @unique
+  role            String
+  permissionLevel String?
+  commission      Int
+  specialties     String[]
+  photoUrl        String?
+  status          String    @default("PENDING")
+  password        String?
+  inviteToken     String?
+  inviteExpires   DateTime?
+  resetToken      String?
+  resetExpires    DateTime?
+  createdAt       DateTime  @default(now())
+}
+
+model Barbershop {
   id        String   @id @default(uuid())
   name      String
-  email     String   @unique
-  password  String
-  role      Role     @default(BARBER)
+  phone     String?
+  email     String?
+  address   String?
+  status    String   @default("ACTIVE")
   createdAt DateTime @default(now())
+
+  members BarbershopUser[]
+}
+
+model BarbershopUser {
+  id           String   @id @default(uuid())
+  userId       String
+  barbershopId String
+  role         Role
+  createdAt    DateTime @default(now())
+
+  user       User       @relation(fields: [userId], references: [id])
+  barbershop Barbershop @relation(fields: [barbershopId], references: [id])
+
+  @@unique([userId, barbershopId])
 }

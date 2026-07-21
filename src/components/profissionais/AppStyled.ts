@@ -3,7 +3,7 @@ import Image from "next/image";
 import styled from "styled-components";
 import BgImagem from './image/Frame1.webp';
  import HomemBarba from '../assets/image/human-face-expressions-min.jpg';
-import { theme } from "../styles/theme";
+import { theme } from "../../styles/theme";
 
 
 interface ItensHeaderProps {
