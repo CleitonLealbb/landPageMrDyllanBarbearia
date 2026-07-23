@@ -1,9 +1,24 @@
 "use client"
+
 import * as React from "react"
 import type { ElementType } from "react"
+import { SettingsIcon } from "lucide-react"
+import {
+  MdAdsClick,
+  MdCalendarToday,
+  MdCreditCard,
+  MdDashboard,
+  MdDiversity2,
+  MdGroups,
+  MdInventory2,
+  MdPointOfSale,
+  MdStore,
+} from "react-icons/md"
+
 import { NavMain } from "@/components/layout/nav-main"
 import { NavSecondary } from "@/components/layout/nav-secondary"
 import { NavUser } from "@/components/layout/nav-user"
+import { LogoMr } from "@/components/ui/logo"
 import {
   Sidebar,
   SidebarContent,
@@ -13,21 +28,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { LogoMr } from "@/components/ui/logo"
-import { SettingsIcon } from "lucide-react"
-
-import {
-  MdCalendarToday,
-  MdPointOfSale,
-  MdGroups,
-  MdInventory2,
-  MdAdsClick,
-  MdCreditCard,
-  MdDashboard,
-  MdDiversity2,
-  MdStore,
-} from "react-icons/md"
-
 
 type ViewKey =
   | "agenda"
@@ -41,14 +41,14 @@ type ViewKey =
   | "perfil"
   | "config"
 
-type UserRole =
-  | "SUPER_ADMIN"
-  | "BARBERSHOP_OWNER"
-  | "BARBER"
-  | "ASSISTANT"
+type UserRole = "SUPER_ADMIN" | "BARBERSHOP_OWNER" | "BARBER" | "ASSISTANT"
 
 const data = {
-  user: { name: "shadcn", email: "m@example.com", photoUrl: "/android-chrome-512x512.png" },
+  user: {
+    name: "shadcn",
+    email: "m@example.com",
+    photoUrl: "/android-chrome-512x512.png",
+  },
   navMain: [
     { title: "Agenda", view: "agenda", icon: MdCalendarToday },
     { title: "Checkout", view: "checkout", icon: MdPointOfSale },
@@ -60,7 +60,9 @@ const data = {
     { title: "Profissionais", view: "profissionais", icon: MdDiversity2 },
     { title: "Perfil da Empresa", view: "perfil", icon: MdStore },
   ] as { title: string; view: ViewKey; icon?: ElementType }[],
-  navSecondary: [{ title: "Settings", view: "config" as ViewKey, icon: SettingsIcon }],
+  navSecondary: [
+    { title: "Settings", view: "config" as ViewKey, icon: SettingsIcon },
+  ],
 }
 
 const menuPermissions: Record<UserRole, ViewKey[]> = {
@@ -120,26 +122,25 @@ export function AppSidebar({
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-          <SidebarMenuButton
-  onClick={() => onViewChange("agenda")}
-  className="h-16 data-[slot=sidebar-menu-button]:!p-1.5"
->
-  <div className="flex w-full items-center group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:justify-center">
-    <div className="shrink-0 w-12 h-12 flex items-center justify-center">
-      <LogoMr />
-    </div>
+            <SidebarMenuButton
+              onClick={() => onViewChange("agenda")}
+              className="h-16 data-[slot=sidebar-menu-button]:!p-1.5"
+            >
+              <div className="flex w-full items-center group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center">
+                  <LogoMr />
+                </div>
 
-    <span className="flex flex-col leading-tight group-data-[collapsible=icon]:hidden">
-      <span className="text-base font-bold whitespace-nowrap">
-        Mr Dyllan Barbearia
-      </span>
-      <span className="text-primary font-light whitespace-nowrap">
-        Painel Admin
-      </span>
-    </span>
-  </div>
-</SidebarMenuButton>
-
+                <span className="flex flex-col leading-tight group-data-[collapsible=icon]:hidden">
+                  <span className="whitespace-nowrap text-base font-bold">
+                    Mr Dyllan Barbearia
+                  </span>
+                  <span className="whitespace-nowrap font-light text-primary">
+                    Painel Admin
+                  </span>
+                </span>
+              </div>
+            </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>

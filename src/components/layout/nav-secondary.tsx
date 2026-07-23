@@ -1,7 +1,6 @@
 "use client"
 
-import * as React from "react"
-import type { ComponentType } from "react"
+import type { ComponentPropsWithoutRef, ComponentType } from "react"
 
 import {
   SidebarGroup,
@@ -29,7 +28,7 @@ export function NavSecondary({
   items: NavSecondaryItem[]
   activeView: ViewKey
   onViewChange: (view: ViewKey) => void
-} & React.ComponentPropsWithoutRef<typeof SidebarGroup>) {
+} & ComponentPropsWithoutRef<typeof SidebarGroup>) {
   return (
     <SidebarGroup {...props}>
       <SidebarGroupContent>

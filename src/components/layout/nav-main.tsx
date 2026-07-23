@@ -10,8 +10,6 @@ import {
 } from "@/components/ui/sidebar"
 import type { ViewKey } from "@/types/view"
 
-type NavIcon = ElementType
-
 type NavItem = {
   title: string
   view: ViewKey
@@ -41,7 +39,9 @@ export function NavMain({ items, activeView, onViewChange }: NavMainProps) {
                   onClick={() => onViewChange(item.view)}
                   className="h-12"
                 >
-                  {Icon ? <Icon className="h-6 w-6 shrink-0 text-muted-foreground" /> : null}
+                  {Icon ? (
+                    <Icon className="h-6 w-6 shrink-0 text-muted-foreground" />
+                  ) : null}
                   <span className="truncate">{item.title}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
