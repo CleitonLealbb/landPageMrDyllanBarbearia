@@ -5,22 +5,14 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/in
 
 
 export const ProfissionaisTop = () => (
+  <div className="relative flex h-16 items-center gap-3 px-3 sm:px-4">
+    <SidebarTrigger className="z-10 shrink-0" />
 
-  <div>
-    <SidebarTrigger className="mt-5 ml-5" />
-    <div className="relative flex items-center h-16 px-4">
-
-      <InputGroup className="max-w-xs absolute left-1/2 -translate-x-1/2 w-full max-w-md bg-[var(--bg-soft)] border-border">
-        <InputGroupInput placeholder="Buscar profissional..." />
-        <InputGroupAddon>
-          <Search />
-        </InputGroupAddon>
-      </InputGroup>
-
-    </div>
+    <InputGroup className="min-w-0 flex-1 border-border bg-[var(--bg-soft)] sm:absolute sm:left-1/2 sm:w-full sm:max-w-md sm:-translate-x-1/2">
+      <InputGroupInput placeholder="Buscar profissional..." />
+      <InputGroupAddon>
+        <Search />
+      </InputGroupAddon>
+    </InputGroup>
   </div>
-
-
-
-
 )
