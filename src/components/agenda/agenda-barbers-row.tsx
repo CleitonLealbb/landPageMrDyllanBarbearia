@@ -34,7 +34,7 @@ export function AgendaBarbersRow({ barbers }: { barbers: Barber[] }) {
   return (
     <div className="border-b">
       <div
-        className="min-w-[700px] grid gap-2 px-2 py-2 md:px-1 sticky top-0 z-20 bg-background"
+        className="sticky top-0 z-20 grid min-w-[640px] gap-2 bg-background px-2 py-2 sm:min-w-[700px] md:px-1"
         style={{ gridTemplateColumns: "var(--agenda-cols)" }}
       >
         {/* célula da coluna "Hora" (fica alinhada com a coluna da hora da grade) */}

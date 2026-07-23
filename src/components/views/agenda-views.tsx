@@ -47,7 +47,7 @@ export function AgendaView() {
         
           {/* ✅ 1 container que controla o scroll horizontal pro header + grid */}
           <div
-            className="h-full overflow-auto scrollbar-hide "
+            className="h-full max-w-full overflow-auto overscroll-contain scrollbar-hide"
             style={
               {
                 "--agenda-cols": agendaCols(barbers.length),

@@ -18,9 +18,12 @@ export const headerConfig: Record<string, HeaderConfig> = {
     title: "Checkouts",
     subtitle: "Gerencie pagamentos e vendas",
     right: (
-      <div className="flex items-center gap-2">
-        <Input placeholder="Buscar cliente..." className="h-9 w-[180px] lg:w-[260px]" />
-        <Button className="h-9">Novo agendamento</Button>
+      <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap">
+        <Input
+          placeholder="Buscar cliente..."
+          className="h-9 min-w-0 flex-1 sm:w-[180px] sm:flex-none lg:w-[260px]"
+        />
+        <Button className="h-9 shrink-0">Novo agendamento</Button>
       </div>
     ),
   },
@@ -31,9 +34,11 @@ export const headerConfig: Record<string, HeaderConfig> = {
     title: "Caixa",
     subtitle: "Entradas, saídas e fechamento",
     right: (
-      <div className="flex items-center gap-2">
-        <Button variant="outline" className="h-9">Registrar saída</Button>
-        <Button className="h-9">Registrar entrada</Button>
+      <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap">
+        <Button variant="outline" className="h-9 flex-1 sm:flex-none">
+          Registrar saída
+        </Button>
+        <Button className="h-9 flex-1 sm:flex-none">Registrar entrada</Button>
       </div>
     ),
   },

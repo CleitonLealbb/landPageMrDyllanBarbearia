@@ -38,13 +38,13 @@ export function AgendaTop({ onToggleRight }: AgendaTopProps) {
   }
 
   return (
-    <div className="mt-5 ml-5">
+    <div className="ml-0 mt-2 sm:ml-5 sm:mt-5">
      <SidebarTrigger />
-    <div className="flex items-center justify-between gap-3  px-4 py-3">
+    <div className="flex flex-wrap items-center justify-between gap-3 px-2 py-3 sm:flex-nowrap sm:px-4">
 
       {/* Esquerda: navegação + data */}
-      <div className="flex items-center gap-2 min-w-0">
-        <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => addDays(-1)}>
+      <div className="flex min-w-0 flex-1 items-center gap-1 sm:gap-2">
+        <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => addDays(-1)}>
           <ChevronLeft className="h-5 w-5" />
         </Button>
 
@@ -52,7 +52,7 @@ export function AgendaTop({ onToggleRight }: AgendaTopProps) {
           <div className="truncate text-sm font-semibold">{label}</div>
         </div>
 
-        <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => addDays(1)}>
+        <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => addDays(1)}>
           <ChevronRight className="h-5 w-5" />
         </Button>
       </div>
@@ -69,7 +69,7 @@ export function AgendaTop({ onToggleRight }: AgendaTopProps) {
       </div>
 
       {/* Direita: botões */}
-      <div className="flex items-center gap-2">
+      <div className="flex shrink-0 items-center gap-2">
         {/* Desktop (xl+): toggle do painel fixo */}
         <Button
           type="button"
@@ -91,7 +91,10 @@ export function AgendaTop({ onToggleRight }: AgendaTopProps) {
               </Button>
             </SheetTrigger>
 
-            <SheetContent side="right" className="w-[340px] sm:w-[380px]">
+            <SheetContent
+              side="right"
+              className="w-[calc(100vw-2rem)] max-w-[380px] sm:w-[380px]"
+            >
               <SheetHeader>
                 <SheetTitle>Resumo</SheetTitle>
               </SheetHeader>

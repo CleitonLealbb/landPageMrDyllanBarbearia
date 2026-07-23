@@ -38,7 +38,7 @@ export function AgendaGrid({
 
   return (
     <div
-      className="min-w-[900px] grid relative"
+      className="relative grid min-w-[640px] sm:min-w-[900px]"
       style={{ gridTemplateColumns: "var(--agenda-cols)" }}
     >
       {/* BACKGROUND LINES: desenha UMA vez só atravessando tudo */}
