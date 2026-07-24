@@ -24,7 +24,6 @@ export async function PUT(
   context: { params: Params }
 ) {
   const session = await getSession()
-  const barbershop = await getCurrentBarbershop()
 
   if (!session) {
     return NextResponse.json(
@@ -33,6 +32,18 @@ export async function PUT(
     )
   }
 
+  if (
+    session.type !== "USER" ||
+    session.role !== "BARBERSHOP_OWNER"
+  ) {
+    return NextResponse.json(
+      { message: "Acesso negado." },
+      { status: 403 }
+    )
+  }
+
+  const barbershop = await getCurrentBarbershop()
+
   if (!barbershop) {
     return NextResponse.json(
       { message: "Barbearia nao vinculada ao usuario." },
@@ -40,8 +51,25 @@ export async function PUT(
     )
   }
 
+  const ownerMembership = await prisma.barbershopUser.findFirst({
+    where: {
+      userId: session.userId,
+      barbershopId: barbershop.id,
+      role: "BARBERSHOP_OWNER",
+    },
+    select: {
+      id: true,
+    },
+  })
+
+  if (!ownerMembership) {
+    return NextResponse.json(
+      { message: "Acesso negado." },
+      { status: 403 }
+    )
+  }
+
   const { id } = await context.params
-  const body = await req.json()
 
   const exists = await prisma.professional.findFirst({
     where: {
@@ -57,13 +85,30 @@ export async function PUT(
     )
   }
 
+  const body = await req.json()
+  const ALLOWED_PERMISSION_LEVELS = ["BARBER", "ASSISTANT"] as const
+  const permissionLevel: unknown = body.permissionLevel
+
+  if (
+    typeof permissionLevel !== "string" ||
+    !ALLOWED_PERMISSION_LEVELS.some(
+      (allowedPermissionLevel) =>
+        allowedPermissionLevel === permissionLevel
+    )
+  ) {
+    return NextResponse.json(
+      { message: "Nível de permissão inválido." },
+      { status: 400 }
+    )
+  }
+
   const professional = await prisma.professional.update({
     where: { id },
     data: {
       name: body.name?.trim(),
       email: body.email?.trim(),
       role: body.role,
-      permissionLevel: body.permissionLevel,
+      permissionLevel,
       commission: Number(body.commission),
       specialties: body.specialties ?? [],
       photoUrl: body.photoUrl,
