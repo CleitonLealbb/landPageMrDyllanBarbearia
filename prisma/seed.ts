@@ -21,5 +21,5 @@ async function main() {
 }
 
 main()
-  .catch((e) => console.error(e))
+  .catch(() => console.error("Falha ao executar o seed."))
   .finally(() => prisma.$disconnect())
