@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { ThemeProvider } from "@/context/ThemeProvider";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner"
 
@@ -33,7 +32,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body>
-        <ThemeProvider>{children}</ThemeProvider>
+        {children}
         <Toaster richColors />
       </body>
     </html>

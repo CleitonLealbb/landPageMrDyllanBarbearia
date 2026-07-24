@@ -17,9 +17,6 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
-    "types": [
-      "styled-components"
-    ], // 👈 garante suporte ao styled-components
     "plugins": [
       {
         "name": "next"
@@ -36,7 +33,6 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "styled.d.ts", // 👈 inclui definição personalizada do theme
     "src/declarations.d.ts",
     ".next/dev/types/**/*.ts"
   ],

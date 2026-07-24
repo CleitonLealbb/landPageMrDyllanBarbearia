@@ -2,10 +2,6 @@ import type { NextConfig } from "next";
 
 
 const nextConfig: NextConfig = {
-  compiler: {
-    styledComponents: true,
-  },
-
   webpack(config) {
     // Remove loaders padrão do Next que tratam SVG como componente React
     config.module.rules = config.module.rules.map((rule: any) => {
