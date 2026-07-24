@@ -1,5 +1,26 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { getSession } from "@/lib/auth/session"
+
+async function requireSuperAdmin() {
+  const session = await getSession()
+
+  if (!session) {
+    return NextResponse.json(
+      { message: "Não autenticado." },
+      { status: 401 }
+    )
+  }
+
+  if (session.type !== "USER" || session.role !== "SUPER_ADMIN") {
+    return NextResponse.json(
+      { message: "Acesso negado." },
+      { status: 403 }
+    )
+  }
+
+  return null
+}
 
 type Params = Promise<{
   id: string
@@ -9,6 +30,12 @@ export async function PUT(
   req: Request,
   context: { params: Params }
 ) {
+  const authorizationError = await requireSuperAdmin()
+
+  if (authorizationError) {
+    return authorizationError
+  }
+
   const { id } = await context.params
   const body = await req.json()
 
@@ -30,6 +57,12 @@ export async function DELETE(
   req: Request,
   context: { params: Params }
 ) {
+  const authorizationError = await requireSuperAdmin()
+
+  if (authorizationError) {
+    return authorizationError
+  }
+
   const { id } = await context.params
 
   const [linkedUsers, linkedProfessionals] = await Promise.all([
