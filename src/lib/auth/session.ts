@@ -21,9 +21,43 @@ export type CurrentBarbershop = {
   name?: string
 }
 
-type TokenPayload = Session & {
-  iat?: number
-  exp?: number
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+}
+
+function isUserRole(value: unknown): value is SessionRole {
+  return (
+    value === "SUPER_ADMIN" ||
+    value === "BARBERSHOP_OWNER" ||
+    value === "BARBER" ||
+    value === "ASSISTANT"
+  )
+}
+
+function isProfessionalRole(
+  value: unknown
+): value is "BARBER" | "ASSISTANT" {
+  return value === "BARBER" || value === "ASSISTANT"
+}
+
+function isSessionPayload(value: unknown): value is Session {
+  if (
+    !isRecord(value) ||
+    typeof value.userId !== "string" ||
+    value.userId.trim().length === 0
+  ) {
+    return false
+  }
+
+  if (value.type === "USER") {
+    return isUserRole(value.role)
+  }
+
+  if (value.type === "PROFESSIONAL") {
+    return isProfessionalRole(value.role)
+  }
+
+  return false
 }
 
 export async function getSession(): Promise<Session | null> {
@@ -33,15 +67,19 @@ export async function getSession(): Promise<Session | null> {
   if (!token) return null
 
   try {
-    const payload = jwt.verify(
+    const decoded: unknown = jwt.verify(
       token,
       process.env.JWT_SECRET!
-    ) as TokenPayload
+    )
+
+    if (!isSessionPayload(decoded)) {
+      return null
+    }
 
     return {
-      userId: payload.userId,
-      role: payload.role,
-      type: payload.type,
+      userId: decoded.userId,
+      role: decoded.role,
+      type: decoded.type,
     }
   } catch {
     return null
