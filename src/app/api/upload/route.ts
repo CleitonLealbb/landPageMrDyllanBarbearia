@@ -38,17 +38,76 @@ export async function POST(req: Request) {
   }
 
   const formData = await req.formData()
-  const file = formData.get("file") as File | null
+  const uploadedFile = formData.get("file")
 
-  if (!file) {
+  if (!(uploadedFile instanceof File)) {
     return NextResponse.json(
       { message: "Nenhuma imagem enviada." },
       { status: 400 }
     )
   }
 
+  const file = uploadedFile
+
+  if (file.size === 0) {
+    return NextResponse.json(
+      { message: "Arquivo inválido." },
+      { status: 400 }
+    )
+  }
+
+  const MAX_FILE_SIZE = 2 * 1024 * 1024
+
+  if (file.size > MAX_FILE_SIZE) {
+    return NextResponse.json(
+      { message: "Arquivo acima do limite permitido." },
+      { status: 413 }
+    )
+  }
+
+  const ALLOWED_MIME_TYPES = new Set([
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+  ])
+
+  if (!ALLOWED_MIME_TYPES.has(file.type)) {
+    return NextResponse.json(
+      { message: "Tipo de arquivo não permitido." },
+      { status: 415 }
+    )
+  }
+
   const bytes = await file.arrayBuffer()
   const buffer = Buffer.from(bytes)
+
+  const hasValidSignature =
+    (file.type === "image/jpeg" &&
+      buffer.length >= 3 &&
+      buffer[0] === 0xff &&
+      buffer[1] === 0xd8 &&
+      buffer[2] === 0xff) ||
+    (file.type === "image/png" &&
+      buffer.length >= 8 &&
+      buffer[0] === 0x89 &&
+      buffer[1] === 0x50 &&
+      buffer[2] === 0x4e &&
+      buffer[3] === 0x47 &&
+      buffer[4] === 0x0d &&
+      buffer[5] === 0x0a &&
+      buffer[6] === 0x1a &&
+      buffer[7] === 0x0a) ||
+    (file.type === "image/webp" &&
+      buffer.length >= 12 &&
+      buffer.subarray(0, 4).toString("ascii") === "RIFF" &&
+      buffer.subarray(8, 12).toString("ascii") === "WEBP")
+
+  if (!hasValidSignature) {
+    return NextResponse.json(
+      { message: "Tipo de arquivo não permitido." },
+      { status: 415 }
+    )
+  }
 
   const result = await new Promise<any>((resolve, reject) => {
     cloudinary.uploader
@@ -56,6 +115,7 @@ export async function POST(req: Request) {
         {
           folder: "mr-dyllan/profissionais",
           resource_type: "image",
+          allowed_formats: ["jpg", "jpeg", "png", "webp"],
         },
         (error, result) => {
           if (error) reject(error)
