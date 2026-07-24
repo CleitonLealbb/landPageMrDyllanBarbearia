@@ -33,15 +33,20 @@ export async function GET() {
     orderBy: {
       createdAt: "desc",
     },
-    include: {
+    select: {
+      id: true,
+      name: true,
+      phone: true,
+      email: true,
+      address: true,
+      status: true,
       members: {
         where: {
           role: "BARBERSHOP_OWNER",
         },
-        include: {
+        select: {
           user: {
             select: {
-              id: true,
               name: true,
               email: true,
             },

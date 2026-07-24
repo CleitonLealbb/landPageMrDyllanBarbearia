@@ -7,7 +7,6 @@ export type Barbershop = {
   status: string
   members?: {
     user: {
-      id: string
       name: string
       email: string
     }
