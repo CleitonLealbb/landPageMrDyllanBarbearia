@@ -1,6 +1,19 @@
+import type { Prisma } from "@prisma/client"
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { getCurrentBarbershop, getSession } from "@/lib/auth/session"
+
+const professionalPublicSelect = {
+  id: true,
+  name: true,
+  email: true,
+  role: true,
+  permissionLevel: true,
+  commission: true,
+  specialties: true,
+  photoUrl: true,
+  status: true,
+} satisfies Prisma.ProfessionalSelect
 
 type Params = Promise<{
   id: string
@@ -55,6 +68,7 @@ export async function PUT(
       specialties: body.specialties ?? [],
       photoUrl: body.photoUrl,
     },
+    select: professionalPublicSelect,
   })
 
   return NextResponse.json(professional)

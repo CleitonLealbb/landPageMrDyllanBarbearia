@@ -1,8 +1,21 @@
+import type { Prisma } from "@prisma/client"
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import crypto from "crypto"
 import { Resend } from "resend"
 import { getCurrentBarbershop, getSession } from "@/lib/auth/session"
+
+const professionalPublicSelect = {
+  id: true,
+  name: true,
+  email: true,
+  role: true,
+  permissionLevel: true,
+  commission: true,
+  specialties: true,
+  photoUrl: true,
+  status: true,
+} satisfies Prisma.ProfessionalSelect
 
 export async function POST(req: Request) {
   const session = await getSession()
@@ -77,6 +90,7 @@ export async function POST(req: Request) {
       inviteToken,
       inviteExpires,
     },
+    select: professionalPublicSelect,
   })
 
   if (!process.env.RESEND_API_KEY) {
@@ -163,6 +177,7 @@ export async function GET() {
     orderBy: {
       createdAt: "desc",
     },
+    select: professionalPublicSelect,
   })
 
   return NextResponse.json(professionals)
