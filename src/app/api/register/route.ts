@@ -13,7 +13,14 @@ export async function POST(request: Request) {
       email,
       password: hashedPassword,
       role,
-    }
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      createdAt: true,
+    },
   })
   return NextResponse.json(user);
 }
