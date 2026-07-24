@@ -42,7 +42,6 @@ export function LoginForm() {
         data = await res.json()
       } else {
         const text = await res.text()
-        console.error("Resposta inesperada da API:", text)
         throw new Error("Resposta inválida da API")
       }
 
@@ -65,7 +64,6 @@ export function LoginForm() {
       }
       router.refresh()
     } catch (error) {
-      console.error("Erro no login:", error)
       setError("Não foi possível conectar ao servidor")
     } finally {
       setLoading(false)
