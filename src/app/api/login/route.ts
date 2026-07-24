@@ -92,11 +92,11 @@ export async function POST(req: Request) {
       path: "/",
     })
     return response
-  } catch (error: any) {
+  } catch {
     console.error("Falha interna durante o login.")
 
     return NextResponse.json(
-      { error: error?.message || "Erro interno" },
+      { error: "Erro interno do servidor." },
       { status: 500 }
     )
   }
