@@ -1,7 +1,34 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { getSession } from "@/lib/auth/session"
+
+async function requireSuperAdmin() {
+  const session = await getSession()
+
+  if (!session) {
+    return NextResponse.json(
+      { message: "Não autenticado." },
+      { status: 401 }
+    )
+  }
+
+  if (session.type !== "USER" || session.role !== "SUPER_ADMIN") {
+    return NextResponse.json(
+      { message: "Acesso negado." },
+      { status: 403 }
+    )
+  }
+
+  return null
+}
 
 export async function GET() {
+  const authorizationError = await requireSuperAdmin()
+
+  if (authorizationError) {
+    return authorizationError
+  }
+
   const barbershops = await prisma.barbershop.findMany({
     orderBy: {
       createdAt: "desc",
@@ -28,6 +55,12 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const authorizationError = await requireSuperAdmin()
+
+  if (authorizationError) {
+    return authorizationError
+  }
+
   const body = await req.json()
 
   if (!body.name) {
