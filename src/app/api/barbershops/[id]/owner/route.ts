@@ -1,6 +1,27 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { getSession } from "@/lib/auth/session"
 import bcrypt from "bcryptjs"
+
+async function requireSuperAdmin() {
+  const session = await getSession()
+
+  if (!session) {
+    return NextResponse.json(
+      { message: "Não autenticado." },
+      { status: 401 }
+    )
+  }
+
+  if (session.type !== "USER" || session.role !== "SUPER_ADMIN") {
+    return NextResponse.json(
+      { message: "Acesso negado." },
+      { status: 403 }
+    )
+  }
+
+  return null
+}
 
 type RouteParams = {
   params: Promise<{
@@ -12,6 +33,12 @@ export async function POST(
   req: Request,
   { params }: RouteParams
 ) {
+  const authorizationError = await requireSuperAdmin()
+
+  if (authorizationError) {
+    return authorizationError
+  }
+
   const { id: barbershopId } = await params
   const body = await req.json()
 
