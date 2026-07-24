@@ -43,8 +43,6 @@ export async function POST(req: Request) {
         accountType = "PROFESSIONAL"
       }
     }
-    console.log(account)
-
     if (!account || !account.password) {
       return NextResponse.json(
         { error: "E-mail ou senha inválidos" },
