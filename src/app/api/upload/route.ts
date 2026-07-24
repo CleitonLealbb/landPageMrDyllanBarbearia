@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { v2 as cloudinary } from "cloudinary"
+import { getCurrentBarbershop, getSession } from "@/lib/auth/session"
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -8,6 +9,34 @@ cloudinary.config({
 })
 
 export async function POST(req: Request) {
+  const session = await getSession()
+
+  if (!session) {
+    return NextResponse.json(
+      { message: "Não autenticado." },
+      { status: 401 }
+    )
+  }
+
+  if (
+    session.type !== "USER" ||
+    session.role !== "BARBERSHOP_OWNER"
+  ) {
+    return NextResponse.json(
+      { message: "Acesso negado." },
+      { status: 403 }
+    )
+  }
+
+  const barbershop = await getCurrentBarbershop()
+
+  if (!barbershop) {
+    return NextResponse.json(
+      { message: "Acesso negado." },
+      { status: 403 }
+    )
+  }
+
   const formData = await req.formData()
   const file = formData.get("file") as File | null
 
