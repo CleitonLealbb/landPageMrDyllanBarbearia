@@ -199,7 +199,6 @@ export async function POST(req: Request) {
 
 export async function GET() {
   const session = await getSession()
-  const barbershop = await getCurrentBarbershop()
 
   if (!session) {
     return NextResponse.json(
@@ -208,10 +207,40 @@ export async function GET() {
     )
   }
 
+  if (
+    session.type !== "USER" ||
+    session.role !== "BARBERSHOP_OWNER"
+  ) {
+    return NextResponse.json(
+      { message: "Acesso negado." },
+      { status: 403 }
+    )
+  }
+
+  const barbershop = await getCurrentBarbershop()
+
   if (!barbershop) {
     return NextResponse.json(
       { message: "Barbearia nao vinculada ao usuario." },
       { status: 404 }
+    )
+  }
+
+  const ownerMembership = await prisma.barbershopUser.findFirst({
+    where: {
+      userId: session.userId,
+      barbershopId: barbershop.id,
+      role: "BARBERSHOP_OWNER",
+    },
+    select: {
+      id: true,
+    },
+  })
+
+  if (!ownerMembership) {
+    return NextResponse.json(
+      { message: "Acesso negado." },
+      { status: 403 }
     )
   }
 
