@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { v2 as cloudinary } from "cloudinary"
+import type { UploadApiResponse } from "cloudinary"
 import { getCurrentBarbershop, getSession } from "@/lib/auth/session"
 
 cloudinary.config({
@@ -109,21 +110,61 @@ export async function POST(req: Request) {
     )
   }
 
-  const result = await new Promise<any>((resolve, reject) => {
-    cloudinary.uploader
-      .upload_stream(
-        {
-          folder: "mr-dyllan/profissionais",
-          resource_type: "image",
-          allowed_formats: ["jpg", "jpeg", "png", "webp"],
-        },
-        (error, result) => {
-          if (error) reject(error)
-          else resolve(result)
-        }
-      )
-      .end(buffer)
-  })
+  if (
+    !process.env.CLOUDINARY_CLOUD_NAME ||
+    !process.env.CLOUDINARY_API_KEY ||
+    !process.env.CLOUDINARY_API_SECRET
+  ) {
+    return NextResponse.json(
+      { message: "Erro interno do servidor." },
+      { status: 500 }
+    )
+  }
+
+  let result: UploadApiResponse
+
+  try {
+    result = await new Promise<UploadApiResponse>((resolve, reject) => {
+      cloudinary.uploader
+        .upload_stream(
+          {
+            folder: "mr-dyllan/profissionais",
+            resource_type: "image",
+            allowed_formats: ["jpg", "jpeg", "png", "webp"],
+          },
+          (error, uploadResult) => {
+            if (error) {
+              reject(error)
+              return
+            }
+
+            if (!uploadResult) {
+              reject(new Error())
+              return
+            }
+
+            resolve(uploadResult)
+          }
+        )
+        .end(buffer)
+    })
+  } catch {
+    return NextResponse.json(
+      { message: "Não foi possível enviar a imagem." },
+      { status: 502 }
+    )
+  }
+
+  if (
+    typeof result.secure_url !== "string" ||
+    result.secure_url.length === 0 ||
+    !result.secure_url.startsWith("https://")
+  ) {
+    return NextResponse.json(
+      { message: "Não foi possível enviar a imagem." },
+      { status: 502 }
+    )
+  }
 
   return NextResponse.json({
     url: result.secure_url,
