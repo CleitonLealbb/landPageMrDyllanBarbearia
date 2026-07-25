@@ -50,6 +50,9 @@ export async function POST(req: Request) {
       status: "ACTIVE",
       inviteToken: null,
       inviteExpires: null,
+      sessionVersion: {
+        increment: 1,
+      },
     },
   })
 

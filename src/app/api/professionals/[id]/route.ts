@@ -3,6 +3,22 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { getCurrentBarbershop, getSession } from "@/lib/auth/session"
 
+const PROFESSIONAL_PERMISSION_LEVELS = [
+  "BARBER",
+  "ASSISTANT",
+] as const
+
+type ProfessionalPermissionLevel =
+  (typeof PROFESSIONAL_PERMISSION_LEVELS)[number]
+
+function isProfessionalPermissionLevel(
+  value: unknown
+): value is ProfessionalPermissionLevel {
+  return PROFESSIONAL_PERMISSION_LEVELS.some(
+    (permissionLevel) => permissionLevel === value
+  )
+}
+
 const professionalPublicSelect = {
   id: true,
   name: true,
@@ -34,7 +50,9 @@ export async function PUT(
 
   if (
     session.type !== "USER" ||
-    session.role !== "BARBERSHOP_OWNER"
+    session.globalRole !== null ||
+    session.tenantRole !== "BARBERSHOP_OWNER" ||
+    session.barbershopId === null
   ) {
     return NextResponse.json(
       { message: "Acesso negado." },
@@ -54,7 +72,7 @@ export async function PUT(
   const ownerMembership = await prisma.barbershopUser.findFirst({
     where: {
       userId: session.userId,
-      barbershopId: barbershop.id,
+      barbershopId: session.barbershopId,
       role: "BARBERSHOP_OWNER",
     },
     select: {
@@ -86,21 +104,17 @@ export async function PUT(
   }
 
   const body = await req.json()
-  const ALLOWED_PERMISSION_LEVELS = ["BARBER", "ASSISTANT"] as const
   const permissionLevel: unknown = body.permissionLevel
 
-  if (
-    typeof permissionLevel !== "string" ||
-    !ALLOWED_PERMISSION_LEVELS.some(
-      (allowedPermissionLevel) =>
-        allowedPermissionLevel === permissionLevel
-    )
-  ) {
+  if (!isProfessionalPermissionLevel(permissionLevel)) {
     return NextResponse.json(
       { message: "Nível de permissão inválido." },
       { status: 400 }
     )
   }
+
+  const permissionLevelChanged =
+    exists.permissionLevel !== permissionLevel
 
   const professional = await prisma.professional.update({
     where: { id },
@@ -112,6 +126,13 @@ export async function PUT(
       commission: Number(body.commission),
       specialties: body.specialties ?? [],
       photoUrl: body.photoUrl,
+      ...(permissionLevelChanged
+        ? {
+            sessionVersion: {
+              increment: 1,
+            },
+          }
+        : {}),
     },
     select: professionalPublicSelect,
   })
@@ -134,7 +155,9 @@ export async function DELETE(
 
   if (
     session.type !== "USER" ||
-    session.role !== "BARBERSHOP_OWNER"
+    session.globalRole !== null ||
+    session.tenantRole !== "BARBERSHOP_OWNER" ||
+    session.barbershopId === null
   ) {
     return NextResponse.json(
       { message: "Acesso negado." },
@@ -154,7 +177,7 @@ export async function DELETE(
   const ownerMembership = await prisma.barbershopUser.findFirst({
     where: {
       userId: session.userId,
-      barbershopId: barbershop.id,
+      barbershopId: session.barbershopId,
       role: "BARBERSHOP_OWNER",
     },
     select: {

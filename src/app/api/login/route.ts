@@ -1,11 +1,18 @@
-import type { Professional, Role } from "@prisma/client"
-import { prisma } from "@/lib/prisma"
+import type { Professional } from "@prisma/client"
 import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
 import { NextResponse } from "next/server"
 
+import { prisma } from "@/lib/prisma"
+
+const TENANT_ROLES = [
+  "BARBERSHOP_OWNER",
+  "BARBER",
+  "ASSISTANT",
+] as const
 const PROFESSIONAL_PERMISSION_LEVELS = ["BARBER", "ASSISTANT"] as const
 
+type TenantRole = (typeof TENANT_ROLES)[number]
 type ProfessionalPermissionLevel =
   (typeof PROFESSIONAL_PERMISSION_LEVELS)[number]
 
@@ -14,15 +21,48 @@ type LoginAccount = {
   email: string | null
   name: string
   password: string | null
-  role: string
   photoUrl: string | null
+  sessionVersion: number
 }
+
+type LoginSessionPayload =
+  | {
+      type: "USER"
+      userId: string
+      globalRole: "SUPER_ADMIN"
+      tenantRole: null
+      barbershopId: null
+      sessionVersion: number
+    }
+  | {
+      type: "USER"
+      userId: string
+      globalRole: null
+      tenantRole: TenantRole
+      barbershopId: string
+      sessionVersion: number
+    }
+  | {
+      type: "PROFESSIONAL"
+      professionalId: string
+      globalRole: null
+      tenantRole: ProfessionalPermissionLevel
+      barbershopId: string
+      sessionVersion: number
+    }
 
 function isProfessionalPermissionLevel(
   value: unknown
 ): value is ProfessionalPermissionLevel {
   return PROFESSIONAL_PERMISSION_LEVELS.some(
     (permissionLevel) => permissionLevel === value
+  )
+}
+
+function accountAccessDeniedResponse() {
+  return NextResponse.json(
+    { error: "Acesso negado." },
+    { status: 403 }
   )
 }
 
@@ -68,6 +108,7 @@ export async function POST(req: Request) {
         accountType = "PROFESSIONAL"
       }
     }
+
     if (!account || !account.password) {
       return NextResponse.json(
         { error: "E-mail ou senha inválidos" },
@@ -84,7 +125,9 @@ export async function POST(req: Request) {
       )
     }
 
-    let authenticatedRole: Role | ProfessionalPermissionLevel
+    let sessionPayload: LoginSessionPayload
+    let globalRole: "SUPER_ADMIN" | null
+    let tenantRole: TenantRole | null
 
     if (accountType === "PROFESSIONAL") {
       if (!professionalAccount) {
@@ -127,7 +170,16 @@ export async function POST(req: Request) {
         return professionalAccessDeniedResponse()
       }
 
-      authenticatedRole = professionalAccount.permissionLevel
+      sessionPayload = {
+        type: "PROFESSIONAL",
+        professionalId: professionalAccount.id,
+        globalRole: null,
+        tenantRole: professionalAccount.permissionLevel,
+        barbershopId: professionalAccount.barbershopId,
+        sessionVersion: professionalAccount.sessionVersion,
+      }
+      globalRole = null
+      tenantRole = professionalAccount.permissionLevel
     } else {
       if (!user) {
         return NextResponse.json(
@@ -136,15 +188,55 @@ export async function POST(req: Request) {
         )
       }
 
-      authenticatedRole = user.role
+      if (user.role === "SUPER_ADMIN") {
+        sessionPayload = {
+          type: "USER",
+          userId: user.id,
+          globalRole: "SUPER_ADMIN",
+          tenantRole: null,
+          barbershopId: null,
+          sessionVersion: user.sessionVersion,
+        }
+        globalRole = "SUPER_ADMIN"
+        tenantRole = null
+      } else {
+        const memberships = await prisma.barbershopUser.findMany({
+          where: {
+            userId: user.id,
+            barbershop: {
+              status: "ACTIVE",
+            },
+          },
+          select: {
+            barbershopId: true,
+            role: true,
+          },
+        })
+
+        if (
+          memberships.length !== 1 ||
+          memberships[0].role !== user.role
+        ) {
+          return accountAccessDeniedResponse()
+        }
+
+        const [membership] = memberships
+
+        sessionPayload = {
+          type: "USER",
+          userId: user.id,
+          globalRole: null,
+          tenantRole: membership.role,
+          barbershopId: membership.barbershopId,
+          sessionVersion: user.sessionVersion,
+        }
+        globalRole = null
+        tenantRole = membership.role
+      }
     }
 
     const token = jwt.sign(
-      {
-        userId: account.id,
-        role: authenticatedRole,
-        type: accountType,
-      },
+      sessionPayload,
       process.env.JWT_SECRET!,
       { expiresIn: "7d" }
     )
@@ -155,8 +247,9 @@ export async function POST(req: Request) {
         id: account.id,
         email: account.email,
         name: account.name,
-        role: authenticatedRole,
         type: accountType,
+        globalRole,
+        tenantRole,
         photoUrl: account.photoUrl ?? "",
       },
     })

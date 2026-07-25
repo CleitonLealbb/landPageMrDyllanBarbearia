@@ -13,7 +13,10 @@ async function requireSuperAdmin() {
     )
   }
 
-  if (session.type !== "USER" || session.role !== "SUPER_ADMIN") {
+  if (
+    session.type !== "USER" ||
+    session.globalRole !== "SUPER_ADMIN"
+  ) {
     return NextResponse.json(
       { message: "Acesso negado." },
       { status: 403 }

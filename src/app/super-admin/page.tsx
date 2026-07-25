@@ -11,7 +11,7 @@ export default async function SuperAdminPage() {
 
   if (
     session.type !== "USER" ||
-    session.role !== "SUPER_ADMIN"
+    session.globalRole !== "SUPER_ADMIN"
   ) {
     redirect("/dashboard")
   }

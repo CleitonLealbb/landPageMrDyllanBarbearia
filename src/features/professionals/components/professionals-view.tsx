@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { toast, Toaster } from "sonner"
 import Cropper from "react-easy-crop"
-import { canAccess, type Role } from "@/lib/permissions"
+import { canAccess } from "@/lib/permissions"
 
 import {
   Edit,
@@ -64,18 +64,37 @@ function isProfessionalPermissionLevel(
   )
 }
 
+type TenantRole = "BARBERSHOP_OWNER" | "BARBER" | "ASSISTANT"
+
 type StoredUser = {
-  type: "USER" | "PROFESSIONAL"
-  role: Role
-}
+  id: string
+  name: string
+  email: string
+  photoUrl: string
+} & (
+  | {
+      type: "USER"
+      globalRole: "SUPER_ADMIN"
+      tenantRole: null
+    }
+  | {
+      type: "USER"
+      globalRole: null
+      tenantRole: TenantRole
+    }
+  | {
+      type: "PROFESSIONAL"
+      globalRole: null
+      tenantRole: "BARBER" | "ASSISTANT"
+    }
+)
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
 }
 
-function isRole(value: unknown): value is Role {
+function isTenantRole(value: unknown): value is TenantRole {
   return (
-    value === "SUPER_ADMIN" ||
     value === "BARBERSHOP_OWNER" ||
     value === "BARBER" ||
     value === "ASSISTANT"
@@ -83,16 +102,34 @@ function isRole(value: unknown): value is Role {
 }
 
 function isStoredUser(value: unknown): value is StoredUser {
-  if (!isRecord(value)) {
+  if (
+    !isRecord(value) ||
+    typeof value.id !== "string" ||
+    typeof value.name !== "string" ||
+    typeof value.email !== "string" ||
+    typeof value.photoUrl !== "string" ||
+    "role" in value ||
+    "sessionVersion" in value ||
+    "barbershopId" in value
+  ) {
     return false
   }
 
   if (value.type === "USER") {
-    return isRole(value.role)
+    return (
+      (value.globalRole === "SUPER_ADMIN" &&
+        value.tenantRole === null) ||
+      (value.globalRole === null &&
+        isTenantRole(value.tenantRole))
+    )
   }
 
   if (value.type === "PROFESSIONAL") {
-    return value.role === "BARBER" || value.role === "ASSISTANT"
+    return (
+      value.globalRole === null &&
+      (value.tenantRole === "BARBER" ||
+        value.tenantRole === "ASSISTANT")
+    )
   }
 
   return false
@@ -136,7 +173,8 @@ export function ProfissionaisView() {
   const [permissionLevel, setPermissionLevel] =
     useState<ProfessionalPermissionLevel | "">("")
   /*{ carregar os profissionais}*/
-  const [userRole, setUserRole] = useState("")
+  const [effectiveRole, setEffectiveRole] =
+    useState<"BARBERSHOP_OWNER" | null>(null)
 
   useEffect(() => {
     try {
@@ -145,12 +183,19 @@ export function ProfissionaisView() {
       if (storedUser) {
         const parsedUser: unknown = JSON.parse(storedUser)
 
-        setUserRole(isStoredUser(parsedUser) ? parsedUser.role : "")
+        setEffectiveRole(
+          isStoredUser(parsedUser) &&
+            parsedUser.type === "USER" &&
+            parsedUser.globalRole === null &&
+            parsedUser.tenantRole === "BARBERSHOP_OWNER"
+            ? parsedUser.tenantRole
+            : null
+        )
       } else {
-        setUserRole("")
+        setEffectiveRole(null)
       }
     } catch {
-      setUserRole("")
+      setEffectiveRole(null)
     }
 
     async function carregarProfissionais() {
@@ -394,7 +439,7 @@ export function ProfissionaisView() {
 
             <DialogTrigger asChild>
               <DialogTrigger asChild>
-              { canAccess(userRole, "professionals:create")  && (
+              { canAccess(effectiveRole, "professionals:create")  && (
                 <Button
                   onClick={() => {
                     setEditingProfessional(null)
@@ -719,7 +764,7 @@ export function ProfissionaisView() {
 
                     <TableCell>
                       <div className="flex gap-2">
-                        {canAccess(userRole, "professionals:update") && (
+                        {canAccess(effectiveRole, "professionals:update") && (
                           <Button
                             variant="ghost"
                             size="icon"
@@ -728,7 +773,7 @@ export function ProfissionaisView() {
                             <Edit className="h-4 w-4" />
                           </Button>
                         )}
-                        {canAccess(userRole, "professionals:delete") && (
+                        {canAccess(effectiveRole, "professionals:delete") && (
                           <Button
                             variant="ghost"
                             size="icon"

@@ -14,36 +14,49 @@ enum Role {
   ASSISTANT
 }
 
+enum TenantRole {
+  BARBERSHOP_OWNER
+  BARBER
+  ASSISTANT
+}
+
+enum ProfessionalPermissionLevel {
+  BARBER
+  ASSISTANT
+}
+
 model User {
-  id          String           @id @default(uuid())
-  name        String
-  email       String           @unique
-  password    String
-  role        Role             @default(BARBER)
-  photoUrl    String?
-  resetToken  String?
-  resetExpires DateTime?
-  createdAt   DateTime         @default(now())
-  memberships BarbershopUser[]
+  id             String           @id @default(uuid())
+  name           String
+  email          String           @unique
+  password       String
+  role           Role             @default(BARBER)
+  sessionVersion Int              @default(0)
+  photoUrl       String?
+  resetToken     String?
+  resetExpires   DateTime?
+  createdAt      DateTime         @default(now())
+  memberships    BarbershopUser[]
 }
 
 model Professional {
-  id              String    @id @default(uuid())
+  id              String                      @id @default(uuid())
   barbershopId    String
   name            String
-  email           String?   @unique
+  email           String?                     @unique
   role            String
-  permissionLevel String?
+  permissionLevel ProfessionalPermissionLevel
+  sessionVersion  Int                         @default(0)
   commission      Int
   specialties     String[]
   photoUrl        String?
-  status          String    @default("PENDING")
+  status          String                      @default("PENDING")
   password        String?
   inviteToken     String?
   inviteExpires   DateTime?
   resetToken      String?
   resetExpires    DateTime?
-  createdAt       DateTime  @default(now())
+  createdAt       DateTime                    @default(now())
 }
 
 model Barbershop {
@@ -59,11 +72,11 @@ model Barbershop {
 }
 
 model BarbershopUser {
-  id           String   @id @default(uuid())
+  id           String     @id @default(uuid())
   userId       String
   barbershopId String
-  role         Role
-  createdAt    DateTime @default(now())
+  role         TenantRole
+  createdAt    DateTime   @default(now())
 
   user       User       @relation(fields: [userId], references: [id])
   barbershop Barbershop @relation(fields: [barbershopId], references: [id])

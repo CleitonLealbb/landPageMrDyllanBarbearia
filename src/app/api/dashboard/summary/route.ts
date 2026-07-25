@@ -23,18 +23,8 @@ export async function GET() {
   }
 
   if (
-    session.type !== "USER" &&
-    session.role === "SUPER_ADMIN"
-  ) {
-    return NextResponse.json(
-      { message: "Acesso negado." },
-      { status: 403 }
-    )
-  }
-
-  if (
     session.type === "USER" &&
-    session.role === "SUPER_ADMIN"
+    session.globalRole === "SUPER_ADMIN"
   ) {
     const [barbershops, owners, professionals] = await Promise.all([
       prisma.barbershop.count(),
@@ -45,7 +35,7 @@ export async function GET() {
     ])
 
     return NextResponse.json({
-      role: session.role,
+      role: session.globalRole,
       barbershops,
       owners,
       professionals,
@@ -72,7 +62,7 @@ export async function GET() {
   })
 
   return NextResponse.json({
-    role: session.role,
+    role: session.tenantRole,
     barbershopId: barbershop.id,
     barbershopName: barbershop.name,
     barbershops: 1,

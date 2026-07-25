@@ -6,6 +6,31 @@ import { Mail, Lock, LogIn } from "lucide-react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 
+type TenantRole = "BARBERSHOP_OWNER" | "BARBER" | "ASSISTANT"
+
+type AuthenticatedUser = {
+  id: string
+  name: string
+  email: string
+  photoUrl: string
+} & (
+  | {
+      type: "USER"
+      globalRole: "SUPER_ADMIN"
+      tenantRole: null
+    }
+  | {
+      type: "USER"
+      globalRole: null
+      tenantRole: TenantRole
+    }
+  | {
+      type: "PROFESSIONAL"
+      globalRole: null
+      tenantRole: "BARBER" | "ASSISTANT"
+    }
+)
+
 export function LoginForm() {
   const router = useRouter()
   const [error, setError] = useState("")
@@ -28,13 +53,7 @@ export function LoginForm() {
 
       let data: {
         error?: string
-        user?: {
-          id: string
-          name: string
-          email: string
-          role: string
-          type: string
-        }
+        user?: AuthenticatedUser
       } = {}
 
       const contentType = res.headers.get("content-type")
@@ -59,7 +78,7 @@ export function LoginForm() {
       
       if (
         data.user?.type === "USER" &&
-        data.user.role === "SUPER_ADMIN"
+        data.user.globalRole === "SUPER_ADMIN"
       ) {
         router.push("/super-admin")
       } else {

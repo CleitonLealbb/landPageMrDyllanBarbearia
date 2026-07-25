@@ -17,6 +17,19 @@ const professionalPublicSelect = {
   status: true,
 } satisfies Prisma.ProfessionalSelect
 
+const PROFESSIONAL_PERMISSION_LEVELS = ["BARBER", "ASSISTANT"] as const
+
+type ProfessionalPermissionLevel =
+  (typeof PROFESSIONAL_PERMISSION_LEVELS)[number]
+
+function isProfessionalPermissionLevel(
+  value: unknown
+): value is ProfessionalPermissionLevel {
+  return PROFESSIONAL_PERMISSION_LEVELS.some(
+    (permissionLevel) => permissionLevel === value
+  )
+}
+
 export async function POST(req: Request) {
   const session = await getSession()
 
@@ -29,7 +42,9 @@ export async function POST(req: Request) {
 
   if (
     session.type !== "USER" ||
-    session.role !== "BARBERSHOP_OWNER"
+    session.globalRole !== null ||
+    session.tenantRole !== "BARBERSHOP_OWNER" ||
+    session.barbershopId === null
   ) {
     return NextResponse.json(
       { message: "Acesso negado." },
@@ -39,7 +54,10 @@ export async function POST(req: Request) {
 
   const barbershop = await getCurrentBarbershop()
 
-  if (!barbershop) {
+  if (
+    !barbershop ||
+    barbershop.id !== session.barbershopId
+  ) {
     return NextResponse.json(
       { message: "Barbearia nao vinculada ao usuario." },
       { status: 404 }
@@ -49,7 +67,7 @@ export async function POST(req: Request) {
   const ownerMembership = await prisma.barbershopUser.findFirst({
     where: {
       userId: session.userId,
-      barbershopId: barbershop.id,
+      barbershopId: session.barbershopId,
       role: "BARBERSHOP_OWNER",
     },
     select: {
@@ -80,16 +98,9 @@ export async function POST(req: Request) {
     )
   }
 
-  const ALLOWED_PERMISSION_LEVELS = ["BARBER", "ASSISTANT"] as const
   const permissionLevel: unknown = body.permissionLevel
 
-  if (
-    typeof permissionLevel !== "string" ||
-    !ALLOWED_PERMISSION_LEVELS.some(
-      (allowedPermissionLevel) =>
-        allowedPermissionLevel === permissionLevel
-    )
-  ) {
+  if (!isProfessionalPermissionLevel(permissionLevel)) {
     return NextResponse.json(
       { message: "Nível de permissão inválido." },
       { status: 400 }
@@ -209,7 +220,9 @@ export async function GET() {
 
   if (
     session.type !== "USER" ||
-    session.role !== "BARBERSHOP_OWNER"
+    session.globalRole !== null ||
+    session.tenantRole !== "BARBERSHOP_OWNER" ||
+    session.barbershopId === null
   ) {
     return NextResponse.json(
       { message: "Acesso negado." },
@@ -219,7 +232,10 @@ export async function GET() {
 
   const barbershop = await getCurrentBarbershop()
 
-  if (!barbershop) {
+  if (
+    !barbershop ||
+    barbershop.id !== session.barbershopId
+  ) {
     return NextResponse.json(
       { message: "Barbearia nao vinculada ao usuario." },
       { status: 404 }
@@ -229,7 +245,7 @@ export async function GET() {
   const ownerMembership = await prisma.barbershopUser.findFirst({
     where: {
       userId: session.userId,
-      barbershopId: barbershop.id,
+      barbershopId: session.barbershopId,
       role: "BARBERSHOP_OWNER",
     },
     select: {

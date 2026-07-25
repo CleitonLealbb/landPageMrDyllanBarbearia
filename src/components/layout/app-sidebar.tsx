@@ -47,13 +47,30 @@ type NavigationItem = {
   icon?: ElementType
 }
 
-type UserType = "USER" | "PROFESSIONAL"
-type UserRole = "SUPER_ADMIN" | "BARBERSHOP_OWNER" | "BARBER" | "ASSISTANT"
+type TenantRole = "BARBERSHOP_OWNER" | "BARBER" | "ASSISTANT"
 
 type StoredUser = {
-  type: UserType
-  role: UserRole
-}
+  id: string
+  name: string
+  email: string
+  photoUrl: string
+} & (
+  | {
+      type: "USER"
+      globalRole: "SUPER_ADMIN"
+      tenantRole: null
+    }
+  | {
+      type: "USER"
+      globalRole: null
+      tenantRole: TenantRole
+    }
+  | {
+      type: "PROFESSIONAL"
+      globalRole: null
+      tenantRole: "BARBER" | "ASSISTANT"
+    }
+)
 
 const data = {
   user: {
@@ -77,8 +94,7 @@ const data = {
   ] satisfies NavigationItem[],
 }
 
-const menuPermissions: Record<UserRole, readonly ViewKey[]> = {
-  SUPER_ADMIN: [],
+const menuPermissions: Record<TenantRole, readonly ViewKey[]> = {
   BARBERSHOP_OWNER: [
     "dashboard",
     "agenda",
@@ -99,9 +115,8 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
 }
 
-function isUserRole(value: unknown): value is UserRole {
+function isTenantRole(value: unknown): value is TenantRole {
   return (
-    value === "SUPER_ADMIN" ||
     value === "BARBERSHOP_OWNER" ||
     value === "BARBER" ||
     value === "ASSISTANT"
@@ -109,33 +124,43 @@ function isUserRole(value: unknown): value is UserRole {
 }
 
 function isStoredUser(value: unknown): value is StoredUser {
-  if (!isRecord(value)) {
+  if (
+    !isRecord(value) ||
+    typeof value.id !== "string" ||
+    typeof value.name !== "string" ||
+    typeof value.email !== "string" ||
+    typeof value.photoUrl !== "string" ||
+    "role" in value ||
+    "sessionVersion" in value ||
+    "barbershopId" in value
+  ) {
     return false
   }
 
   if (value.type === "USER") {
-    return isUserRole(value.role)
+    return (
+      (value.globalRole === "SUPER_ADMIN" &&
+        value.tenantRole === null) ||
+      (value.globalRole === null &&
+        isTenantRole(value.tenantRole))
+    )
   }
 
   if (value.type === "PROFESSIONAL") {
-    return value.role === "BARBER" || value.role === "ASSISTANT"
+    return (
+      value.globalRole === null &&
+      (value.tenantRole === "BARBER" ||
+        value.tenantRole === "ASSISTANT")
+    )
   }
 
   return false
 }
 
 function canViewMenuItem(user: StoredUser | null, view: ViewKey) {
-  if (!user) return false
+  if (!user || user.tenantRole === null) return false
 
-  if (
-    (user.role === "SUPER_ADMIN" ||
-      user.role === "BARBERSHOP_OWNER") &&
-    user.type !== "USER"
-  ) {
-    return false
-  }
-
-  return menuPermissions[user.role].includes(view)
+  return menuPermissions[user.tenantRole].includes(view)
 }
 
 export function AppSidebar({
@@ -149,18 +174,18 @@ export function AppSidebar({
   const [storedUser, setStoredUser] = React.useState<StoredUser | null>(null)
 
   React.useEffect(() => {
-    const serializedUser = localStorage.getItem("user")
-
-    if (!serializedUser) return
-
     try {
+      const serializedUser = localStorage.getItem("user")
+
+      if (!serializedUser) {
+        setStoredUser(null)
+        return
+      }
+
       const parsedUser: unknown = JSON.parse(serializedUser)
 
       if (isStoredUser(parsedUser)) {
-        setStoredUser({
-          type: parsedUser.type,
-          role: parsedUser.role,
-        })
+        setStoredUser(parsedUser)
       } else {
         setStoredUser(null)
       }

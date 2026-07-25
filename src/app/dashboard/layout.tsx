@@ -14,7 +14,7 @@ export default async function DashboardLayout({
 
   if (
     session.type === "USER" &&
-    session.role === "SUPER_ADMIN"
+    session.globalRole === "SUPER_ADMIN"
   ) {
     redirect("/super-admin")
   }
