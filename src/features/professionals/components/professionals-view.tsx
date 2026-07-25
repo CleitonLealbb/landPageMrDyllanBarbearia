@@ -17,6 +17,7 @@ import {
   Star,
   Camera,
   User,
+  type LucideIcon,
 } from "lucide-react"
 
 import {
@@ -46,6 +47,22 @@ import {
 } from "@/components/ui/select"
 import { useEffect, useState } from "react"
 
+
+const PROFESSIONAL_PERMISSION_LEVELS = [
+  "BARBER",
+  "ASSISTANT",
+] as const
+
+type ProfessionalPermissionLevel =
+  (typeof PROFESSIONAL_PERMISSION_LEVELS)[number]
+
+function isProfessionalPermissionLevel(
+  value: unknown
+): value is ProfessionalPermissionLevel {
+  return PROFESSIONAL_PERMISSION_LEVELS.some(
+    (permissionLevel) => permissionLevel === value
+  )
+}
 
 type Profissional = {
   id: string
@@ -82,7 +99,8 @@ export function ProfissionaisView() {
   const [editingProfessional, setEditingProfessional] =
     useState<Profissional | null>(null)
 
-  const [permissionLevel, setPermissionLevel] = useState("")
+  const [permissionLevel, setPermissionLevel] =
+    useState<ProfessionalPermissionLevel | "">("")
   /*{ carregar os profissionais}*/
   const [userRole, setUserRole] = useState("")
 
@@ -135,8 +153,8 @@ export function ProfissionaisView() {
       toast.warning("Selecione o cargo do profissional.")
       return
     }
-    if (!permissionLevel.trim()) {
-      toast.warning("Selecione o nível de permissão.")
+    if (!isProfessionalPermissionLevel(permissionLevel)) {
+      toast.warning("Selecione um nível de permissão válido.")
       return
     }
 
@@ -250,6 +268,7 @@ export function ProfissionaisView() {
     setRole("")
     setCommission("")
     setSpecialties([])
+    setPermissionLevel("")
     setPhotoUrl("")
     setImageSrc("")
     setPhotoFile(null)
@@ -301,7 +320,11 @@ export function ProfissionaisView() {
     setProfessionalName(item.name)
     setEmail(item.email ?? "")
     setRole(item.role)
-    setPermissionLevel(item.permissionLevel ?? "")
+    setPermissionLevel(
+      isProfessionalPermissionLevel(item.permissionLevel)
+        ? item.permissionLevel
+        : ""
+    )
     setCommission(String(item.commission))
     setSpecialties(item.specialties ?? [])
     setPhotoUrl(item.photoUrl ?? "")
@@ -339,6 +362,7 @@ export function ProfissionaisView() {
                     setProfessionalName("")
                     setEmail("")
                     setRole("")
+                    setPermissionLevel("")
                     setCommission("")
                     setSpecialties([])
                     setOpen(true)
@@ -500,13 +524,19 @@ export function ProfissionaisView() {
 
                         <div className="space-y-2">
                           <Label>Nível de Permissão</Label>
-                          <Select value={permissionLevel} onValueChange={setPermissionLevel}>
+                          <Select
+                            value={permissionLevel}
+                            onValueChange={(value) => {
+                              if (isProfessionalPermissionLevel(value)) {
+                                setPermissionLevel(value)
+                              }
+                            }}
+                          >
                             <SelectTrigger>
                               <SelectValue placeholder="Selecione a permissão" />
                             </SelectTrigger>
 
                             <SelectContent>
-                              <SelectItem value="OWNER">Dono</SelectItem>
                               <SelectItem value="BARBER">Barbeiro</SelectItem>
                               <SelectItem value="ASSISTANT">Assistente</SelectItem>
                             </SelectContent>
@@ -649,21 +679,24 @@ export function ProfissionaisView() {
 
                     <TableCell>
                       <div className="flex gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEdit(item)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-{ canAccess(userRole, "professionals:create") && (  
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(item.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>)}
+                        {canAccess(userRole, "professionals:update") && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEdit(item)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {canAccess(userRole, "professionals:delete") && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(item.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
 
@@ -700,7 +733,7 @@ function MetricCard({
 }: {
   title: string
   value: string
-  icon: any
+  icon: LucideIcon
 }) {
   return (
     <Card className="border-white/10 bg-[#171717] text-white">
