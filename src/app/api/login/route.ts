@@ -1,7 +1,37 @@
+import type { Professional, Role } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
 import { NextResponse } from "next/server"
+
+const PROFESSIONAL_PERMISSION_LEVELS = ["BARBER", "ASSISTANT"] as const
+
+type ProfessionalPermissionLevel =
+  (typeof PROFESSIONAL_PERMISSION_LEVELS)[number]
+
+type LoginAccount = {
+  id: string
+  email: string | null
+  name: string
+  password: string | null
+  role: string
+  photoUrl: string | null
+}
+
+function isProfessionalPermissionLevel(
+  value: unknown
+): value is ProfessionalPermissionLevel {
+  return PROFESSIONAL_PERMISSION_LEVELS.some(
+    (permissionLevel) => permissionLevel === value
+  )
+}
+
+function professionalAccessDeniedResponse() {
+  return NextResponse.json(
+    { error: "Conta ainda não ativada. Verifique o convite de acesso." },
+    { status: 403 }
+  )
+}
 
 export async function POST(req: Request) {
   try {
@@ -16,7 +46,8 @@ export async function POST(req: Request) {
       )
     }
 
-    let account: any = null
+    let account: LoginAccount | null = null
+    let professionalAccount: Professional | null = null
     let accountType: "USER" | "PROFESSIONAL" = "USER"
 
     const user = await prisma.user.findUnique({
@@ -32,14 +63,8 @@ export async function POST(req: Request) {
       })
 
       if (professional) {
-        if (professional.status !== "ACTIVE") {
-          return NextResponse.json(
-            { error: "Conta ainda não ativada. Verifique o convite de acesso." },
-            { status: 403 }
-          )
-        }
-
         account = professional
+        professionalAccount = professional
         accountType = "PROFESSIONAL"
       }
     }
@@ -59,13 +84,65 @@ export async function POST(req: Request) {
       )
     }
 
+    let authenticatedRole: Role | ProfessionalPermissionLevel
+
+    if (accountType === "PROFESSIONAL") {
+      if (!professionalAccount) {
+        return NextResponse.json(
+          { error: "E-mail ou senha inválidos" },
+          { status: 401 }
+        )
+      }
+
+      if (professionalAccount.status !== "ACTIVE") {
+        return professionalAccessDeniedResponse()
+      }
+
+      if (
+        !isProfessionalPermissionLevel(
+          professionalAccount.permissionLevel
+        )
+      ) {
+        return professionalAccessDeniedResponse()
+      }
+
+      if (
+        typeof professionalAccount.barbershopId !== "string" ||
+        professionalAccount.barbershopId.trim().length === 0
+      ) {
+        return professionalAccessDeniedResponse()
+      }
+
+      const barbershop = await prisma.barbershop.findUnique({
+        where: {
+          id: professionalAccount.barbershopId,
+        },
+        select: {
+          id: true,
+          status: true,
+        },
+      })
+
+      if (!barbershop || barbershop.status !== "ACTIVE") {
+        return professionalAccessDeniedResponse()
+      }
+
+      authenticatedRole = professionalAccount.permissionLevel
+    } else {
+      if (!user) {
+        return NextResponse.json(
+          { error: "E-mail ou senha inválidos" },
+          { status: 401 }
+        )
+      }
+
+      authenticatedRole = user.role
+    }
+
     const token = jwt.sign(
       {
         userId: account.id,
-        role:
-          accountType === "PROFESSIONAL"
-            ? account.permissionLevel
-            : account.role,
+        role: authenticatedRole,
         type: accountType,
       },
       process.env.JWT_SECRET!,
@@ -78,10 +155,7 @@ export async function POST(req: Request) {
         id: account.id,
         email: account.email,
         name: account.name,
-        role:
-          accountType === "PROFESSIONAL"
-            ? account.permissionLevel
-            : account.role,
+        role: authenticatedRole,
         type: accountType,
         photoUrl: account.photoUrl ?? "",
       },
