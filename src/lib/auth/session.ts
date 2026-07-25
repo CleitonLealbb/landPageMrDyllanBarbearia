@@ -89,7 +89,14 @@ export async function getSession(): Promise<Session | null> {
 export async function getCurrentBarbershop(): Promise<CurrentBarbershop | null> {
   const session = await getSession()
 
-  if (!session || session.role === "SUPER_ADMIN") {
+  if (!session) {
+    return null
+  }
+
+  if (
+    session.type === "USER" &&
+    session.role === "SUPER_ADMIN"
+  ) {
     return null
   }
 
@@ -100,33 +107,70 @@ export async function getCurrentBarbershop(): Promise<CurrentBarbershop | null> 
       },
       select: {
         barbershopId: true,
+        status: true,
+        permissionLevel: true,
       },
     })
 
-    if (!professional) return null
+    if (
+      !professional ||
+      professional.status !== "ACTIVE" ||
+      (professional.permissionLevel !== "BARBER" &&
+        professional.permissionLevel !== "ASSISTANT") ||
+      professional.permissionLevel !== session.role ||
+      typeof professional.barbershopId !== "string" ||
+      professional.barbershopId.trim().length === 0
+    ) {
+      return null
+    }
+
+    const barbershop = await prisma.barbershop.findUnique({
+      where: {
+        id: professional.barbershopId,
+      },
+      select: {
+        id: true,
+        status: true,
+      },
+    })
+
+    if (!barbershop || barbershop.status !== "ACTIVE") {
+      return null
+    }
 
     return {
-      id: professional.barbershopId,
+      id: barbershop.id,
     }
   }
 
-  const membership = await prisma.barbershopUser.findFirst({
+  const memberships = await prisma.barbershopUser.findMany({
     where: {
       userId: session.userId,
+      role: session.role,
     },
-    include: {
+    select: {
       barbershop: {
         select: {
+          id: true,
           name: true,
+          status: true,
         },
       },
     },
   })
 
-  if (!membership) return null
+  if (memberships.length !== 1) {
+    return null
+  }
+
+  const [{ barbershop }] = memberships
+
+  if (barbershop.status !== "ACTIVE") {
+    return null
+  }
 
   return {
-    id: membership.barbershopId,
-    name: membership.barbershop.name,
+    id: barbershop.id,
+    name: barbershop.name,
   }
 }
