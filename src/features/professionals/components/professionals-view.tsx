@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { toast, Toaster } from "sonner"
 import Cropper from "react-easy-crop"
-import { canAccess } from "@/lib/permissions"
+import { canAccess, type Role } from "@/lib/permissions"
 
 import {
   Edit,
@@ -64,6 +64,40 @@ function isProfessionalPermissionLevel(
   )
 }
 
+type StoredUser = {
+  type: "USER" | "PROFESSIONAL"
+  role: Role
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+}
+
+function isRole(value: unknown): value is Role {
+  return (
+    value === "SUPER_ADMIN" ||
+    value === "BARBERSHOP_OWNER" ||
+    value === "BARBER" ||
+    value === "ASSISTANT"
+  )
+}
+
+function isStoredUser(value: unknown): value is StoredUser {
+  if (!isRecord(value)) {
+    return false
+  }
+
+  if (value.type === "USER") {
+    return isRole(value.role)
+  }
+
+  if (value.type === "PROFESSIONAL") {
+    return value.role === "BARBER" || value.role === "ASSISTANT"
+  }
+
+  return false
+}
+
 type Profissional = {
   id: string
   name: string
@@ -105,14 +139,20 @@ export function ProfissionaisView() {
   const [userRole, setUserRole] = useState("")
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user")
-  
-    if (storedUser) {
-      const parsedUser = JSON.parse(storedUser)
-  
-      setUserRole(parsedUser.role)
+    try {
+      const storedUser = localStorage.getItem("user")
+
+      if (storedUser) {
+        const parsedUser: unknown = JSON.parse(storedUser)
+
+        setUserRole(isStoredUser(parsedUser) ? parsedUser.role : "")
+      } else {
+        setUserRole("")
+      }
+    } catch {
+      setUserRole("")
     }
-  
+
     async function carregarProfissionais() {
       const response = await fetch("/api/professionals")
   

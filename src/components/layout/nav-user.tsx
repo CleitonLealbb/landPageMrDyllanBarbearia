@@ -30,32 +30,68 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 
+type NavUserData = {
+  name: string
+  email: string
+  photoUrl: string
+}
+
+type StoredUserData = {
+  name: string
+  email: string
+  photoUrl?: string | null
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+}
+
+function isStoredUserData(value: unknown): value is StoredUserData {
+  return (
+    isRecord(value) &&
+    typeof value.name === "string" &&
+    typeof value.email === "string" &&
+    (value.photoUrl === undefined ||
+      value.photoUrl === null ||
+      typeof value.photoUrl === "string")
+  )
+}
+
 export function NavUser({
   user,
 }: {
-  user: {
-    name: string
-    email: string
-    photoUrl: string
-  }
+  user: NavUserData
 }) {
   const { isMobile } = useSidebar()
 
   const [currentUser, setCurrentUser] = useState(user)
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user")
+    try {
+      const storedUser = localStorage.getItem("user")
 
-    if (storedUser) {
-      const parsedUser = JSON.parse(storedUser)
+      if (!storedUser) {
+        setCurrentUser(user)
+        return
+      }
+
+      const parsedUser: unknown = JSON.parse(storedUser)
+
+      if (!isStoredUserData(parsedUser)) {
+        setCurrentUser(user)
+        return
+      }
 
       setCurrentUser({
         name: parsedUser.name,
         email: parsedUser.email,
         photoUrl: parsedUser.photoUrl ?? "",
       })
+    } catch {
+      setCurrentUser(user)
     }
   }, [user])
+
   async function handleLogout() {
     await fetch("/api/logout", {
       method: "POST",
