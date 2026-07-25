@@ -57,7 +57,10 @@ export function LoginForm() {
         )
       }
       
-      if (data.user?.role === "SUPER_ADMIN") {
+      if (
+        data.user?.type === "USER" &&
+        data.user.role === "SUPER_ADMIN"
+      ) {
         router.push("/super-admin")
       } else {
         router.push("/dashboard")

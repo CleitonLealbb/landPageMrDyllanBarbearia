@@ -41,7 +41,19 @@ type ViewKey =
   | "perfil"
   | "config"
 
+type NavigationItem = {
+  title: string
+  view: ViewKey
+  icon?: ElementType
+}
+
+type UserType = "USER" | "PROFESSIONAL"
 type UserRole = "SUPER_ADMIN" | "BARBERSHOP_OWNER" | "BARBER" | "ASSISTANT"
+
+type StoredUser = {
+  type: UserType
+  role: UserRole
+}
 
 const data = {
   user: {
@@ -59,13 +71,13 @@ const data = {
     { title: "Dashboard", view: "dashboard", icon: MdDashboard },
     { title: "Profissionais", view: "profissionais", icon: MdDiversity2 },
     { title: "Perfil da Empresa", view: "perfil", icon: MdStore },
-  ] as { title: string; view: ViewKey; icon?: ElementType }[],
+  ] satisfies NavigationItem[],
   navSecondary: [
-    { title: "Settings", view: "config" as ViewKey, icon: SettingsIcon },
-  ],
+    { title: "Settings", view: "config", icon: SettingsIcon },
+  ] satisfies NavigationItem[],
 }
 
-const menuPermissions: Record<UserRole, ViewKey[]> = {
+const menuPermissions: Record<UserRole, readonly ViewKey[]> = {
   SUPER_ADMIN: [],
   BARBERSHOP_OWNER: [
     "dashboard",
@@ -83,10 +95,47 @@ const menuPermissions: Record<UserRole, ViewKey[]> = {
   ASSISTANT: ["agenda", "checkout", "clientes", "perfil"],
 }
 
-function canViewMenuItem(role: string | null, view: ViewKey) {
-  if (!role) return false
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+}
 
-  return menuPermissions[role as UserRole]?.includes(view) ?? false
+function isUserRole(value: unknown): value is UserRole {
+  return (
+    value === "SUPER_ADMIN" ||
+    value === "BARBERSHOP_OWNER" ||
+    value === "BARBER" ||
+    value === "ASSISTANT"
+  )
+}
+
+function isStoredUser(value: unknown): value is StoredUser {
+  if (!isRecord(value)) {
+    return false
+  }
+
+  if (value.type === "USER") {
+    return isUserRole(value.role)
+  }
+
+  if (value.type === "PROFESSIONAL") {
+    return value.role === "BARBER" || value.role === "ASSISTANT"
+  }
+
+  return false
+}
+
+function canViewMenuItem(user: StoredUser | null, view: ViewKey) {
+  if (!user) return false
+
+  if (
+    (user.role === "SUPER_ADMIN" ||
+      user.role === "BARBERSHOP_OWNER") &&
+    user.type !== "USER"
+  ) {
+    return false
+  }
+
+  return menuPermissions[user.role].includes(view)
 }
 
 export function AppSidebar({
@@ -97,24 +146,35 @@ export function AppSidebar({
   activeView: ViewKey
   onViewChange: (view: ViewKey) => void
 }) {
-  const [userRole, setUserRole] = React.useState<string | null>(null)
+  const [storedUser, setStoredUser] = React.useState<StoredUser | null>(null)
 
   React.useEffect(() => {
-    const storedUser = localStorage.getItem("user")
+    const serializedUser = localStorage.getItem("user")
 
-    if (storedUser) {
-      const parsedUser = JSON.parse(storedUser)
+    if (!serializedUser) return
 
-      setUserRole(parsedUser.role ?? null)
+    try {
+      const parsedUser: unknown = JSON.parse(serializedUser)
+
+      if (isStoredUser(parsedUser)) {
+        setStoredUser({
+          type: parsedUser.type,
+          role: parsedUser.role,
+        })
+      } else {
+        setStoredUser(null)
+      }
+    } catch {
+      setStoredUser(null)
     }
   }, [])
 
   const navMain = data.navMain.filter((item) =>
-    canViewMenuItem(userRole, item.view)
+    canViewMenuItem(storedUser, item.view)
   )
 
   const navSecondary = data.navSecondary.filter((item) =>
-    canViewMenuItem(userRole, item.view)
+    canViewMenuItem(storedUser, item.view)
   )
 
   return (

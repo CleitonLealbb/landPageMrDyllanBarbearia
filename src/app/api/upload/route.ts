@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { v2 as cloudinary } from "cloudinary"
 import type { UploadApiResponse } from "cloudinary"
 import { getCurrentBarbershop, getSession } from "@/lib/auth/session"
+import { prisma } from "@/lib/prisma"
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -32,6 +33,24 @@ export async function POST(req: Request) {
   const barbershop = await getCurrentBarbershop()
 
   if (!barbershop) {
+    return NextResponse.json(
+      { message: "Acesso negado." },
+      { status: 403 }
+    )
+  }
+
+  const ownerMembership = await prisma.barbershopUser.findFirst({
+    where: {
+      userId: session.userId,
+      barbershopId: barbershop.id,
+      role: "BARBERSHOP_OWNER",
+    },
+    select: {
+      id: true,
+    },
+  })
+
+  if (!ownerMembership) {
     return NextResponse.json(
       { message: "Acesso negado." },
       { status: 403 }

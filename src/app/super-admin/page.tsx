@@ -9,7 +9,10 @@ export default async function SuperAdminPage() {
     redirect("/login")
   }
 
-  if (session.role !== "SUPER_ADMIN") {
+  if (
+    session.type !== "USER" ||
+    session.role !== "SUPER_ADMIN"
+  ) {
     redirect("/dashboard")
   }
 
