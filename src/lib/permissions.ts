@@ -4,7 +4,7 @@ export type Role =
   | "BARBER"
   | "ASSISTANT"
 
-  type Permission =
+type Permission =
   | "professionals:view"
   | "professionals:create"
   | "professionals:update"
@@ -14,7 +14,7 @@ export type Role =
   | "barbershops:update"
   | "barbershops:delete"
 
-const permissions: Record<Role, Permission[]> = {
+const permissions: Record<Role, readonly Permission[]> = {
   SUPER_ADMIN: [
     "barbershops:view",
     "barbershops:create",
@@ -29,16 +29,27 @@ const permissions: Record<Role, Permission[]> = {
     "professionals:delete",
   ],
 
-  BARBER: [
-    "professionals:view",
-  ],
+  BARBER: [],
 
   ASSISTANT: [],
 }
 
+function isRole(value: unknown): value is Role {
+  return (
+    value === "SUPER_ADMIN" ||
+    value === "BARBERSHOP_OWNER" ||
+    value === "BARBER" ||
+    value === "ASSISTANT"
+  )
+}
+
 export function canAccess(
-  role: string,
+  role: unknown,
   permission: Permission
-) {
-  return permissions[role as Role]?.includes(permission) ?? false
+): boolean {
+  if (!isRole(role)) {
+    return false
+  }
+
+  return permissions[role].includes(permission)
 }
