@@ -4,17 +4,13 @@ import jwt from "jsonwebtoken"
 import { NextResponse } from "next/server"
 
 import { prisma } from "@/lib/prisma"
+import type {
+  ProfessionalTenantRole,
+  Session,
+  TenantRole,
+} from "@/lib/auth/claims"
 
-const TENANT_ROLES = [
-  "BARBERSHOP_OWNER",
-  "BARBER",
-  "ASSISTANT",
-] as const
 const PROFESSIONAL_PERMISSION_LEVELS = ["BARBER", "ASSISTANT"] as const
-
-type TenantRole = (typeof TENANT_ROLES)[number]
-type ProfessionalPermissionLevel =
-  (typeof PROFESSIONAL_PERMISSION_LEVELS)[number]
 
 type LoginAccount = {
   id: string
@@ -25,35 +21,9 @@ type LoginAccount = {
   sessionVersion: number
 }
 
-type LoginSessionPayload =
-  | {
-      type: "USER"
-      userId: string
-      globalRole: "SUPER_ADMIN"
-      tenantRole: null
-      barbershopId: null
-      sessionVersion: number
-    }
-  | {
-      type: "USER"
-      userId: string
-      globalRole: null
-      tenantRole: TenantRole
-      barbershopId: string
-      sessionVersion: number
-    }
-  | {
-      type: "PROFESSIONAL"
-      professionalId: string
-      globalRole: null
-      tenantRole: ProfessionalPermissionLevel
-      barbershopId: string
-      sessionVersion: number
-    }
-
 function isProfessionalPermissionLevel(
   value: unknown
-): value is ProfessionalPermissionLevel {
+): value is ProfessionalTenantRole {
   return PROFESSIONAL_PERMISSION_LEVELS.some(
     (permissionLevel) => permissionLevel === value
   )
@@ -125,7 +95,7 @@ export async function POST(req: Request) {
       )
     }
 
-    let sessionPayload: LoginSessionPayload
+    let sessionPayload: Session
     let globalRole: "SUPER_ADMIN" | null
     let tenantRole: TenantRole | null
 
