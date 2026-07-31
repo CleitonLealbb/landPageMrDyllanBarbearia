@@ -9,16 +9,31 @@ function forbiddenPrismaCall(model: string, method: string) {
 export const prismaMock = {
   user: {
     findUnique: forbiddenPrismaCall("user", "findUnique"),
+    count: forbiddenPrismaCall("user", "count"),
+    create: forbiddenPrismaCall("user", "create"),
   },
   professional: {
     findUnique: forbiddenPrismaCall("professional", "findUnique"),
+    findFirst: forbiddenPrismaCall("professional", "findFirst"),
+    findMany: forbiddenPrismaCall("professional", "findMany"),
+    count: forbiddenPrismaCall("professional", "count"),
+    create: forbiddenPrismaCall("professional", "create"),
+    update: forbiddenPrismaCall("professional", "update"),
+    delete: forbiddenPrismaCall("professional", "delete"),
   },
   barbershopUser: {
     findMany: forbiddenPrismaCall("barbershopUser", "findMany"),
+    findFirst: forbiddenPrismaCall("barbershopUser", "findFirst"),
+    count: forbiddenPrismaCall("barbershopUser", "count"),
   },
   barbershop: {
     findUnique: forbiddenPrismaCall("barbershop", "findUnique"),
     findFirst: forbiddenPrismaCall("barbershop", "findFirst"),
+    findMany: forbiddenPrismaCall("barbershop", "findMany"),
+    count: forbiddenPrismaCall("barbershop", "count"),
+    create: forbiddenPrismaCall("barbershop", "create"),
+    update: forbiddenPrismaCall("barbershop", "update"),
+    delete: forbiddenPrismaCall("barbershop", "delete"),
   },
 }
 

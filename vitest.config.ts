@@ -16,7 +16,14 @@ export default defineConfig({
     restoreMocks: true,
     coverage: {
       provider: "v8",
-      include: ["src/lib/auth/**/*.ts", "src/lib/permissions.ts"],
+      include: [
+        "src/lib/auth/**/*.ts",
+        "src/lib/permissions.ts",
+        "src/app/api/barbershops/**/route.ts",
+        "src/app/api/professionals/**/route.ts",
+        "src/app/api/upload/route.ts",
+        "src/app/api/dashboard/summary/route.ts",
+      ],
     },
   },
 })
