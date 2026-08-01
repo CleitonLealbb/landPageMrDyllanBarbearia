@@ -3,6 +3,29 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { getCurrentBarbershop, getSession } from "@/lib/auth/session"
 
+function internalServerErrorResponse() {
+  return NextResponse.json(
+    { message: "Erro interno do servidor." },
+    { status: 500 }
+  )
+}
+
+function professionalNotFoundResponse() {
+  return NextResponse.json(
+    { message: "Profissional nao encontrado." },
+    { status: 404 }
+  )
+}
+
+function isPrismaNotFoundError(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    error.code === "P2025"
+  )
+}
+
 const PROFESSIONAL_PERMISSION_LEVELS = [
   "BARBER",
   "ASSISTANT",
@@ -39,7 +62,8 @@ export async function PUT(
   req: Request,
   context: { params: Params }
 ) {
-  const session = await getSession()
+  try {
+    const session = await getSession()
 
   if (!session) {
     return NextResponse.json(
@@ -137,14 +161,22 @@ export async function PUT(
     select: professionalPublicSelect,
   })
 
-  return NextResponse.json(professional)
+    return NextResponse.json(professional)
+  } catch (error) {
+    if (isPrismaNotFoundError(error)) {
+      return professionalNotFoundResponse()
+    }
+
+    return internalServerErrorResponse()
+  }
 }
 
 export async function DELETE(
   req: Request,
   context: { params: Params }
 ) {
-  const session = await getSession()
+  try {
+    const session = await getSession()
 
   if (!session) {
     return NextResponse.json(
@@ -212,7 +244,14 @@ export async function DELETE(
     where: { id },
   })
 
-  return NextResponse.json({
+    return NextResponse.json({
     message: "Profissional excluido com sucesso.",
-  })
+    })
+  } catch (error) {
+    if (isPrismaNotFoundError(error)) {
+      return professionalNotFoundResponse()
+    }
+
+    return internalServerErrorResponse()
+  }
 }

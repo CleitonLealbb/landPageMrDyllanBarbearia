@@ -7,7 +7,7 @@ import {
   professionalBarberSession,
   superAdminSession,
 } from "../setup/session-fixtures"
-import { expectJson, expectNoSensitiveData, jsonRequest } from "../helpers/route-assertions"
+import { expectJson, expectNoSensitiveData, expectSanitizedInternalError, jsonRequest } from "../helpers/route-assertions"
 
 const { getSessionMock, getCurrentBarbershopMock } = vi.hoisted(() => ({
   getSessionMock: vi.fn(),
@@ -133,10 +133,10 @@ describe("/api/professionals", () => {
     expectNoSensitiveData(body)
   })
 
-  it.fails("documenta que falha interna ainda nao e sanitizada", async () => {
+  it("retorna 500 sanitizado para falha interna", async () => {
     allowOwner()
     prismaMock.professional.findMany.mockRejectedValue(new Error("database secret"))
     const response = await GET()
-    await expectJson(response, 500)
+    expectSanitizedInternalError(await expectJson(response, 500))
   })
 })

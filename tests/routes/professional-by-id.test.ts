@@ -7,7 +7,7 @@ import {
   professionalBarberSession,
   superAdminSession,
 } from "../setup/session-fixtures"
-import { expectJson, expectNoSensitiveData, jsonRequest } from "../helpers/route-assertions"
+import { expectJson, expectNoSensitiveData, expectSanitizedInternalError, jsonRequest } from "../helpers/route-assertions"
 
 const { getSessionMock, getCurrentBarbershopMock } = vi.hoisted(() => ({
   getSessionMock: vi.fn(), getCurrentBarbershopMock: vi.fn(),
@@ -111,9 +111,22 @@ describe("/api/professionals/[id]", () => {
     expect(prismaMock.professional.delete).toHaveBeenCalledWith({ where: { id: "professional" } })
   })
 
-  it.fails("documenta que erro interno ainda nao e sanitizado", async () => {
+  it.each([PUT, DELETE])("%s retorna 404 sanitizado para P2025", async (handler) => {
+    prismaMock.professional.findFirst.mockResolvedValue(existing)
+    prismaMock.professional.update.mockRejectedValue({ code: "P2025", message: "database secret" })
+    prismaMock.professional.delete.mockRejectedValue({ code: "P2025", message: "database secret" })
+    const method = handler === PUT ? "PUT" : "DELETE"
+    const body = await expectJson(
+      await handler(jsonRequest("http://test/x", method, updateBody), context("professional")), 404
+    )
+    expect(body).toEqual({ message: expect.any(String) })
+    expect(JSON.stringify(body)).not.toContain("P2025")
+    expect(JSON.stringify(body)).not.toContain("database secret")
+  })
+
+  it("retorna 500 sanitizado para erro interno", async () => {
     prismaMock.professional.findFirst.mockRejectedValue(new Error("database secret"))
     const response = await DELETE(jsonRequest("http://test/x", "DELETE", {}), context("professional"))
-    await expectJson(response, 500)
+    expectSanitizedInternalError(await expectJson(response, 500))
   })
 })

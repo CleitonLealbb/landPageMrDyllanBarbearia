@@ -9,8 +9,16 @@ const emptySummary = {
   revenue: 0,
 }
 
+function internalServerErrorResponse() {
+  return NextResponse.json(
+    { message: "Erro interno do servidor." },
+    { status: 500 }
+  )
+}
+
 export async function GET() {
-  const session = await getSession()
+  try {
+    const session = await getSession()
 
   if (!session) {
     return NextResponse.json(
@@ -61,15 +69,18 @@ export async function GET() {
     },
   })
 
-  return NextResponse.json({
-    role: session.tenantRole,
-    barbershopId: barbershop.id,
-    barbershopName: barbershop.name,
-    barbershops: 1,
-    owners: 0,
-    professionals,
-    clients: 0,
-    appointments: 0,
-    revenue: 0,
-  })
+    return NextResponse.json({
+      role: session.tenantRole,
+      barbershopId: barbershop.id,
+      barbershopName: barbershop.name,
+      barbershops: 1,
+      owners: 0,
+      professionals,
+      clients: 0,
+      appointments: 0,
+      revenue: 0,
+    })
+  } catch {
+    return internalServerErrorResponse()
+  }
 }

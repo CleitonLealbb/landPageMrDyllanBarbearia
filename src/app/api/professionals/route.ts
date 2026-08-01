@@ -5,6 +5,13 @@ import crypto from "crypto"
 import { Resend } from "resend"
 import { getCurrentBarbershop, getSession } from "@/lib/auth/session"
 
+function internalServerErrorResponse() {
+  return NextResponse.json(
+    { message: "Erro interno do servidor." },
+    { status: 500 }
+  )
+}
+
 const professionalPublicSelect = {
   id: true,
   name: true,
@@ -31,7 +38,8 @@ function isProfessionalPermissionLevel(
 }
 
 export async function POST(req: Request) {
-  const session = await getSession()
+  try {
+    const session = await getSession()
 
   if (!session) {
     return NextResponse.json(
@@ -205,11 +213,15 @@ export async function POST(req: Request) {
     `,
   })
 
-  return NextResponse.json(professional)
+    return NextResponse.json(professional)
+  } catch {
+    return internalServerErrorResponse()
+  }
 }
 
 export async function GET() {
-  const session = await getSession()
+  try {
+    const session = await getSession()
 
   if (!session) {
     return NextResponse.json(
@@ -270,5 +282,8 @@ export async function GET() {
     select: professionalPublicSelect,
   })
 
-  return NextResponse.json(professionals)
+    return NextResponse.json(professionals)
+  } catch {
+    return internalServerErrorResponse()
+  }
 }

@@ -2,6 +2,13 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { getSession } from "@/lib/auth/session"
 
+function internalServerErrorResponse() {
+  return NextResponse.json(
+    { message: "Erro interno do servidor." },
+    { status: 500 }
+  )
+}
+
 async function requireSuperAdmin() {
   const session = await getSession()
 
@@ -26,11 +33,12 @@ async function requireSuperAdmin() {
 }
 
 export async function GET() {
-  const authorizationError = await requireSuperAdmin()
+  try {
+    const authorizationError = await requireSuperAdmin()
 
-  if (authorizationError) {
-    return authorizationError
-  }
+    if (authorizationError) {
+      return authorizationError
+    }
 
   const barbershops = await prisma.barbershop.findMany({
     orderBy: {
@@ -59,15 +67,19 @@ export async function GET() {
     },
   })
 
-  return NextResponse.json(barbershops)
+    return NextResponse.json(barbershops)
+  } catch {
+    return internalServerErrorResponse()
+  }
 }
 
 export async function POST(req: Request) {
-  const authorizationError = await requireSuperAdmin()
+  try {
+    const authorizationError = await requireSuperAdmin()
 
-  if (authorizationError) {
-    return authorizationError
-  }
+    if (authorizationError) {
+      return authorizationError
+    }
 
   const body = await req.json()
 
@@ -87,5 +99,8 @@ export async function POST(req: Request) {
     },
   })
 
-  return NextResponse.json(barbershop)
+    return NextResponse.json(barbershop)
+  } catch {
+    return internalServerErrorResponse()
+  }
 }

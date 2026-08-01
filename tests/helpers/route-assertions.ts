@@ -33,6 +33,16 @@ export function expectNoSensitiveData(value: unknown): void {
   }
 }
 
+export function expectSanitizedInternalError(value: unknown) {
+  expect(value).toEqual({ message: "Erro interno do servidor." })
+  const serialized = JSON.stringify(value)
+  expect(serialized).not.toContain("database secret")
+  expect(serialized).not.toContain("P20")
+  expect(serialized.toLowerCase()).not.toContain("stack")
+  expect(serialized.toLowerCase()).not.toContain("query")
+  expectNoSensitiveData(value)
+}
+
 export function jsonRequest(
   url: string,
   method: "POST" | "PUT" | "DELETE",

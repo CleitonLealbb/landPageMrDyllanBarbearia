@@ -3,6 +3,13 @@ import { prisma } from "@/lib/prisma"
 import { getSession } from "@/lib/auth/session"
 import bcrypt from "bcryptjs"
 
+function internalServerErrorResponse() {
+  return NextResponse.json(
+    { message: "Erro interno do servidor." },
+    { status: 500 }
+  )
+}
+
 async function requireSuperAdmin() {
   const session = await getSession()
 
@@ -36,11 +43,12 @@ export async function POST(
   req: Request,
   { params }: RouteParams
 ) {
-  const authorizationError = await requireSuperAdmin()
+  try {
+    const authorizationError = await requireSuperAdmin()
 
-  if (authorizationError) {
-    return authorizationError
-  }
+    if (authorizationError) {
+      return authorizationError
+    }
 
   const { id: barbershopId } = await params
   const body = await req.json()
@@ -100,5 +108,8 @@ export async function POST(
     },
   })
 
-  return NextResponse.json(owner)
+    return NextResponse.json(owner)
+  } catch {
+    return internalServerErrorResponse()
+  }
 }

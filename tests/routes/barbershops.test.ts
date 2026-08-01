@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { prismaMock } from "../setup/prisma-mock"
 import { ownerSession, professionalBarberSession, superAdminSession } from "../setup/session-fixtures"
-import { expectJson, expectNoSensitiveData, jsonRequest } from "../helpers/route-assertions"
+import { expectJson, expectNoSensitiveData, expectSanitizedInternalError, jsonRequest } from "../helpers/route-assertions"
 
 const { getSessionMock } = vi.hoisted(() => ({ getSessionMock: vi.fn() }))
 vi.mock("@/lib/auth/session", () => ({ getSession: getSessionMock }))
@@ -71,10 +71,10 @@ describe("/api/barbershops", () => {
     expectNoSensitiveData(body)
   })
 
-  it.fails("documenta que falha interna ainda nao e sanitizada", async () => {
+  it("retorna 500 sanitizado para falha interna", async () => {
     prismaMock.barbershop.findMany.mockRejectedValue(new Error("database secret"))
     const response = await GET()
     const body = await expectJson(response, 500)
-    expect(JSON.stringify(body)).not.toContain("database secret")
+    expectSanitizedInternalError(body)
   })
 })
