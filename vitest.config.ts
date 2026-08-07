@@ -23,6 +23,7 @@ export default defineConfig({
         "src/app/api/professionals/**/route.ts",
         "src/app/api/upload/route.ts",
         "src/app/api/dashboard/summary/route.ts",
+        "src/app/api/register/route.ts",
       ],
     },
   },
