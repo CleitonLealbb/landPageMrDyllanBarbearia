@@ -7,6 +7,7 @@ function forbiddenPrismaCall(model: string, method: string) {
 }
 
 export const prismaMock = {
+  $transaction: forbiddenPrismaCall("prisma", "$transaction"),
   user: {
     findUnique: forbiddenPrismaCall("user", "findUnique"),
     count: forbiddenPrismaCall("user", "count"),
@@ -35,10 +36,25 @@ export const prismaMock = {
     update: forbiddenPrismaCall("barbershop", "update"),
     delete: forbiddenPrismaCall("barbershop", "delete"),
   },
+  service: {
+    findFirst: forbiddenPrismaCall("service", "findFirst"),
+    findMany: forbiddenPrismaCall("service", "findMany"),
+    create: forbiddenPrismaCall("service", "create"),
+    update: forbiddenPrismaCall("service", "update"),
+  },
+  professionalService: {
+    deleteMany: forbiddenPrismaCall("professionalService", "deleteMany"),
+    createMany: forbiddenPrismaCall("professionalService", "createMany"),
+  },
 }
 
 export function resetPrismaMock() {
   for (const model of Object.values(prismaMock)) {
+    if (typeof model === "function") {
+      model.mockReset()
+      model.mockImplementation(() => { throw new Error("Unexpected Prisma call") })
+      continue
+    }
     for (const mockedMethod of Object.values(model)) {
       mockedMethod.mockReset()
       mockedMethod.mockImplementation(() => {
