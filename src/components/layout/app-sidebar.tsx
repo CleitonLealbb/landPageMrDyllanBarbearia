@@ -2,7 +2,9 @@
 
 import * as React from "react"
 import type { ElementType } from "react"
-import { SettingsIcon } from "lucide-react"
+import { Scissors, SettingsIcon } from "lucide-react"
+import { usePathname, useRouter } from "next/navigation"
+import type { ViewKey } from "@/types/view"
 import {
   MdAdsClick,
   MdCalendarToday,
@@ -28,18 +30,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-
-type ViewKey =
-  | "agenda"
-  | "checkout"
-  | "clientes"
-  | "estoque"
-  | "marketing"
-  | "cartoes"
-  | "dashboard"
-  | "profissionais"
-  | "perfil"
-  | "config"
 
 type NavigationItem = {
   title: string
@@ -87,6 +77,7 @@ const data = {
     { title: "Cartões", view: "cartoes", icon: MdCreditCard },
     { title: "Dashboard", view: "dashboard", icon: MdDashboard },
     { title: "Profissionais", view: "profissionais", icon: MdDiversity2 },
+    { title: "Serviços", view: "servicos", icon: Scissors },
     { title: "Perfil da Empresa", view: "perfil", icon: MdStore },
   ] satisfies NavigationItem[],
   navSecondary: [
@@ -104,6 +95,7 @@ const menuPermissions: Record<TenantRole, readonly ViewKey[]> = {
     "marketing",
     "cartoes",
     "profissionais",
+    "servicos",
     "perfil",
     "config",
   ],
@@ -171,6 +163,8 @@ export function AppSidebar({
   activeView: ViewKey
   onViewChange: (view: ViewKey) => void
 }) {
+  const router = useRouter()
+  const pathname = usePathname()
   const [storedUser, setStoredUser] = React.useState<StoredUser | null>(null)
 
   React.useEffect(() => {
@@ -202,13 +196,23 @@ export function AppSidebar({
     canViewMenuItem(storedUser, item.view)
   )
 
+  function handleViewChange(view: ViewKey) {
+    if (view === "servicos") {
+      router.push("/dashboard/servicos")
+    } else if (pathname === "/dashboard/servicos") {
+      router.push(`/dashboard?view=${view}`)
+    } else {
+      onViewChange(view)
+    }
+  }
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
-              onClick={() => onViewChange("agenda")}
+              onClick={() => handleViewChange("agenda")}
               className="h-16 data-[slot=sidebar-menu-button]:!p-1.5"
             >
               <div className="flex w-full items-center group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0">
@@ -234,13 +238,13 @@ export function AppSidebar({
         <NavMain
           items={navMain}
           activeView={activeView}
-          onViewChange={onViewChange}
+          onViewChange={handleViewChange}
         />
 
         <NavSecondary
           items={navSecondary}
           activeView={activeView}
-          onViewChange={onViewChange}
+          onViewChange={handleViewChange}
           className="mt-auto"
         />
       </SidebarContent>

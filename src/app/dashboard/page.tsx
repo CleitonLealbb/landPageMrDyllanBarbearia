@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { AppSidebar } from "@/components/layout/app-sidebar"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { AgendaView } from "@/components/views/agenda-views"
@@ -13,22 +13,23 @@ import { DashboardView } from "@/components/views/dashboard-views"
 import { ProfissionaisView } from "@/features/professionals/components/professionals-view"
 import { PerfilEmpresaView } from "@/components/views/perfil-empresa-views"
 import { ConfiguracoesView } from "@/components/views/configuracoes-views"
+import type { ViewKey } from "@/types/view"
 
 
-type ViewKey =
-  | "agenda"
-  | "checkout"
-  | "clientes"
-  | "estoque"
-  | "marketing"
-  | "cartoes"
-  | "dashboard"
-  | "profissionais"
-  | "perfil"
-  | "config"
+const dashboardViews: readonly ViewKey[] = [
+  "agenda", "checkout", "clientes", "estoque", "marketing", "cartoes",
+  "dashboard", "profissionais", "perfil", "config",
+]
 
 export default function DashboardPage() {
   const [view, setView] = useState<ViewKey>("agenda")
+
+  useEffect(() => {
+    const requestedView = new URLSearchParams(window.location.search).get("view")
+    if (requestedView && dashboardViews.includes(requestedView as ViewKey)) {
+      setView(requestedView as ViewKey)
+    }
+  }, [])
 
   return (
     <SidebarProvider>
