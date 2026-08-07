@@ -62,11 +62,12 @@ describe("/api/barbershops", () => {
       jsonRequest("http://test/api/barbershops", "POST", {
         name: "  One  ", phone: "1", email: "one@test", address: "Street", status: "INACTIVE",
         password: "must-not-pass",
+        slug: "attacker-controlled-slug",
       })
     )
     const body = await expectJson(response, 200)
     expect(prismaMock.barbershop.create).toHaveBeenCalledWith({
-      data: { name: "One", phone: "1", email: "one@test", address: "Street" },
+      data: { name: "One", slug: "one", phone: "1", email: "one@test", address: "Street" },
     })
     expectNoSensitiveData(body)
   })

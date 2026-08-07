@@ -9,6 +9,15 @@ function internalServerErrorResponse() {
   )
 }
 
+function createPublicSlug(name: string) {
+  return name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+}
+
 async function requireSuperAdmin() {
   const session = await getSession()
 
@@ -90,9 +99,20 @@ export async function POST(req: Request) {
     )
   }
 
+  const name = body.name.trim()
+  const slug = createPublicSlug(name)
+
+  if (!slug) {
+    return NextResponse.json(
+      { message: "Nome da barbearia invalido." },
+      { status: 400 }
+    )
+  }
+
   const barbershop = await prisma.barbershop.create({
     data: {
-      name: body.name.trim(),
+      name,
+      slug,
       phone: body.phone,
       email: body.email,
       address: body.address,

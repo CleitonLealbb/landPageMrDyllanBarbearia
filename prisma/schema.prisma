@@ -25,6 +25,16 @@ enum ProfessionalPermissionLevel {
   ASSISTANT
 }
 
+enum CustomerStatus {
+  ACTIVE
+  BLOCKED
+}
+
+enum ServiceStatus {
+  ACTIVE
+  INACTIVE
+}
+
 model User {
   id             String           @id @default(uuid())
   name           String
@@ -57,6 +67,11 @@ model Professional {
   resetToken      String?
   resetExpires    DateTime?
   createdAt       DateTime                    @default(now())
+
+  barbershop Barbershop            @relation(fields: [barbershopId], references: [id])
+  services   ProfessionalService[]
+
+  @@unique([barbershopId, id])
 }
 
 model Barbershop {
@@ -67,8 +82,13 @@ model Barbershop {
   address   String?
   status    String   @default("ACTIVE")
   createdAt DateTime @default(now())
+  slug      String   @unique
+  timezone  String   @default("America/Cuiaba")
 
-  members BarbershopUser[]
+  members       BarbershopUser[]
+  professionals Professional[]
+  customers     BarbershopCustomer[]
+  services      Service[]
 }
 
 model BarbershopUser {
@@ -82,4 +102,67 @@ model BarbershopUser {
   barbershop Barbershop @relation(fields: [barbershopId], references: [id])
 
   @@unique([userId, barbershopId])
+}
+
+model CustomerAccount {
+  id             String   @id @default(uuid())
+  name           String
+  email          String   @unique
+  passwordHash   String
+  phone          String?
+  sessionVersion Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  barbershops BarbershopCustomer[]
+}
+
+model BarbershopCustomer {
+  id                String         @id @default(uuid())
+  barbershopId      String
+  customerAccountId String
+  status            CustomerStatus @default(ACTIVE)
+  internalNotes     String?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  barbershop      Barbershop      @relation(fields: [barbershopId], references: [id])
+  customerAccount CustomerAccount @relation(fields: [customerAccountId], references: [id])
+
+  @@unique([barbershopId, customerAccountId])
+  @@index([barbershopId, status])
+  @@index([customerAccountId])
+}
+
+model Service {
+  id              String        @id @default(uuid())
+  barbershopId    String
+  name            String
+  description     String?
+  priceCents      Int
+  durationMinutes Int
+  status          ServiceStatus @default(ACTIVE)
+  displayOrder    Int           @default(0)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  barbershop    Barbershop            @relation(fields: [barbershopId], references: [id])
+  professionals ProfessionalService[]
+
+  @@unique([barbershopId, id])
+  @@unique([barbershopId, name])
+  @@index([barbershopId, status, displayOrder])
+}
+
+model ProfessionalService {
+  barbershopId   String
+  professionalId String
+  serviceId      String
+  createdAt      DateTime @default(now())
+
+  professional Professional @relation(fields: [barbershopId, professionalId], references: [barbershopId, id])
+  service      Service      @relation(fields: [barbershopId, serviceId], references: [barbershopId, id])
+
+  @@id([barbershopId, professionalId, serviceId])
+  @@index([barbershopId, serviceId])
 }
