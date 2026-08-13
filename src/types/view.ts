@@ -7,6 +7,5 @@ export type ViewKey =
   | "cartoes"
   | "dashboard"
   | "profissionais"
-  | "servicos"
   | "perfil"
   | "config"

@@ -12,6 +12,7 @@ type Permission =
   | "services:view"
   | "services:create"
   | "services:update"
+  | "settings:view"
   | "barbershops:view"
   | "barbershops:create"
   | "barbershops:update"
@@ -33,6 +34,7 @@ const permissions: Record<Role, readonly Permission[]> = {
     "services:view",
     "services:create",
     "services:update",
+    "settings:view",
   ],
 
   BARBER: [],

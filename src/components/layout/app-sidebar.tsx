@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import type { ElementType } from "react"
-import { Scissors, SettingsIcon } from "lucide-react"
+import { SettingsIcon } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 import type { ViewKey } from "@/types/view"
 import {
@@ -77,11 +77,10 @@ const data = {
     { title: "Cartões", view: "cartoes", icon: MdCreditCard },
     { title: "Dashboard", view: "dashboard", icon: MdDashboard },
     { title: "Profissionais", view: "profissionais", icon: MdDiversity2 },
-    { title: "Serviços", view: "servicos", icon: Scissors },
     { title: "Perfil da Empresa", view: "perfil", icon: MdStore },
   ] satisfies NavigationItem[],
   navSecondary: [
-    { title: "Settings", view: "config", icon: SettingsIcon },
+    { title: "Configurações", view: "config", icon: SettingsIcon },
   ] satisfies NavigationItem[],
 }
 
@@ -95,7 +94,6 @@ const menuPermissions: Record<TenantRole, readonly ViewKey[]> = {
     "marketing",
     "cartoes",
     "profissionais",
-    "servicos",
     "perfil",
     "config",
   ],
@@ -197,9 +195,9 @@ export function AppSidebar({
   )
 
   function handleViewChange(view: ViewKey) {
-    if (view === "servicos") {
-      router.push("/dashboard/servicos")
-    } else if (pathname === "/dashboard/servicos") {
+    if (view === "config") {
+      router.push("/dashboard/configuracoes")
+    } else if (pathname.startsWith("/dashboard/configuracoes")) {
       router.push(`/dashboard?view=${view}`)
     } else {
       onViewChange(view)

@@ -7,6 +7,10 @@ const permissions = [
   "professionals:create",
   "professionals:update",
   "professionals:delete",
+  "services:view",
+  "services:create",
+  "services:update",
+  "settings:view",
   "barbershops:view",
   "barbershops:create",
   "barbershops:update",
@@ -16,7 +20,7 @@ const permissions = [
 const expectedByRole = {
   SUPER_ADMIN: new Set(permissions.filter((permission) => permission.startsWith("barbershops:"))),
   BARBERSHOP_OWNER: new Set(
-    permissions.filter((permission) => permission.startsWith("professionals:"))
+    permissions.filter((permission) => permission.startsWith("professionals:") || permission.startsWith("services:") || permission === "settings:view")
   ),
   BARBER: new Set<string>(),
   ASSISTANT: new Set<string>(),

@@ -12,13 +12,12 @@ import { CartoesView } from "@/components/views/cartoes-views"
 import { DashboardView } from "@/components/views/dashboard-views"
 import { ProfissionaisView } from "@/features/professionals/components/professionals-view"
 import { PerfilEmpresaView } from "@/components/views/perfil-empresa-views"
-import { ConfiguracoesView } from "@/components/views/configuracoes-views"
 import type { ViewKey } from "@/types/view"
 
 
 const dashboardViews: readonly ViewKey[] = [
   "agenda", "checkout", "clientes", "estoque", "marketing", "cartoes",
-  "dashboard", "profissionais", "perfil", "config",
+  "dashboard", "profissionais", "perfil",
 ]
 
 export default function DashboardPage() {
@@ -51,7 +50,6 @@ export default function DashboardPage() {
             {view === "dashboard" && <div><DashboardView/></div>}
             {view === "profissionais" && <div><ProfissionaisView/></div>}
             {view === "perfil" && <div><PerfilEmpresaView/></div>}
-            {view === "config" && <div><ConfiguracoesView/></div>}
             
           </main>
         </SidebarInset>
