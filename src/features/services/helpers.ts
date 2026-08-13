@@ -1,4 +1,32 @@
-import type { CatalogService, ServiceFormValues, ServicePayload } from "./types"
+import type { CatalogService, ProfessionalOption, ServiceFormValues, ServicePayload } from "./types"
+
+export const serviceTabs = [
+  { value: "individual", label: "Serviços Individuais", available: true },
+  { value: "combos", label: "Combos / Pacotes", available: false },
+  { value: "categories", label: "Categorias", available: false },
+] as const
+
+export function groupServicesByProfessional(services: CatalogService[], professionals: ProfessionalOption[]) {
+  return professionals.map((professional) => ({
+    professional,
+    services: services.filter((service) => service.professionals.some(({ professional: assigned }) => assigned.id === professional.id)),
+  }))
+}
+
+export function sortServicesForDisplay(services: readonly CatalogService[]) {
+  return [...services].sort((a, b) => a.displayOrder - b.displayOrder || a.name.localeCompare(b.name, "pt-BR"))
+}
+
+export function getAssignedServicesSummary(services: readonly CatalogService[], limit = 3) {
+  const ordered = sortServicesForDisplay(services)
+  return { visible: ordered.slice(0, limit), remaining: Math.max(0, ordered.length - limit), empty: ordered.length === 0 }
+}
+
+export function filterAssignedServices(services: readonly CatalogService[], query: string) {
+  const term = query.trim().toLocaleLowerCase("pt-BR")
+  const ordered = sortServicesForDisplay(services)
+  return term ? ordered.filter((service) => service.name.toLocaleLowerCase("pt-BR").includes(term)) : ordered
+}
 
 export function reaisToCents(value: string): number | null {
   const normalized = value.trim().replace(/\s/g, "").replace(/\./g, "").replace(",", ".")
