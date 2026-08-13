@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation"
 import { getSession } from "@/lib/auth/session"
+import { DashboardShell } from "@/components/layout/dashboard-shell"
 
 export default async function DashboardLayout({
   children,
@@ -19,5 +20,5 @@ export default async function DashboardLayout({
     redirect("/super-admin")
   }
 
-  return children
+  return <DashboardShell tenantRole={session.tenantRole}>{children}</DashboardShell>
 }

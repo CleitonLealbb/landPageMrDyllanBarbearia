@@ -1,8 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { AppSidebar } from "@/components/layout/app-sidebar"
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
+import { useSearchParams } from "next/navigation"
 import { AgendaView } from "@/components/views/agenda-views"
 import { CheckoutView } from "@/components/views/checkout-views"
 import { CustomerView } from "@/features/customers/components/customer-view"
@@ -21,26 +19,11 @@ const dashboardViews: readonly ViewKey[] = [
 ]
 
 export default function DashboardPage() {
-  const [view, setView] = useState<ViewKey>("agenda")
-
-  useEffect(() => {
-    const requestedView = new URLSearchParams(window.location.search).get("view")
-    if (requestedView && dashboardViews.includes(requestedView as ViewKey)) {
-      setView(requestedView as ViewKey)
-    }
-  }, [])
+  const requestedView = useSearchParams().get("view")
+  const view: ViewKey = requestedView && dashboardViews.includes(requestedView as ViewKey) ? requestedView as ViewKey : "agenda"
 
   return (
-    <SidebarProvider>
-      <div className="flex min-h-screen w-full">
-
-        <AppSidebar
-          activeView={view}
-          onViewChange={setView}
-        />
-
-        <SidebarInset>
-          <main>
+    <>
             {view === "agenda" && <div><AgendaView/></div>}
             {view === "checkout" && <div><CheckoutView/></div>}
             {view === "clientes" && <div><CustomerView/></div>}
@@ -51,10 +34,6 @@ export default function DashboardPage() {
             {view === "profissionais" && <div><ProfissionaisView/></div>}
             {view === "perfil" && <div><PerfilEmpresaView/></div>}
             
-          </main>
-        </SidebarInset>
-
-      </div>
-    </SidebarProvider>
+    </>
   )
 }

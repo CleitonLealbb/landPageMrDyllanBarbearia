@@ -61,7 +61,7 @@ describe("API publica mobile do catalogo", () => {
     expect(prismaMock.service.findMany).toHaveBeenCalledWith({
       where: { barbershopId: "shop-one", status: "ACTIVE" },
       orderBy: [{ displayOrder: "asc" }, { name: "asc" }],
-      select: { id: true, name: true, description: true, priceCents: true, durationMinutes: true, displayOrder: true },
+      select: { id: true, name: true, description: true, priceCents: true, durationMinutes: true, displayOrder: true, category: { select: { id: true, name: true, displayOrder: true } } },
     })
     expect(body).toEqual([
       { id: "s1", name: "Barba", description: null, priceCents: 3000, durationMinutes: 30, displayOrder: 1 },

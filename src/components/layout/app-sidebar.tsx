@@ -3,7 +3,7 @@
 import * as React from "react"
 import type { ElementType } from "react"
 import { SettingsIcon } from "lucide-react"
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import type { ViewKey } from "@/types/view"
 import {
   MdAdsClick,
@@ -20,6 +20,7 @@ import {
 import { NavMain } from "@/components/layout/nav-main"
 import { NavSecondary } from "@/components/layout/nav-secondary"
 import { NavUser } from "@/components/layout/nav-user"
+import { Skeleton } from "@/components/ui/skeleton"
 import { LogoMr } from "@/components/ui/logo"
 import {
   Sidebar,
@@ -63,11 +64,6 @@ type StoredUser = {
 )
 
 const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    photoUrl: "/android-chrome-512x512.png",
-  },
   navMain: [
     { title: "Agenda", view: "agenda", icon: MdCalendarToday },
     { title: "Checkout", view: "checkout", icon: MdPointOfSale },
@@ -147,29 +143,30 @@ function isStoredUser(value: unknown): value is StoredUser {
   return false
 }
 
-function canViewMenuItem(user: StoredUser | null, view: ViewKey) {
-  if (!user || user.tenantRole === null) return false
-
-  return menuPermissions[user.tenantRole].includes(view)
+function canViewMenuItem(role: TenantRole, view: ViewKey) {
+  return menuPermissions[role].includes(view)
 }
 
-export function AppSidebar({
-  activeView,
-  onViewChange,
-  ...props
-}: React.ComponentProps<typeof Sidebar> & {
-  activeView: ViewKey
-  onViewChange: (view: ViewKey) => void
-}) {
+let cachedStoredUser: StoredUser | null | undefined
+
+function SidebarLoading() {
+  return <><SidebarHeader><div className="flex h-16 items-center gap-3 px-2 group-data-[collapsible=icon]:justify-center"><Skeleton className="size-12 shrink-0 rounded-xl motion-reduce:animate-none" /><div className="flex-1 space-y-2 group-data-[collapsible=icon]:hidden"><Skeleton className="h-4 w-36 motion-reduce:animate-none" /><Skeleton className="h-3 w-20 motion-reduce:animate-none" /></div></div></SidebarHeader><SidebarContent className="overflow-hidden px-2 py-2"><div className="space-y-2">{Array.from({ length: 9 }).map((_, index) => <div key={index} className="flex h-12 items-center gap-3 px-2 group-data-[collapsible=icon]:justify-center"><Skeleton className="size-6 shrink-0 motion-reduce:animate-none" /><Skeleton className="h-4 flex-1 motion-reduce:animate-none group-data-[collapsible=icon]:hidden" /></div>)}</div><div className="mt-auto flex h-12 items-center gap-3 px-2 group-data-[collapsible=icon]:justify-center"><Skeleton className="size-6 shrink-0 motion-reduce:animate-none" /><Skeleton className="h-4 flex-1 motion-reduce:animate-none group-data-[collapsible=icon]:hidden" /></div></SidebarContent><SidebarFooter><div className="flex h-14 items-center gap-3 p-2 group-data-[collapsible=icon]:justify-center"><Skeleton className="size-10 shrink-0 rounded-lg motion-reduce:animate-none" /><div className="min-w-0 flex-1 space-y-2 group-data-[collapsible=icon]:hidden"><Skeleton className="h-3 w-24 motion-reduce:animate-none" /><Skeleton className="h-3 w-32 motion-reduce:animate-none" /></div></div></SidebarFooter></>
+}
+
+export function AppSidebar({ tenantRole, ...props }: React.ComponentProps<typeof Sidebar> & { tenantRole: TenantRole }) {
   const router = useRouter()
   const pathname = usePathname()
-  const [storedUser, setStoredUser] = React.useState<StoredUser | null>(null)
+  const requestedView = useSearchParams().get("view")
+  const activeView: ViewKey = pathname.startsWith("/dashboard/configuracoes") ? "config" : requestedView && data.navMain.some((item) => item.view === requestedView) ? requestedView as ViewKey : "agenda"
+  const [storedUser, setStoredUser] = React.useState<StoredUser | null>(cachedStoredUser ?? null)
+  const [sidebarReady, setSidebarReady] = React.useState(cachedStoredUser !== undefined)
 
   React.useEffect(() => {
     try {
       const serializedUser = localStorage.getItem("user")
 
       if (!serializedUser) {
+        cachedStoredUser = null
         setStoredUser(null)
         return
       }
@@ -177,35 +174,36 @@ export function AppSidebar({
       const parsedUser: unknown = JSON.parse(serializedUser)
 
       if (isStoredUser(parsedUser)) {
+        cachedStoredUser = parsedUser
         setStoredUser(parsedUser)
       } else {
+        cachedStoredUser = null
         setStoredUser(null)
       }
     } catch {
+      cachedStoredUser = null
       setStoredUser(null)
+    } finally {
+      setSidebarReady(true)
     }
   }, [])
 
   const navMain = data.navMain.filter((item) =>
-    canViewMenuItem(storedUser, item.view)
+    canViewMenuItem(tenantRole, item.view)
   )
 
   const navSecondary = data.navSecondary.filter((item) =>
-    canViewMenuItem(storedUser, item.view)
+    canViewMenuItem(tenantRole, item.view)
   )
 
   function handleViewChange(view: ViewKey) {
-    if (view === "config") {
-      router.push("/dashboard/configuracoes")
-    } else if (pathname.startsWith("/dashboard/configuracoes")) {
-      router.push(`/dashboard?view=${view}`)
-    } else {
-      onViewChange(view)
-    }
+    router.push(view === "config" ? "/dashboard/configuracoes" : `/dashboard?view=${view}`)
   }
 
+  if (!sidebarReady) return <Sidebar collapsible="icon" {...props}><SidebarLoading /></Sidebar>
+
   return (
-    <Sidebar collapsible="icon" {...props}>
+    <Sidebar collapsible="icon" className="animate-in fade-in duration-200 motion-reduce:animate-none" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -248,7 +246,17 @@ export function AppSidebar({
       </SidebarContent>
 
       <SidebarFooter>
-        <NavUser user={data.user} />
+        {storedUser ? (
+          <NavUser user={{ name: storedUser.name, email: storedUser.email, photoUrl: storedUser.photoUrl }} />
+        ) : (
+          <div aria-hidden="true" className="flex items-center gap-3 p-2 group-data-[collapsible=icon]:justify-center">
+            <Skeleton className="size-10 shrink-0 rounded-lg motion-reduce:animate-none" />
+            <div className="min-w-0 flex-1 space-y-2 group-data-[collapsible=icon]:hidden">
+              <Skeleton className="h-3 w-24 motion-reduce:animate-none" />
+              <Skeleton className="h-3 w-32 motion-reduce:animate-none" />
+            </div>
+          </div>
+        )}
       </SidebarFooter>
     </Sidebar>
   )

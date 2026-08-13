@@ -12,6 +12,7 @@ export const adminServiceSelect = {
   durationMinutes: true,
   displayOrder: true,
   status: true,
+  category: { select: { id: true, name: true, status: true, displayOrder: true } },
   professionals: {
     select: {
       professional: {
@@ -88,6 +89,7 @@ export type ServiceWriteData = {
   durationMinutes?: number
   displayOrder?: number
   status?: ServiceStatus
+  categoryId?: string | null
 }
 
 type ValidationResult<T> =
@@ -101,6 +103,7 @@ const serviceFields = new Set([
   "durationMinutes",
   "displayOrder",
   "status",
+  "categoryId",
 ])
 
 export function validateServiceBody(
@@ -161,6 +164,11 @@ export function validateServiceBody(
     data.status = body.status
   } else if (!partial) {
     data.status = ServiceStatus.ACTIVE
+  }
+
+  if ("categoryId" in body) {
+    if (body.categoryId !== null && (typeof body.categoryId !== "string" || !body.categoryId.trim())) return { error: "Categoria invalida." }
+    data.categoryId = typeof body.categoryId === "string" ? body.categoryId.trim() : null
   }
 
   if (partial && Object.keys(data).length === 0) {

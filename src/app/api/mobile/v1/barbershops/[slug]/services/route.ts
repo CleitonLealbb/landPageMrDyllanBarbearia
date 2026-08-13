@@ -25,6 +25,9 @@ export async function GET(_request: Request, context: RouteContext) {
         priceCents: true,
         durationMinutes: true,
         displayOrder: true,
+        category: {
+          select: { id: true, name: true, displayOrder: true },
+        },
       },
     })
 

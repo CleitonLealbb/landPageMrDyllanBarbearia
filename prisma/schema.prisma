@@ -35,6 +35,11 @@ enum ServiceStatus {
   INACTIVE
 }
 
+enum CategoryStatus {
+  ACTIVE
+  INACTIVE
+}
+
 model User {
   id             String           @id @default(uuid())
   name           String
@@ -89,6 +94,7 @@ model Barbershop {
   professionals Professional[]
   customers     BarbershopCustomer[]
   services      Service[]
+  serviceCategories ServiceCategory[]
 }
 
 model BarbershopUser {
@@ -137,6 +143,7 @@ model BarbershopCustomer {
 model Service {
   id              String        @id @default(uuid())
   barbershopId    String
+  categoryId      String?
   name            String
   description     String?
   priceCents      Int
@@ -148,6 +155,25 @@ model Service {
 
   barbershop    Barbershop            @relation(fields: [barbershopId], references: [id])
   professionals ProfessionalService[]
+  category      ServiceCategory?      @relation(fields: [barbershopId, categoryId], references: [barbershopId, id])
+
+  @@unique([barbershopId, id])
+  @@unique([barbershopId, name])
+  @@index([barbershopId, status, displayOrder])
+}
+
+model ServiceCategory {
+  id            String         @id @default(uuid())
+  barbershopId  String
+  name          String
+  description   String?
+  displayOrder  Int            @default(0)
+  status        CategoryStatus @default(ACTIVE)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  barbershop Barbershop @relation(fields: [barbershopId], references: [id])
+  services   Service[]
 
   @@unique([barbershopId, id])
   @@unique([barbershopId, name])

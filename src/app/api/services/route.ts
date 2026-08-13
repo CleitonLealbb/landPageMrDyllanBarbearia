@@ -44,6 +44,10 @@ export async function POST(request: Request) {
     const serviceValidation = validateServiceBody(serviceBody, false)
     if (serviceValidation.error) return validationError(serviceValidation.error)
     const serviceData = serviceValidation.value!
+    if (serviceData.categoryId) {
+      const category = await prisma.serviceCategory.findFirst({ where: { id: serviceData.categoryId, barbershopId: authorization.owner.barbershopId, status: "ACTIVE" }, select: { id: true } })
+      if (!category) return validationError("Categoria invalida ou inativa.")
+    }
 
     const professionalValidation =
       rawProfessionalIds === undefined
@@ -77,6 +81,7 @@ export async function POST(request: Request) {
           durationMinutes: serviceData.durationMinutes!,
           displayOrder: serviceData.displayOrder,
           status: serviceData.status,
+          categoryId: serviceData.categoryId,
           professionals: {
             create: professionalIds.map((professionalId) => ({
               barbershopId,

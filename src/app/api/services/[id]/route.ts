@@ -38,6 +38,11 @@ export async function PUT(request: Request, context: RouteContext) {
     if (validation.error) return validationError(validation.error)
 
     const data = validation.value ?? {}
+    if (data.categoryId) {
+      const current = await prisma.service.findFirst({ where: { id, barbershopId: authorization.owner.barbershopId }, select: { categoryId: true } })
+      const category = await prisma.serviceCategory.findFirst({ where: { id: data.categoryId, barbershopId: authorization.owner.barbershopId }, select: { id: true, status: true } })
+      if (!category || (category.status !== "ACTIVE" && current?.categoryId !== category.id)) return validationError("Categoria invalida ou inativa.")
+    }
     const service = await prisma.service.update({
       where: { id },
       data,

@@ -12,13 +12,13 @@ describe("helpers da interface de serviços", () => {
   })
 
   it("normaliza somente o payload aceito pela API", () => {
-    expect(normalizeServicePayload({ name: " Corte ", description: " ", priceReais: "50,00", durationMinutes: "40", displayOrder: "2", status: "ACTIVE" })).toEqual({
-      payload: { name: "Corte", description: null, priceCents: 5000, durationMinutes: 40, displayOrder: 2, status: "ACTIVE" },
+    expect(normalizeServicePayload({ name: " Corte ", description: " ", priceReais: "50,00", durationMinutes: "40", displayOrder: "2", status: "ACTIVE", categoryId: "" })).toEqual({
+      payload: { name: "Corte", description: null, priceCents: 5000, durationMinutes: 40, displayOrder: 2, status: "ACTIVE", categoryId: null },
     })
   })
 
   it("valida duração e ordem inteiras", () => {
-    const base = { name: "Corte", description: "", priceReais: "10", durationMinutes: "1.5", displayOrder: "0", status: "ACTIVE" as const }
+    const base = { name: "Corte", description: "", priceReais: "10", durationMinutes: "1.5", displayOrder: "0", status: "ACTIVE" as const, categoryId: "" }
     expect(normalizeServicePayload(base)).toHaveProperty("error")
     expect(normalizeServicePayload({ ...base, durationMinutes: "30", displayOrder: "-1" })).toHaveProperty("error")
   })
@@ -33,14 +33,14 @@ describe("helpers da interface de serviços", () => {
   })
 
   it("marca somente serviços individuais como disponíveis", () => {
-    expect(serviceTabs.filter((tab) => tab.available).map((tab) => tab.value)).toEqual(["individual"])
-    expect(serviceTabs.filter((tab) => !tab.available).map((tab) => tab.value)).toEqual(["combos", "categories"])
+    expect(serviceTabs.filter((tab) => tab.available).map((tab) => tab.value)).toEqual(["individual", "categories"])
+    expect(serviceTabs.filter((tab) => !tab.available).map((tab) => tab.value)).toEqual(["combos"])
   })
 
   it("agrupa associações reais por profissional", () => {
     const ana = { id: "p1", name: "Ana", role: "Barbeira", photoUrl: null, status: "ACTIVE" } satisfies ProfessionalOption
     const bia = { id: "p2", name: "Bia", role: "Barbeira", photoUrl: null, status: "ACTIVE" } satisfies ProfessionalOption
-    const serviceBase = { description: null, priceCents: 5000, durationMinutes: 30, displayOrder: 0, status: "ACTIVE" as const }
+    const serviceBase = { description: null, category: null, priceCents: 5000, durationMinutes: 30, displayOrder: 0, status: "ACTIVE" as const, categoryId: "" }
     const services: CatalogService[] = [
       { ...serviceBase, id: "s1", name: "Corte", professionals: [{ professional: ana }] },
       { ...serviceBase, id: "s2", name: "Barba", professionals: [{ professional: ana }, { professional: bia }] },

@@ -110,6 +110,12 @@ describe("/api/services", () => {
     expect(prismaMock.$transaction).not.toHaveBeenCalled()
   })
 
+  it("recusa categoria inativa ou de outro tenant", async () => {
+    prismaMock.serviceCategory.findFirst.mockResolvedValue(null)
+    await expectJson(await POST(jsonRequest("http://test/api/services", "POST", { ...validBody, categoryId: "invalid" })), 400)
+    expect(prismaMock.$transaction).not.toHaveBeenCalled()
+  })
+
   it("cria servico e associacoes deduplicadas em transacao", async () => {
     prismaMock.professional.findMany.mockResolvedValue([{ id: "professional-one" }])
     prismaMock.service.create.mockResolvedValue({

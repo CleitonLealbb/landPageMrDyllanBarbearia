@@ -3,7 +3,7 @@ import type { CatalogService, ProfessionalOption, ServiceFormValues, ServicePayl
 export const serviceTabs = [
   { value: "individual", label: "Serviços Individuais", available: true },
   { value: "combos", label: "Combos / Pacotes", available: false },
-  { value: "categories", label: "Categorias", available: false },
+  { value: "categories", label: "Categorias", available: true },
 ] as const
 
 export function groupServicesByProfessional(services: CatalogService[], professionals: ProfessionalOption[]) {
@@ -74,6 +74,7 @@ export function normalizeServicePayload(values: ServiceFormValues):
       durationMinutes,
       displayOrder,
       status: values.status,
+      categoryId: values.categoryId || null,
     },
   }
 }
