@@ -50,6 +50,26 @@ export type PackageWriteData = {
   serviceIds?: string[]
 }
 
+export function buildPackageCreateData(
+  barbershopId: string,
+  data: Required<Pick<PackageWriteData, "name" | "priceCents" | "displayOrder" | "status" | "serviceIds">> & Pick<PackageWriteData, "description">
+) {
+  return {
+    barbershopId,
+    name: data.name,
+    description: data.description,
+    priceCents: data.priceCents,
+    displayOrder: data.displayOrder,
+    status: data.status,
+    items: {
+      create: data.serviceIds.map((serviceId, displayOrder) => ({
+        serviceId,
+        displayOrder,
+      })),
+    },
+  } satisfies Prisma.ServicePackageUncheckedCreateInput
+}
+
 export function validatePackageBody(body: unknown, partial: boolean): { value?: PackageWriteData; error?: string } {
   if (!isRecord(body)) return { error: "Corpo da requisicao invalido." }
   const data: PackageWriteData = {}
