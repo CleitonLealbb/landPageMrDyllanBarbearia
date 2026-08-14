@@ -1,5 +1,9 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Documentação do projeto
+
+A documentação técnica e visual viva do Agendo Barber está em [docs/README.md](docs/README.md). Ela reúne arquitetura, autenticação, banco, módulos, APIs, operação, ADRs e o estado comprovado de cada funcionalidade.
+
 ## Getting Started
 
 First, run the development server:
