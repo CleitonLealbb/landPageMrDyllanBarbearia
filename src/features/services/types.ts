@@ -21,6 +21,7 @@ export type CatalogService = {
 
 export type ProfessionalOption = ServiceProfessional & { status: string }
 export type ServiceCategory = { id: string; name: string; description: string | null; displayOrder: number; status: ServiceStatus; _count: { services: number } }
+export type ServicePackage = { id: string; name: string; description: string | null; priceCents: number; originalPriceCents: number; durationMinutes: number; displayOrder: number; status: ServiceStatus; services: Array<{ id: string; name: string; priceCents: number; durationMinutes: number; status: ServiceStatus }> }
 
 export type ServiceFormValues = {
   name: string

@@ -13,6 +13,6 @@ sequenceDiagram
   API-->>App: JSON público estável
 ```
 
-Retorna identidade pública da barbearia, serviços ativos e profissionais ativos associados. Não expõe e-mail, comissão, credenciais, membership, `accessEmail` ou notas internas.
+Retorna identidade pública da barbearia, serviços ativos, profissionais ativos associados e combos ativos compostos apenas por serviços ativos. Combos incluem preço promocional, preço original e duração derivados. Não expõe e-mail, comissão, credenciais, membership, tenant, `accessEmail` ou notas internas.
 
-Fontes: `src/app/api/mobile/v1`, `src/lib/mobile/public-catalog.ts`, `tests/routes/mobile-catalog.test.ts`.
+Fontes: `src/app/api/mobile/v1`, `src/lib/mobile/public-catalog.ts`, `tests/routes/mobile-catalog.test.ts` e `tests/routes/mobile-service-packages.test.ts`.

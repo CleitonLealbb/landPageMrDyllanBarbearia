@@ -98,6 +98,7 @@ model Barbershop {
   customers     BarbershopCustomer[]
   services      Service[]
   serviceCategories ServiceCategory[]
+  servicePackages   ServicePackage[]
 }
 
 model BarbershopUser {
@@ -161,10 +162,43 @@ model Service {
   barbershop    Barbershop            @relation(fields: [barbershopId], references: [id])
   professionals ProfessionalService[]
   category      ServiceCategory?      @relation(fields: [barbershopId, categoryId], references: [barbershopId, id])
+  packageItems  ServicePackageItem[]
 
   @@unique([barbershopId, id])
   @@unique([barbershopId, name])
   @@index([barbershopId, status, displayOrder])
+}
+
+model ServicePackage {
+  id           String        @id @default(uuid())
+  barbershopId String
+  name         String
+  description  String?
+  priceCents   Int
+  displayOrder Int           @default(0)
+  status       ServiceStatus @default(ACTIVE)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  barbershop Barbershop          @relation(fields: [barbershopId], references: [id])
+  items      ServicePackageItem[]
+
+  @@unique([barbershopId, id])
+  @@unique([barbershopId, name])
+  @@index([barbershopId, status, displayOrder])
+}
+
+model ServicePackageItem {
+  barbershopId String
+  packageId    String
+  serviceId    String
+  displayOrder Int @default(0)
+
+  package ServicePackage @relation(fields: [barbershopId, packageId], references: [barbershopId, id])
+  service Service        @relation(fields: [barbershopId, serviceId], references: [barbershopId, id])
+
+  @@id([barbershopId, packageId, serviceId])
+  @@index([barbershopId, serviceId])
 }
 
 model ServiceCategory {

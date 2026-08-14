@@ -1,8 +1,8 @@
-import type { CatalogService, ProfessionalOption, ServiceFormValues, ServicePayload } from "./types"
+import type { CatalogService, ProfessionalOption, ServiceFormValues, ServicePackage, ServicePayload } from "./types"
 
 export const serviceTabs = [
   { value: "individual", label: "Serviços Individuais", available: true },
-  { value: "combos", label: "Combos / Pacotes", available: false },
+  { value: "combos", label: "Combos / Pacotes", available: true },
   { value: "categories", label: "Categorias", available: true },
 ] as const
 
@@ -95,4 +95,23 @@ export function safeApiMessage(status: number) {
   if (status === 404) return "O serviço solicitado não foi encontrado."
   if (status === 409) return "Já existe um serviço com este nome."
   return "Não foi possível concluir a operação. Tente novamente."
+}
+
+export function filterPackages(packages: readonly ServicePackage[], query: string) {
+  const term = query.trim().toLocaleLowerCase("pt-BR")
+  return term ? packages.filter((item) => `${item.name} ${item.description ?? ""} ${item.services.map((service) => service.name).join(" ")}`.toLocaleLowerCase("pt-BR").includes(term)) : [...packages]
+}
+
+export function calculatePackageSummary(services: ReadonlyArray<{ priceCents: number; durationMinutes: number }>, priceCents: number) {
+  const originalPriceCents = services.reduce((sum, service) => sum + service.priceCents, 0)
+  const durationMinutes = services.reduce((sum, service) => sum + service.durationMinutes, 0)
+  const savingsCents = Math.max(0, originalPriceCents - priceCents)
+  return { originalPriceCents, durationMinutes, savingsCents, savingsPercent: originalPriceCents ? Math.round(savingsCents / originalPriceCents * 100) : 0 }
+}
+
+export function normalizePackagePayload(values: { name: string; description: string; priceReais: string; displayOrder: string; serviceIds: string[] }) {
+  const priceCents = reaisToCents(values.priceReais), displayOrder = Number(values.displayOrder)
+  const serviceIds = [...new Set(values.serviceIds)]
+  if (!values.name.trim() || priceCents === null || !/^\d+$/.test(values.displayOrder) || !Number.isSafeInteger(displayOrder) || serviceIds.length < 2) return { error: "Dados do combo invalidos." as const }
+  return { payload: { name: values.name.trim(), description: values.description.trim() || null, priceCents, displayOrder, serviceIds } }
 }

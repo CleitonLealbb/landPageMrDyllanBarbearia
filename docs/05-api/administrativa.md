@@ -16,7 +16,10 @@ Todas as rotas derivam autorização da sessão; corpo e parâmetros não escolh
 | `/api/services/[id]` | PUT/DELETE lógico | Owner |
 | `/api/services/[id]/professionals` | PUT | Owner |
 | `/api/service-categories` e `/[id]` | GET/POST/PUT/DELETE lógico | Owner |
+| `/api/service-packages` e `/[id]` | GET/POST/PUT/DELETE lógico | Owner |
 | `/api/dashboard/summary` | GET | Sessão autorizada por tipo |
 | `/api/upload` | POST | Owner; integração Cloudinary |
 
 Fontes: `src/app/api/**/route.ts` e testes de rota.
+
+Combos exigem dois serviços ativos do tenant. O preço promocional não supera a soma atual. `PUT` substitui itens atomicamente apenas com `serviceIds`; `DELETE` inativa de modo idempotente.

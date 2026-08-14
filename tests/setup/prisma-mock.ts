@@ -49,6 +49,16 @@ export const prismaMock = {
     create: forbiddenPrismaCall("serviceCategory", "create"),
     update: forbiddenPrismaCall("serviceCategory", "update"),
   },
+  servicePackage: {
+    findFirst: forbiddenPrismaCall("servicePackage", "findFirst"),
+    findMany: forbiddenPrismaCall("servicePackage", "findMany"),
+    create: forbiddenPrismaCall("servicePackage", "create"),
+    update: forbiddenPrismaCall("servicePackage", "update"),
+  },
+  servicePackageItem: {
+    deleteMany: forbiddenPrismaCall("servicePackageItem", "deleteMany"),
+    createMany: forbiddenPrismaCall("servicePackageItem", "createMany"),
+  },
   professionalService: {
     deleteMany: forbiddenPrismaCall("professionalService", "deleteMany"),
     createMany: forbiddenPrismaCall("professionalService", "createMany"),

@@ -32,9 +32,9 @@ describe("helpers da interface de serviços", () => {
     expect(calculateServiceSummary(services)).toEqual({ total: 2, active: 1, inactive: 1, averageDuration: 45 })
   })
 
-  it("marca somente serviços individuais como disponíveis", () => {
-    expect(serviceTabs.filter((tab) => tab.available).map((tab) => tab.value)).toEqual(["individual", "categories"])
-    expect(serviceTabs.filter((tab) => !tab.available).map((tab) => tab.value)).toEqual(["combos"])
+  it("marca serviços, combos e categorias como disponíveis", () => {
+    expect(serviceTabs.filter((tab) => tab.available).map((tab) => tab.value)).toEqual(["individual", "combos", "categories"])
+    expect(serviceTabs.filter((tab) => !tab.available).map((tab) => tab.value)).toEqual([])
   })
 
   it("agrupa associações reais por profissional", () => {

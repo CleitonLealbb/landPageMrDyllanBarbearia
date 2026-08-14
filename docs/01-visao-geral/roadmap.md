@@ -3,7 +3,7 @@
 | Área | Estado | Evidência |
 |---|---|---|
 | Serviços individuais e categorias | IMPLEMENTADO | Rotas, UI e testes dedicados |
-| Combos/pacotes | PLANEJADO | Aba “Em breve” |
+| Combos/pacotes | IMPLEMENTADO | Schema, APIs, UI e testes dedicados |
 | Escalas de trabalho | PLANEJADO | Painel “Em breve” |
 | Configurações de serviços | IMPLEMENTADO | Rota `/dashboard/configuracoes/servicos` |
 | Outros cards de configurações | PLANEJADO | `available: false` |

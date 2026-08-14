@@ -6,7 +6,7 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { centsToReais, normalizeServicePayload, safeApiMessage } from "../helpers"
-import type { CatalogService, ProfessionalOption, ServiceCategory, ServiceFormValues } from "../types"
+import type { CatalogService, ProfessionalOption, ServiceCategory, ServiceFormValues, ServicePackage } from "../types"
 import { ProfessionalsDialog } from "./professionals-dialog"
 import { ServiceCatalogPanel } from "./service-catalog-panel"
 import { ServiceFormDialog } from "./service-form-dialog"
@@ -21,6 +21,7 @@ export function ServicesView() {
   const [services, setServices] = useState<CatalogService[]>([])
   const [professionals, setProfessionals] = useState<ProfessionalOption[]>([])
   const [categories, setCategories] = useState<ServiceCategory[]>([])
+  const [packages, setPackages] = useState<ServicePackage[]>([])
   const [loading, setLoading] = useState(true)
   const [showLoading, setShowLoading] = useState(false)
   const [loadError, setLoadError] = useState(false)
@@ -35,11 +36,11 @@ export function ServicesView() {
   const loadCatalog = useCallback(async () => {
     setLoading(true); setLoadError(false)
     try {
-      const [serviceResponse, professionalResponse, categoryResponse] = await Promise.all([fetch("/api/services", { cache: "no-store" }), fetch("/api/professionals", { cache: "no-store" }), fetch("/api/service-categories", { cache: "no-store" })])
-      if (!serviceResponse.ok || !professionalResponse.ok || !categoryResponse.ok) throw new Error("request failed")
-      const [serviceData, professionalData, categoryData]: unknown[] = await Promise.all([serviceResponse.json(), professionalResponse.json(), categoryResponse.json()])
-      if (!isArray<CatalogService>(serviceData) || !isArray<ProfessionalOption>(professionalData) || !isArray<ServiceCategory>(categoryData)) throw new Error("invalid response")
-      setServices(serviceData); setProfessionals(professionalData.filter((professional) => professional.status !== "INACTIVE")); setCategories(categoryData)
+      const [serviceResponse, professionalResponse, categoryResponse, packageResponse] = await Promise.all([fetch("/api/services", { cache: "no-store" }), fetch("/api/professionals", { cache: "no-store" }), fetch("/api/service-categories", { cache: "no-store" }), fetch("/api/service-packages", { cache: "no-store" })])
+      if (!serviceResponse.ok || !professionalResponse.ok || !categoryResponse.ok || !packageResponse.ok) throw new Error("request failed")
+      const [serviceData, professionalData, categoryData, packageData]: unknown[] = await Promise.all([serviceResponse.json(), professionalResponse.json(), categoryResponse.json(), packageResponse.json()])
+      if (!isArray<CatalogService>(serviceData) || !isArray<ProfessionalOption>(professionalData) || !isArray<ServiceCategory>(categoryData) || !isArray<ServicePackage>(packageData)) throw new Error("invalid response")
+      setServices(serviceData); setProfessionals(professionalData.filter((professional) => professional.status !== "INACTIVE")); setCategories(categoryData); setPackages(packageData)
     } catch { setLoadError(true) } finally { setLoading(false) }
   }, [])
   useEffect(() => { void loadCatalog() }, [loadCatalog])
@@ -55,5 +56,5 @@ export function ServicesView() {
   async function changeStatus(service: CatalogService) { setSubmitting(true); try { const response = await fetch(`/api/services/${service.id}`, { method: service.status === "ACTIVE" ? "DELETE" : "PUT", headers: { "Content-Type": "application/json" }, ...(service.status === "INACTIVE" ? { body: JSON.stringify({ status: "ACTIVE" }) } : {}) }); if (!response.ok) return void toast.error(safeApiMessage(response.status)); await loadCatalog(); toast.success(service.status === "ACTIVE" ? "Serviço inativado." : "Serviço reativado.") } catch { toast.error("Não foi possível conectar ao servidor. Tente novamente.") } finally { setSubmitting(false) } }
 
   if (loading) return <ServicesLoading visible={showLoading} />
-  return <div className="min-h-screen p-4 sm:p-6 lg:p-8"><div className="mx-auto max-w-[90rem] space-y-7"><ServicesSettingsHeader />{loadError ? <Card><CardContent className="flex flex-col items-center gap-4 py-12 text-center"><p className="text-muted-foreground">Não foi possível carregar o catálogo e a equipe.</p><Button variant="outline" onClick={() => void loadCatalog()}><RefreshCw aria-hidden="true" />Tentar novamente</Button></CardContent></Card> : <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(18rem,2fr)]"><ServiceCatalogPanel categories={categories} reload={loadCatalog} services={services} filtered={filtered} query={query} submitting={submitting} onQuery={setQuery} onNew={openNew} onEdit={openEdit} onProfessionals={openProfessionals} onStatus={(service) => void changeStatus(service)} /><TeamPanel services={services} professionals={professionals} /></div>}</div><ServiceFormDialog categories={categories} open={formOpen} service={editing} values={form} submitting={submitting} onOpenChange={setFormOpen} onChange={setForm} onSubmit={submitForm} /><ProfessionalsDialog service={professionalsService} professionals={professionals} selected={selectedProfessionals} submitting={submitting} onOpenChange={(open) => !open && setProfessionalsService(null)} onSelectedChange={setSelectedProfessionals} onSave={saveProfessionals} /></div>
+  return <div className="min-h-screen p-4 sm:p-6 lg:p-8"><div className="mx-auto max-w-[90rem] space-y-7"><ServicesSettingsHeader />{loadError ? <Card><CardContent className="flex flex-col items-center gap-4 py-12 text-center"><p className="text-muted-foreground">Não foi possível carregar o catálogo e a equipe.</p><Button variant="outline" onClick={() => void loadCatalog()}><RefreshCw aria-hidden="true" />Tentar novamente</Button></CardContent></Card> : <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(18rem,2fr)]"><ServiceCatalogPanel packages={packages} categories={categories} reload={loadCatalog} services={services} filtered={filtered} query={query} submitting={submitting} onQuery={setQuery} onNew={openNew} onEdit={openEdit} onProfessionals={openProfessionals} onStatus={(service) => void changeStatus(service)} /><TeamPanel services={services} professionals={professionals} /></div>}</div><ServiceFormDialog categories={categories} open={formOpen} service={editing} values={form} submitting={submitting} onOpenChange={setFormOpen} onChange={setForm} onSubmit={submitForm} /><ProfessionalsDialog service={professionalsService} professionals={professionals} selected={selectedProfessionals} submitting={submitting} onOpenChange={(open) => !open && setProfessionalsService(null)} onSelectedChange={setSelectedProfessionals} onSave={saveProfessionals} /></div>
 }
