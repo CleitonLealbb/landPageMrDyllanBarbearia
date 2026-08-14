@@ -45,6 +45,7 @@ function validProfessional(
   overrides: Record<string, unknown> = {}
 ) {
   prismaMock.professional.findUnique.mockResolvedValue({
+    userId: null,
     barbershopId: session.barbershopId,
     permissionLevel: session.tenantRole,
     sessionVersion: session.sessionVersion,
@@ -253,6 +254,7 @@ describe("getCurrentBarbershop", () => {
   it("retorna somente id para PROFESSIONAL", async () => {
     decode(professionalBarberSession)
     prismaMock.professional.findUnique.mockResolvedValue({
+      userId: null,
       barbershopId: professionalBarberSession.barbershopId,
       permissionLevel: "BARBER",
       sessionVersion: professionalBarberSession.sessionVersion,

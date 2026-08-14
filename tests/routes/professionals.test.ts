@@ -117,6 +117,7 @@ describe("/api/professionals", () => {
   it("POST ignora tenant do cliente, cria no tenant validado e nao expoe segredos", async () => {
     allowOwner()
     prismaMock.professional.findFirst.mockResolvedValue(null)
+    prismaMock.user.findUnique.mockResolvedValue(null)
     const created = {
       id: "professional", name: "Barber", email: "barber@test.com", role: "Cabeleireiro",
       permissionLevel: "BARBER", commission: 40, specialties: ["Corte"], photoUrl: null, status: "PENDING",

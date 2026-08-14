@@ -12,6 +12,7 @@ export const prismaMock = {
     findUnique: forbiddenPrismaCall("user", "findUnique"),
     count: forbiddenPrismaCall("user", "count"),
     create: forbiddenPrismaCall("user", "create"),
+    update: forbiddenPrismaCall("user", "update"),
   },
   professional: {
     findUnique: forbiddenPrismaCall("professional", "findUnique"),

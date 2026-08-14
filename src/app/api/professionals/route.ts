@@ -92,6 +92,13 @@ export async function POST(req: Request) {
 
   const body = await req.json()
 
+  if (Object.prototype.hasOwnProperty.call(body, "userId")) {
+    return NextResponse.json(
+      { message: "Campo de vinculo nao permitido neste fluxo." },
+      { status: 400 }
+    )
+  }
+
   if (!body.name || !body.email || !body.role) {
     return NextResponse.json(
       { message: "Nome, e-mail e cargo sao obrigatorios." },
@@ -128,6 +135,17 @@ export async function POST(req: Request) {
   if (exists) {
     return NextResponse.json(
       { message: "Ja existe um profissional com esse nome ou e-mail." },
+      { status: 409 }
+    )
+  }
+
+  const userWithEmail = await prisma.user.findUnique({
+    where: { email: body.email.trim().toLowerCase() },
+    select: { id: true },
+  })
+  if (userWithEmail) {
+    return NextResponse.json(
+      { message: "Nao foi possivel criar o profissional com esse e-mail." },
       { status: 409 }
     )
   }
@@ -217,6 +235,7 @@ export async function POST(req: Request) {
   } catch {
     return internalServerErrorResponse()
   }
+
 }
 
 export async function GET() {

@@ -42,6 +42,7 @@ describe("/api/barbershops/[id]/owner", () => {
     getSessionMock.mockResolvedValue(superAdminSession)
     prismaMock.barbershop.findUnique.mockResolvedValue({ id: "shop" })
     prismaMock.user.findUnique.mockResolvedValue({ id: "existing" })
+    prismaMock.professional.findUnique.mockResolvedValue(null)
     await expectJson(await POST(jsonRequest("http://test/x", "POST", validBody), context), 409)
     expect(prismaMock.user.create).not.toHaveBeenCalled()
   })
@@ -50,6 +51,7 @@ describe("/api/barbershops/[id]/owner", () => {
     getSessionMock.mockResolvedValue(superAdminSession)
     prismaMock.barbershop.findUnique.mockResolvedValue({ id: "shop" })
     prismaMock.user.findUnique.mockResolvedValue(null)
+    prismaMock.professional.findUnique.mockResolvedValue(null)
     hashMock.mockResolvedValue("hashed-password")
     prismaMock.user.create.mockResolvedValue({ id: "owner", name: "Owner", email: "owner@test.com", role: "BARBERSHOP_OWNER" })
 

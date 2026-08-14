@@ -22,7 +22,7 @@ const context = (id: string) => ({ params: Promise.resolve({ id }) })
 const userBarber = { ...ownerSession, tenantRole: "BARBER" } as const
 const userAssistant = { ...ownerSession, tenantRole: "ASSISTANT" } as const
 const existing = {
-  id: "professional", barbershopId: ownerSession.barbershopId, name: "Old", permissionLevel: "BARBER",
+  id: "professional", barbershopId: ownerSession.barbershopId, name: "Old", email: "old@test.com", permissionLevel: "BARBER",
 }
 const updateBody = {
   name: "New", email: "new@test.com", role: "Barbeiro", permissionLevel: "BARBER",
@@ -33,6 +33,7 @@ function allowOwner() {
   getSessionMock.mockResolvedValue(ownerSession)
   getCurrentBarbershopMock.mockResolvedValue({ id: ownerSession.barbershopId, name: "One" })
   prismaMock.barbershopUser.findFirst.mockResolvedValue({ id: "membership" })
+  prismaMock.user.findUnique.mockResolvedValue(null)
 }
 
 describe("/api/professionals/[id]", () => {

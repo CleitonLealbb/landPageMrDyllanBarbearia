@@ -57,6 +57,7 @@ model User {
 model Professional {
   id              String                      @id @default(uuid())
   barbershopId    String
+  userId          String?
   name            String
   email           String?                     @unique
   role            String
@@ -74,9 +75,11 @@ model Professional {
   createdAt       DateTime                    @default(now())
 
   barbershop Barbershop            @relation(fields: [barbershopId], references: [id])
+  membership BarbershopUser?       @relation(fields: [barbershopId, userId], references: [barbershopId, userId])
   services   ProfessionalService[]
 
   @@unique([barbershopId, id])
+  @@unique([barbershopId, userId])
 }
 
 model Barbershop {
@@ -106,8 +109,10 @@ model BarbershopUser {
 
   user       User       @relation(fields: [userId], references: [id])
   barbershop Barbershop @relation(fields: [barbershopId], references: [id])
+  professionalProfiles Professional[]
 
   @@unique([userId, barbershopId])
+  @@unique([barbershopId, userId])
 }
 
 model CustomerAccount {

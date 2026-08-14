@@ -69,7 +69,7 @@ export async function POST(req: Request) {
       accountType = "USER"
     } else {
       const professional = await prisma.professional.findUnique({
-        where: { email: cleanEmail },
+        where: { email: cleanEmail, userId: null },
       })
 
       if (professional) {

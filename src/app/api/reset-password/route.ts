@@ -54,6 +54,7 @@ export async function POST(req: Request) {
 
   const professional = await prisma.professional.findFirst({
     where: {
+      userId: null,
       resetToken: token,
       resetExpires: {
         gt: new Date(),

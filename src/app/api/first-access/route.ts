@@ -24,6 +24,7 @@ export async function POST(req: Request) {
 
   const professional = await prisma.professional.findFirst({
     where: {
+      userId: null,
       inviteToken: token,
       inviteExpires: {
         gt: new Date(),

@@ -40,6 +40,7 @@ export async function POST(req: Request) {
     const professional = await prisma.professional.findUnique({
       where: {
         email,
+        userId: null,
       },
     })
 
@@ -62,7 +63,7 @@ export async function POST(req: Request) {
       process.env.NEXT_PUBLIC_APP_URL ?? new URL(req.url).origin
     const resetLink = `${baseUrl}/reset-password?token=${token}`
 
-    if (user || await prisma.professional.findUnique({ where: { email } })) {
+    if (user || await prisma.professional.findUnique({ where: { email, userId: null } })) {
       await resend.emails.send({
         from: process.env.MAIL_FROM!,
         to: email,

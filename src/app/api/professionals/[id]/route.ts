@@ -128,6 +128,13 @@ export async function PUT(
   }
 
   const body = await req.json()
+
+  if (Object.prototype.hasOwnProperty.call(body, "userId")) {
+    return NextResponse.json(
+      { message: "Campo de vinculo nao permitido neste fluxo." },
+      { status: 400 }
+    )
+  }
   const permissionLevel: unknown = body.permissionLevel
 
   if (!isProfessionalPermissionLevel(permissionLevel)) {
@@ -140,11 +147,25 @@ export async function PUT(
   const permissionLevelChanged =
     exists.permissionLevel !== permissionLevel
 
+  const normalizedEmail = body.email?.trim().toLowerCase()
+  if (normalizedEmail && normalizedEmail !== exists.email?.toLowerCase()) {
+    const userWithEmail = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
+      select: { id: true },
+    })
+    if (userWithEmail) {
+      return NextResponse.json(
+        { message: "Nao foi possivel atualizar o profissional com esse e-mail." },
+        { status: 409 }
+      )
+    }
+  }
+
   const professional = await prisma.professional.update({
     where: { id },
     data: {
       name: body.name?.trim(),
-      email: body.email?.trim(),
+      email: normalizedEmail,
       role: body.role,
       permissionLevel,
       commission: Number(body.commission),

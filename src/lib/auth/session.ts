@@ -94,6 +94,7 @@ async function revalidateSession(
       id: session.professionalId,
     },
     select: {
+      userId: true,
       barbershopId: true,
       permissionLevel: true,
       sessionVersion: true,
@@ -103,6 +104,7 @@ async function revalidateSession(
 
   if (
     !professional ||
+    professional.userId !== null ||
     professional.status !== "ACTIVE" ||
     professional.sessionVersion !== session.sessionVersion ||
     professional.permissionLevel !== session.tenantRole ||
