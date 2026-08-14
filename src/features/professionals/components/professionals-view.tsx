@@ -138,7 +138,9 @@ function isStoredUser(value: unknown): value is StoredUser {
 type Profissional = {
   id: string
   name: string
-  email: string
+  email: string | null
+  accessEmail: string | null
+  identityType: "LINKED_USER" | "INDEPENDENT_PROFESSIONAL"
   role: string
   permissionLevel?: string
   commission: number
@@ -219,7 +221,9 @@ export function ProfissionaisView() {
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-    if (!emailRegex.test(email.trim())) {
+    const linkedProfile = editingProfessional?.identityType === "LINKED_USER"
+
+    if (!linkedProfile && !emailRegex.test(email.trim())) {
       toast.warning("Informe um e-mail válido.")
       return
     }
@@ -229,7 +233,7 @@ export function ProfissionaisView() {
       return
     }
 
-    if (!email.trim()) {
+    if (!linkedProfile && !email.trim()) {
       toast.warning("Informe o e-mail do profissional.")
       return
     }
@@ -292,7 +296,7 @@ export function ProfissionaisView() {
       },
       body: JSON.stringify({
         name: professionalName.trim(),
-        email: email.trim(),
+        ...(!linkedProfile ? { email: email.trim() } : {}),
         role,
         permissionLevel, 
         commission: Number(commission),
@@ -403,7 +407,7 @@ export function ProfissionaisView() {
     setEditingProfessional(item)
 
     setProfessionalName(item.name)
-    setEmail(item.email ?? "")
+    setEmail(item.accessEmail ?? "")
     setRole(item.role)
     setPermissionLevel(
       isProfessionalPermissionLevel(item.permissionLevel)
@@ -584,12 +588,33 @@ export function ProfissionaisView() {
 
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label>E-mail Profissional</Label>
+                          <Label htmlFor="professional-email">
+                            {editingProfessional?.identityType === "LINKED_USER"
+                              ? "E-mail de acesso"
+                              : "E-mail profissional"}
+                          </Label>
                           <Input
-                            placeholder="ricardo@barberpro.com"
+                            id="professional-email"
                             value={email}
+                            readOnly={editingProfessional?.identityType === "LINKED_USER"}
+                            aria-readonly={editingProfessional?.identityType === "LINKED_USER"}
                             onChange={(e) => setEmail(e.currentTarget.value)}
                           />
+                          {editingProfessional?.identityType === "LINKED_USER" && (
+                            <div className="space-y-2">
+                              <p className="text-xs text-muted-foreground">
+                                Este e-mail pertence à conta administrativa.
+                              </p>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => toast.info("A alteração segura do e-mail da conta ainda não está disponível. Use a área de Perfil/Conta quando ela for liberada.")}
+                              >
+                                Alterar e-mail da conta
+                              </Button>
+                            </div>
+                          )}
                         </div>
 
                         <div className="space-y-2">
@@ -735,9 +760,6 @@ export function ProfissionaisView() {
                             {item.name}
                           </p>
 
-                          <p className="truncate text-sm text-muted-foreground">
-                            {item.email}
-                          </p>
                         </div>
                       </div>
                     </TableCell>

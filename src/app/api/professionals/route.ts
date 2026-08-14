@@ -1,9 +1,9 @@
-import type { Prisma } from "@prisma/client"
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import crypto from "crypto"
 import { Resend } from "resend"
 import { getCurrentBarbershop, getSession } from "@/lib/auth/session"
+import { adminProfessionalSelect, presentAdminProfessional } from "@/lib/professionals/admin-presentation"
 
 function internalServerErrorResponse() {
   return NextResponse.json(
@@ -11,18 +11,6 @@ function internalServerErrorResponse() {
     { status: 500 }
   )
 }
-
-const professionalPublicSelect = {
-  id: true,
-  name: true,
-  email: true,
-  role: true,
-  permissionLevel: true,
-  commission: true,
-  specialties: true,
-  photoUrl: true,
-  status: true,
-} satisfies Prisma.ProfessionalSelect
 
 const PROFESSIONAL_PERMISSION_LEVELS = ["BARBER", "ASSISTANT"] as const
 
@@ -172,7 +160,7 @@ export async function POST(req: Request) {
       inviteToken,
       inviteExpires,
     },
-    select: professionalPublicSelect,
+    select: adminProfessionalSelect,
   })
 
   if (!process.env.RESEND_API_KEY) {
@@ -231,7 +219,7 @@ export async function POST(req: Request) {
     `,
   })
 
-    return NextResponse.json(professional)
+    return NextResponse.json(presentAdminProfessional(professional))
   } catch {
     return internalServerErrorResponse()
   }
@@ -298,10 +286,10 @@ export async function GET() {
     orderBy: {
       createdAt: "desc",
     },
-    select: professionalPublicSelect,
+    select: adminProfessionalSelect,
   })
 
-    return NextResponse.json(professionals)
+    return NextResponse.json(professionals.map(presentAdminProfessional))
   } catch {
     return internalServerErrorResponse()
   }

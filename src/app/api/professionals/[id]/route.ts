@@ -1,7 +1,7 @@
-import type { Prisma } from "@prisma/client"
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { getCurrentBarbershop, getSession } from "@/lib/auth/session"
+import { adminProfessionalSelect, presentAdminProfessional } from "@/lib/professionals/admin-presentation"
 
 function internalServerErrorResponse() {
   return NextResponse.json(
@@ -41,18 +41,6 @@ function isProfessionalPermissionLevel(
     (permissionLevel) => permissionLevel === value
   )
 }
-
-const professionalPublicSelect = {
-  id: true,
-  name: true,
-  email: true,
-  role: true,
-  permissionLevel: true,
-  commission: true,
-  specialties: true,
-  photoUrl: true,
-  status: true,
-} satisfies Prisma.ProfessionalSelect
 
 type Params = Promise<{
   id: string
@@ -135,6 +123,12 @@ export async function PUT(
       { status: 400 }
     )
   }
+  if (exists.userId != null && Object.prototype.hasOwnProperty.call(body, "email")) {
+    return NextResponse.json(
+      { message: "O e-mail de acesso deve ser alterado na conta administrativa." },
+      { status: 400 }
+    )
+  }
   const permissionLevel: unknown = body.permissionLevel
 
   if (!isProfessionalPermissionLevel(permissionLevel)) {
@@ -165,7 +159,7 @@ export async function PUT(
     where: { id },
     data: {
       name: body.name?.trim(),
-      email: normalizedEmail,
+      ...(exists.userId == null ? { email: normalizedEmail } : {}),
       role: body.role,
       permissionLevel,
       commission: Number(body.commission),
@@ -179,10 +173,10 @@ export async function PUT(
           }
         : {}),
     },
-    select: professionalPublicSelect,
+    select: adminProfessionalSelect,
   })
 
-    return NextResponse.json(professional)
+    return NextResponse.json(presentAdminProfessional(professional))
   } catch (error) {
     if (isPrismaNotFoundError(error)) {
       return professionalNotFoundResponse()

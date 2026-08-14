@@ -89,6 +89,7 @@ describe("API publica mobile do catalogo", () => {
       { id: "p1", name: "Ana", role: "Barbeira", photoUrl: null, serviceIds: ["s1"] },
     ])
     expect(JSON.stringify(body)).not.toContain("email")
+    expect(JSON.stringify(body)).not.toContain("accessEmail")
     expect(JSON.stringify(body)).not.toContain("commission")
     expect(JSON.stringify(body)).not.toContain("status")
   })

@@ -105,6 +105,18 @@ describe("/api/professionals/[id]", () => {
     }))
   })
 
+  it("PUT rejeita email para perfil vinculado sem alterar User ou Professional", async () => {
+    prismaMock.professional.findFirst.mockResolvedValue({ ...existing, userId: "linked-user", email: null })
+    const body = await expectJson(
+      await PUT(jsonRequest("http://test/x", "PUT", updateBody), context("professional")),
+      400
+    )
+    expect(body).toEqual({ message: expect.any(String) })
+    expect(prismaMock.user.update).not.toHaveBeenCalled()
+    expect(prismaMock.user.findUnique).not.toHaveBeenCalled()
+    expect(prismaMock.professional.update).not.toHaveBeenCalled()
+  })
+
   it("DELETE exclui owner valido do mesmo tenant", async () => {
     prismaMock.professional.findFirst.mockResolvedValue(existing)
     prismaMock.professional.delete.mockResolvedValue(existing)
