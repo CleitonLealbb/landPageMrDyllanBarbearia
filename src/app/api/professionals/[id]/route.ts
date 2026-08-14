@@ -129,7 +129,25 @@ export async function PUT(
       { status: 400 }
     )
   }
-  const permissionLevel: unknown = body.permissionLevel
+  const linkedProfile = exists.userId != null
+
+  if (linkedProfile && Object.prototype.hasOwnProperty.call(body, "permissionLevel")) {
+    return NextResponse.json(
+      { message: "O acesso do perfil vinculado nao pode ser alterado neste fluxo." },
+      { status: 400 }
+    )
+  }
+
+  if (linkedProfile && exists.permissionLevel !== "BARBER") {
+    return NextResponse.json(
+      { message: "Perfil vinculado com configuracao de acesso invalida." },
+      { status: 409 }
+    )
+  }
+
+  const permissionLevel: unknown = linkedProfile
+    ? exists.permissionLevel
+    : body.permissionLevel
 
   if (!isProfessionalPermissionLevel(permissionLevel)) {
     return NextResponse.json(
@@ -161,11 +179,11 @@ export async function PUT(
       name: body.name?.trim(),
       ...(exists.userId == null ? { email: normalizedEmail } : {}),
       role: body.role,
-      permissionLevel,
+      ...(!linkedProfile ? { permissionLevel } : {}),
       commission: Number(body.commission),
       specialties: body.specialties ?? [],
       photoUrl: body.photoUrl,
-      ...(permissionLevelChanged
+      ...(!linkedProfile && permissionLevelChanged
         ? {
             sessionVersion: {
               increment: 1,
@@ -252,6 +270,13 @@ export async function DELETE(
     return NextResponse.json(
       { message: "Profissional nao encontrado." },
       { status: 404 }
+    )
+  }
+
+  if (exists.userId != null) {
+    return NextResponse.json(
+      { message: "O perfil vinculado ao proprietario nao pode ser excluido." },
+      { status: 400 }
     )
   }
 

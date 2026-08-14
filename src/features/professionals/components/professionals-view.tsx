@@ -53,6 +53,13 @@ const PROFESSIONAL_PERMISSION_LEVELS = [
   "ASSISTANT",
 ] as const
 
+const PROFESSIONAL_ROLES = [
+  "Barbeiro Proprietário",
+  "Barber Master",
+  "Barber",
+  "Assistente",
+] as const
+
 type ProfessionalPermissionLevel =
   (typeof PROFESSIONAL_PERMISSION_LEVELS)[number]
 
@@ -242,7 +249,7 @@ export function ProfissionaisView() {
       toast.warning("Selecione o cargo do profissional.")
       return
     }
-    if (!isProfessionalPermissionLevel(permissionLevel)) {
+    if (!linkedProfile && !isProfessionalPermissionLevel(permissionLevel)) {
       toast.warning("Selecione um nível de permissão válido.")
       return
     }
@@ -298,7 +305,7 @@ export function ProfissionaisView() {
         name: professionalName.trim(),
         ...(!linkedProfile ? { email: email.trim() } : {}),
         role,
-        permissionLevel, 
+        ...(!linkedProfile ? { permissionLevel } : {}),
         commission: Number(commission),
         specialties,
         photoUrl: uploadedPhotoUrl,
@@ -471,6 +478,9 @@ export function ProfissionaisView() {
                     ? "Editar Profissional"
                     : "Adicionar Novo Profissional"}
                 </DialogTitle>
+                {editingProfessional?.identityType === "LINKED_USER" && (
+                  <Badge className="bg-primary text-primary-foreground">Proprietário</Badge>
+                )}
                 <DialogDescription className="sr-only">
                   {editingProfessional
                     ? "Formulário para editar profissional."
@@ -625,32 +635,50 @@ export function ProfissionaisView() {
                             </SelectTrigger>
 
                             <SelectContent>
-                              <SelectItem value="Barber Master">Barber Master</SelectItem>
-                              <SelectItem value="Barber">Barber</SelectItem>
-                              <SelectItem value="Assistente">Assistente</SelectItem>
+                              {!PROFESSIONAL_ROLES.includes(role as (typeof PROFESSIONAL_ROLES)[number]) && role && (
+                                <SelectItem value={role}>{role}</SelectItem>
+                              )}
+                              {PROFESSIONAL_ROLES.map((option) => (
+                                <SelectItem key={option} value={option}>{option}</SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </div>
 
                         <div className="space-y-2">
-                          <Label>Nível de Permissão</Label>
-                          <Select
-                            value={permissionLevel}
-                            onValueChange={(value) => {
-                              if (isProfessionalPermissionLevel(value)) {
-                                setPermissionLevel(value)
-                              }
-                            }}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecione a permissão" />
-                            </SelectTrigger>
-
-                            <SelectContent>
-                              <SelectItem value="BARBER">Barbeiro</SelectItem>
-                              <SelectItem value="ASSISTANT">Assistente</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          {editingProfessional?.identityType === "LINKED_USER" ? (
+                            <div className="space-y-3 rounded-lg border border-border/60 bg-muted/20 p-3">
+                              <div>
+                                <Label>Atuação operacional</Label>
+                                <p className="mt-1 text-sm font-medium">Barbeiro</p>
+                              </div>
+                              <div>
+                                <Label>Acesso administrativo</Label>
+                                <p className="mt-1 text-sm font-medium">Proprietário da barbearia</p>
+                              </div>
+                              <p className="text-xs leading-5 text-muted-foreground">
+                                O acesso administrativo vem da conta proprietária e não pode ser alterado neste formulário.
+                              </p>
+                            </div>
+                          ) : (
+                            <>
+                              <Label>Acesso profissional</Label>
+                              <Select
+                                value={permissionLevel}
+                                onValueChange={(value) => {
+                                  if (isProfessionalPermissionLevel(value)) setPermissionLevel(value)
+                                }}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Selecione o acesso" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="BARBER">Barbeiro</SelectItem>
+                                  <SelectItem value="ASSISTANT">Assistente</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </>
+                          )}
                         </div>
 
                         <div className="space-y-2">
@@ -795,7 +823,7 @@ export function ProfissionaisView() {
                             <Edit className="h-4 w-4" />
                           </Button>
                         )}
-                        {canAccess(effectiveRole, "professionals:delete") && (
+                        {canAccess(effectiveRole, "professionals:delete") && item.identityType !== "LINKED_USER" && (
                           <Button
                             variant="ghost"
                             size="icon"
