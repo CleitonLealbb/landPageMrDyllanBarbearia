@@ -17,6 +17,7 @@ import {
   Star,
   Camera,
   User,
+  Power,
   type LucideIcon,
 } from "lucide-react"
 
@@ -36,6 +37,16 @@ import {
   DialogTrigger,
   DialogDescription,
 } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -178,6 +189,8 @@ export function ProfissionaisView() {
   const [open, setOpen] = useState(false)
   const [editingProfessional, setEditingProfessional] =
     useState<Profissional | null>(null)
+  const [pendingInactivation, setPendingInactivation] = useState<Profissional | null>(null)
+  const [statusSubmitting, setStatusSubmitting] = useState(false)
 
   const [permissionLevel, setPermissionLevel] =
     useState<ProfessionalPermissionLevel | "">("")
@@ -371,21 +384,32 @@ export function ProfissionaisView() {
   }
 
 
-  async function handleDelete(id: string) {
-    const response = await fetch(`/api/professionals/${id}`, {
-      method: "DELETE",
-    })
-
-    if (!response.ok) {
-      toast.error("Erro ao excluir profissional.")
-      return
+  async function changeProfessionalStatus(item: Profissional) {
+    if (statusSubmitting || item.identityType === "LINKED_USER") return
+    setStatusSubmitting(true)
+    const reactivating = item.status === "INACTIVE"
+    try {
+      const response = await fetch(`/api/professionals/${item.id}`, {
+        method: reactivating ? "PUT" : "DELETE",
+        headers: reactivating ? { "Content-Type": "application/json" } : undefined,
+        body: reactivating ? JSON.stringify({ status: "ACTIVE" }) : undefined,
+      })
+      if (!response.ok) {
+        toast.error("Não foi possível alterar o status do profissional.")
+        return
+      }
+      setProfissionais((current) => current.map((professional) =>
+        professional.id === item.id
+          ? { ...professional, status: reactivating ? "ACTIVE" : "INACTIVE" }
+          : professional
+      ))
+      setPendingInactivation(null)
+      toast.success(reactivating ? "Profissional reativado." : "Profissional inativado.")
+    } catch {
+      toast.error("Não foi possível conectar ao servidor.")
+    } finally {
+      setStatusSubmitting(false)
     }
-
-    setProfissionais((prev) =>
-      prev.filter((item) => item.id !== id)
-    )
-
-    toast.success("Profissional excluído com sucesso.")
   }
 
   function toggleSpecialty(value: string) {
@@ -810,7 +834,11 @@ export function ProfissionaisView() {
 
                     <TableCell>{item.commission}%</TableCell>
 
-                    <TableCell>{item.status ?? "Ativo"}</TableCell>
+                    <TableCell>
+                      <Badge variant={item.status === "ACTIVE" ? "outline" : "secondary"}>
+                        {item.status === "ACTIVE" ? "Ativo" : item.status === "INACTIVE" ? "Inativo" : "Pendente"}
+                      </Badge>
+                    </TableCell>
 
                     <TableCell>
                       <div className="flex gap-2">
@@ -827,9 +855,14 @@ export function ProfissionaisView() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleDelete(item.id)}
+                            disabled={statusSubmitting}
+                            aria-label={`${item.status === "INACTIVE" ? "Reativar" : "Inativar"} ${item.name}`}
+                            onClick={() => item.status === "INACTIVE"
+                              ? void changeProfessionalStatus(item)
+                              : setPendingInactivation(item)}
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Power className="h-4 w-4" />
+                            <span className="sr-only">{item.status === "INACTIVE" ? "Reativar" : "Inativar"}</span>
                           </Button>
                         )}
                       </div>
@@ -852,6 +885,31 @@ export function ProfissionaisView() {
 
 
       </div>
+
+      <AlertDialog open={pendingInactivation !== null} onOpenChange={(open) => {
+        if (!open && !statusSubmitting) setPendingInactivation(null)
+      }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Inativar profissional?</AlertDialogTitle>
+            <AlertDialogDescription>
+              O profissional deixará de aparecer para novos agendamentos, mas seu cadastro e histórico serão preservados.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={statusSubmitting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={statusSubmitting || !pendingInactivation}
+              onClick={(event) => {
+                event.preventDefault()
+                if (pendingInactivation) void changeProfessionalStatus(pendingInactivation)
+              }}
+            >
+              {statusSubmitting ? "Inativando..." : "Inativar"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
     </div>
 

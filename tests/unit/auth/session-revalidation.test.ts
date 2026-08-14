@@ -189,7 +189,8 @@ describe("getSession - PROFESSIONAL", () => {
 
   it.each([
     ["profissional inexistente", null],
-    ["profissional inativo", { status: "PENDING" }],
+    ["profissional pendente", { status: "PENDING" }],
+    ["profissional inativo", { status: "INACTIVE" }],
     ["sessionVersion divergente", { sessionVersion: 99 }],
     ["permissionLevel alterado", { permissionLevel: "ASSISTANT" }],
     ["barbershopId divergente", { barbershopId: "other" }],

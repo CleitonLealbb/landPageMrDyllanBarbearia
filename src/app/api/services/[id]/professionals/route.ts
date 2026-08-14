@@ -49,7 +49,7 @@ export async function PUT(request: Request, context: RouteContext) {
     const professionalIds = idsValidation.value ?? []
     if (professionalIds.length > 0) {
       const professionals = await prisma.professional.findMany({
-        where: { id: { in: professionalIds }, barbershopId },
+        where: { id: { in: professionalIds }, barbershopId, status: "ACTIVE" },
         select: { id: true },
       })
       if (professionals.length !== professionalIds.length) {

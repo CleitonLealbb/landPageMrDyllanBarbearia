@@ -67,7 +67,7 @@ const data = {
   navMain: [
     { title: "Agenda", view: "agenda", icon: MdCalendarToday },
     { title: "Checkout", view: "checkout", icon: MdPointOfSale },
-    { title: "Clients", view: "clientes", icon: MdGroups },
+    { title: "Clientes", view: "clientes", icon: MdGroups },
     { title: "Estoque", view: "estoque", icon: MdInventory2 },
     { title: "Marketing", view: "marketing", icon: MdAdsClick },
     { title: "Cartões", view: "cartoes", icon: MdCreditCard },

@@ -131,6 +131,27 @@ export async function PUT(
   }
   const linkedProfile = exists.userId != null
 
+  if (Object.prototype.hasOwnProperty.call(body, "status")) {
+    if (Object.keys(body).length !== 1 || body.status !== "ACTIVE") {
+      return NextResponse.json(
+        { message: "Alteracao de status invalida." },
+        { status: 400 }
+      )
+    }
+    if (linkedProfile) {
+      return NextResponse.json(
+        { message: "O status do perfil vinculado nao pode ser alterado neste fluxo." },
+        { status: 400 }
+      )
+    }
+    const reactivated = await prisma.professional.update({
+      where: { id },
+      data: { status: "ACTIVE" },
+      select: adminProfessionalSelect,
+    })
+    return NextResponse.json(presentAdminProfessional(reactivated))
+  }
+
   if (linkedProfile && Object.prototype.hasOwnProperty.call(body, "permissionLevel")) {
     return NextResponse.json(
       { message: "O acesso do perfil vinculado nao pode ser alterado neste fluxo." },
@@ -275,17 +296,26 @@ export async function DELETE(
 
   if (exists.userId != null) {
     return NextResponse.json(
-      { message: "O perfil vinculado ao proprietario nao pode ser excluido." },
+      { message: "O perfil vinculado ao proprietario nao pode ser inativado." },
       { status: 400 }
     )
   }
 
-  await prisma.professional.delete({
+  if (exists.status === "INACTIVE") {
+    return NextResponse.json({ message: "Profissional ja estava inativo." })
+  }
+
+  await prisma.professional.update({
     where: { id },
+    data: {
+      status: "INACTIVE",
+      sessionVersion: { increment: 1 },
+    },
+    select: { id: true },
   })
 
     return NextResponse.json({
-    message: "Profissional excluido com sucesso.",
+    message: "Profissional inativado com sucesso.",
     })
   } catch (error) {
     if (isPrismaNotFoundError(error)) {

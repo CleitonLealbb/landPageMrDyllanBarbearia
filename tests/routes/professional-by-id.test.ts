@@ -22,7 +22,7 @@ const context = (id: string) => ({ params: Promise.resolve({ id }) })
 const userBarber = { ...ownerSession, tenantRole: "BARBER" } as const
 const userAssistant = { ...ownerSession, tenantRole: "ASSISTANT" } as const
 const existing = {
-  id: "professional", barbershopId: ownerSession.barbershopId, name: "Old", email: "old@test.com", permissionLevel: "BARBER",
+  id: "professional", barbershopId: ownerSession.barbershopId, name: "Old", email: "old@test.com", permissionLevel: "BARBER", status: "ACTIVE",
 }
 const updateBody = {
   name: "New", email: "new@test.com", role: "Barbeiro", permissionLevel: "BARBER",
@@ -156,11 +156,39 @@ describe("/api/professionals/[id]", () => {
     expect(body).toEqual(expect.objectContaining({ identityType: "LINKED_USER" }))
   })
 
-  it("DELETE exclui owner valido do mesmo tenant", async () => {
+  it("DELETE inativa profissional independente e incrementa sessionVersion uma vez", async () => {
     prismaMock.professional.findFirst.mockResolvedValue(existing)
-    prismaMock.professional.delete.mockResolvedValue(existing)
+    prismaMock.professional.update.mockResolvedValue({ id: existing.id })
     await expectJson(await DELETE(jsonRequest("http://test/x", "DELETE", {}), context("professional")), 200)
-    expect(prismaMock.professional.delete).toHaveBeenCalledWith({ where: { id: "professional" } })
+    expect(prismaMock.professional.update).toHaveBeenCalledWith({
+      where: { id: "professional" },
+      data: { status: "INACTIVE", sessionVersion: { increment: 1 } },
+      select: { id: true },
+    })
+    expect(prismaMock.professional.delete).not.toHaveBeenCalled()
+    expect(prismaMock.professionalService.deleteMany).not.toHaveBeenCalled()
+  })
+
+  it("DELETE e idempotente para profissional ja inativo", async () => {
+    prismaMock.professional.findFirst.mockResolvedValue({ ...existing, status: "INACTIVE" })
+    await expectJson(await DELETE(jsonRequest("http://test/x", "DELETE", {}), context("professional")), 200)
+    expect(prismaMock.professional.update).not.toHaveBeenCalled()
+    expect(prismaMock.professional.delete).not.toHaveBeenCalled()
+  })
+
+  it("PUT reativa sem alterar sessionVersion ou associacoes", async () => {
+    prismaMock.professional.findFirst.mockResolvedValue({ ...existing, status: "INACTIVE" })
+    prismaMock.professional.update.mockResolvedValue({ ...existing, status: "ACTIVE", membership: null })
+    await expectJson(
+      await PUT(jsonRequest("http://test/x", "PUT", { status: "ACTIVE" }), context("professional")),
+      200
+    )
+    expect(prismaMock.professional.update).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "professional" }, data: { status: "ACTIVE" },
+    }))
+    const data = (prismaMock.professional.update.mock.calls[0][0] as { data: Record<string, unknown> }).data
+    expect(data).not.toHaveProperty("sessionVersion")
+    expect(prismaMock.professionalService.deleteMany).not.toHaveBeenCalled()
   })
 
   it("DELETE bloqueia exclusao fisica do perfil vinculado", async () => {
@@ -172,7 +200,6 @@ describe("/api/professionals/[id]", () => {
   it.each([PUT, DELETE])("%s retorna 404 sanitizado para P2025", async (handler) => {
     prismaMock.professional.findFirst.mockResolvedValue(existing)
     prismaMock.professional.update.mockRejectedValue({ code: "P2025", message: "database secret" })
-    prismaMock.professional.delete.mockRejectedValue({ code: "P2025", message: "database secret" })
     const method = handler === PUT ? "PUT" : "DELETE"
     const body = await expectJson(
       await handler(jsonRequest("http://test/x", method, updateBody), context("professional")), 404

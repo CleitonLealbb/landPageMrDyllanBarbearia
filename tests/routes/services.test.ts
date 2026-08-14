@@ -104,6 +104,7 @@ describe("/api/services", () => {
       where: {
         id: { in: ["professional-one", "other-tenant-professional"] },
         barbershopId: ownerSession.barbershopId,
+        status: "ACTIVE",
       },
       select: { id: true },
     })

@@ -24,4 +24,11 @@ describe("distincao visual de identidades profissionais", () => {
     expect(source).toContain("Acesso profissional")
     expect(source).toContain('<SelectItem value="ASSISTANT">Assistente</SelectItem>')
   })
+
+  it("usa linguagem de inativacao e reativacao sem exclusao", () => {
+    expect(source).toContain("Inativar profissional?")
+    expect(source).toContain("cadastro e histórico serão preservados")
+    expect(source).toContain('item.status === "INACTIVE" ? "Reativar" : "Inativar"')
+    expect(source).not.toContain("Excluir profissional")
+  })
 })

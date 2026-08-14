@@ -62,7 +62,7 @@ export async function POST(request: Request) {
 
     if (professionalIds.length > 0) {
       const professionals = await prisma.professional.findMany({
-        where: { id: { in: professionalIds }, barbershopId },
+        where: { id: { in: professionalIds }, barbershopId, status: "ACTIVE" },
         select: { id: true },
       })
 

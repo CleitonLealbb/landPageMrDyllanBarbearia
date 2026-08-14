@@ -125,6 +125,27 @@ describe("/api/services/[id]/professionals", () => {
     expect(prismaMock.professionalService.deleteMany).not.toHaveBeenCalled()
   })
 
+  it("recusa nova associacao com profissional inativo", async () => {
+    prismaMock.service.findFirst.mockResolvedValue({ id: "service-one" })
+    prismaMock.professional.findMany.mockResolvedValue([])
+    await expectJson(
+      await PUT_PROFESSIONALS(
+        jsonRequest("http://test/x", "PUT", { professionalIds: ["inactive"] }),
+        context()
+      ),
+      400
+    )
+    expect(prismaMock.professional.findMany).toHaveBeenCalledWith({
+      where: {
+        id: { in: ["inactive"] },
+        barbershopId: ownerSession.barbershopId,
+        status: "ACTIVE",
+      },
+      select: { id: true },
+    })
+    expect(prismaMock.professionalService.deleteMany).not.toHaveBeenCalled()
+  })
+
   it("substitui associacoes deduplicadas atomicamente", async () => {
     prismaMock.service.findFirst
       .mockResolvedValueOnce({ id: "service-one" })
