@@ -93,12 +93,13 @@ model Barbershop {
   slug      String   @unique
   timezone  String   @default("America/Cuiaba")
 
-  members       BarbershopUser[]
-  professionals Professional[]
-  customers     BarbershopCustomer[]
-  services      Service[]
+  members           BarbershopUser[]
+  professionals     Professional[]
+  customers         BarbershopCustomer[]
+  services          Service[]
   serviceCategories ServiceCategory[]
   servicePackages   ServicePackage[]
+  tvMedia           TvMedia[]
 }
 
 model BarbershopUser {
@@ -108,8 +109,8 @@ model BarbershopUser {
   role         TenantRole
   createdAt    DateTime   @default(now())
 
-  user       User       @relation(fields: [userId], references: [id])
-  barbershop Barbershop @relation(fields: [barbershopId], references: [id])
+  user                 User           @relation(fields: [userId], references: [id])
+  barbershop           Barbershop     @relation(fields: [barbershopId], references: [id])
   professionalProfiles Professional[]
 
   @@unique([userId, barbershopId])
@@ -170,17 +171,18 @@ model Service {
 }
 
 model ServicePackage {
-  id           String        @id @default(uuid())
-  barbershopId String
-  name         String
-  description  String?
-  priceCents   Int
-  displayOrder Int           @default(0)
-  status       ServiceStatus @default(ACTIVE)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id              String        @id @default(uuid())
+  barbershopId    String
+  name            String
+  description     String?
+  priceCents      Int
+  durationMinutes Int
+  displayOrder    Int           @default(0)
+  status          ServiceStatus @default(ACTIVE)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
-  barbershop Barbershop          @relation(fields: [barbershopId], references: [id])
+  barbershop Barbershop           @relation(fields: [barbershopId], references: [id])
   items      ServicePackageItem[]
 
   @@unique([barbershopId, id])
@@ -192,7 +194,7 @@ model ServicePackageItem {
   barbershopId String
   packageId    String
   serviceId    String
-  displayOrder Int @default(0)
+  displayOrder Int    @default(0)
 
   package ServicePackage @relation(fields: [barbershopId, packageId], references: [barbershopId, id])
   service Service        @relation(fields: [barbershopId, serviceId], references: [barbershopId, id])
@@ -202,14 +204,14 @@ model ServicePackageItem {
 }
 
 model ServiceCategory {
-  id            String         @id @default(uuid())
-  barbershopId  String
-  name          String
-  description   String?
-  displayOrder  Int            @default(0)
-  status        CategoryStatus @default(ACTIVE)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  id           String         @id @default(uuid())
+  barbershopId String
+  name         String
+  description  String?
+  displayOrder Int            @default(0)
+  status       CategoryStatus @default(ACTIVE)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
 
   barbershop Barbershop @relation(fields: [barbershopId], references: [id])
   services   Service[]
@@ -230,4 +232,20 @@ model ProfessionalService {
 
   @@id([barbershopId, professionalId, serviceId])
   @@index([barbershopId, serviceId])
+}
+
+model TvMedia {
+  id           String   @id @default(cuid())
+  barbershopId String
+  name         String
+  url          String
+  type         String   @default("VIDEO")
+  order        Int      @default(0)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  barbershop Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+
+  @@index([barbershopId])
 }
