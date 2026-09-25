@@ -36,14 +36,19 @@ export async function GET() {
   } catch (error) {
     console.error("Erro na playlist da TV:", error)
 
-    return NextResponse.json(
-      {
-        success: false,
-        media: [],
-      },
-      {
-        status: 500,
-      }
-    )
+ return NextResponse.json(
+  {
+    success: false,
+    media: [],
+    debugVersion: "tv-player-v2",
+    error:
+      error instanceof Error
+        ? error.message
+        : String(error),
+  },
+  {
+    status: 500,
+  }
+)
   }
 }
