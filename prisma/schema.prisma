@@ -51,6 +51,7 @@ model Barbershop {
   createdAt DateTime @default(now())
 
   members BarbershopUser[]
+  tvMedia TvMedia[]
 }
 
 model BarbershopUser {
@@ -64,4 +65,21 @@ model BarbershopUser {
   barbershop Barbershop @relation(fields: [barbershopId], references: [id])
 
   @@unique([userId, barbershopId])
+}
+
+model TvMedia {
+  id           String   @id @default(cuid())
+  barbershopId String
+  name         String
+  url          String
+  type         String   @default("VIDEO")
+  order        Int      @default(0)
+  active       Boolean  @default(true)
+  duration     Int?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  barbershop Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+
+  @@index([barbershopId])
 }
