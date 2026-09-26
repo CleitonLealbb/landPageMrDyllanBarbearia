@@ -1,4 +1,4 @@
-import type { CatalogService, ProfessionalOption, ServiceFormValues, ServicePackage, ServicePayload } from "./types"
+import type { CatalogService, ProfessionalOption, ServiceFormValues, ServicePackage, ServicePackageFormValues, ServicePackagePayload, ServicePayload } from "./types"
 
 export const serviceTabs = [
   { value: "individual", label: "Serviços Individuais", available: true },
@@ -102,16 +102,23 @@ export function filterPackages(packages: readonly ServicePackage[], query: strin
   return term ? packages.filter((item) => `${item.name} ${item.description ?? ""} ${item.services.map((service) => service.name).join(" ")}`.toLocaleLowerCase("pt-BR").includes(term)) : [...packages]
 }
 
-export function calculatePackageSummary(services: ReadonlyArray<{ priceCents: number; durationMinutes: number }>, priceCents: number) {
+export function calculatePackageSummary(services: ReadonlyArray<{ priceCents: number }>, priceCents: number) {
   const originalPriceCents = services.reduce((sum, service) => sum + service.priceCents, 0)
-  const durationMinutes = services.reduce((sum, service) => sum + service.durationMinutes, 0)
   const savingsCents = Math.max(0, originalPriceCents - priceCents)
-  return { originalPriceCents, durationMinutes, savingsCents, savingsPercent: originalPriceCents ? Math.round(savingsCents / originalPriceCents * 100) : 0 }
+  return { originalPriceCents, savingsCents, savingsPercent: originalPriceCents ? Math.round(savingsCents / originalPriceCents * 100) : 0 }
 }
 
-export function normalizePackagePayload(values: { name: string; description: string; priceReais: string; displayOrder: string; serviceIds: string[] }) {
-  const priceCents = reaisToCents(values.priceReais), displayOrder = Number(values.displayOrder)
+export function normalizePackagePayload(values: ServicePackageFormValues):
+  | { payload: ServicePackagePayload; error?: never }
+  | { payload?: never; error: string } {
+  const priceCents = reaisToCents(values.priceReais)
+  const durationMinutes = Number(values.durationMinutes)
+  const displayOrder = Number(values.displayOrder)
   const serviceIds = [...new Set(values.serviceIds)]
-  if (!values.name.trim() || priceCents === null || !/^\d+$/.test(values.displayOrder) || !Number.isSafeInteger(displayOrder) || serviceIds.length < 2) return { error: "Dados do combo invalidos." as const }
-  return { payload: { name: values.name.trim(), description: values.description.trim() || null, priceCents, displayOrder, serviceIds } }
+  if (!values.name.trim()) return { error: "Informe o nome do combo." }
+  if (priceCents === null) return { error: "Informe um preco valido." }
+  if (!/^\d+$/.test(values.durationMinutes) || !Number.isSafeInteger(durationMinutes) || durationMinutes <= 0) return { error: "A duracao deve ser um numero inteiro maior que zero." }
+  if (!/^\d+$/.test(values.displayOrder) || !Number.isSafeInteger(displayOrder)) return { error: "A ordem deve ser um numero inteiro maior ou igual a zero." }
+  if (serviceIds.length < 2) return { error: "Selecione ao menos dois servicos distintos." }
+  return { payload: { name: values.name.trim(), description: values.description.trim() || null, priceCents, durationMinutes, displayOrder, status: values.status, serviceIds } }
 }

@@ -16,6 +16,7 @@ export const adminPackageSelect = {
   name: true,
   description: true,
   priceCents: true,
+  durationMinutes: true,
   displayOrder: true,
   status: true,
   items: {
@@ -34,7 +35,7 @@ export function presentPackage(value: PackageWithItems) {
     description: value.description,
     priceCents: value.priceCents,
     originalPriceCents: services.reduce((sum, service) => sum + service.priceCents, 0),
-    durationMinutes: services.reduce((sum, service) => sum + service.durationMinutes, 0),
+    durationMinutes: value.durationMinutes,
     displayOrder: value.displayOrder,
     status: value.status,
     services,
@@ -45,6 +46,7 @@ export type PackageWriteData = {
   name?: string
   description?: string | null
   priceCents?: number
+  durationMinutes?: number
   displayOrder?: number
   status?: ServiceStatus
   serviceIds?: string[]
@@ -52,13 +54,14 @@ export type PackageWriteData = {
 
 export function buildPackageCreateData(
   barbershopId: string,
-  data: Required<Pick<PackageWriteData, "name" | "priceCents" | "displayOrder" | "status" | "serviceIds">> & Pick<PackageWriteData, "description">
+  data: Required<Pick<PackageWriteData, "name" | "priceCents" | "durationMinutes" | "displayOrder" | "status" | "serviceIds">> & Pick<PackageWriteData, "description">
 ) {
   return {
     barbershopId,
     name: data.name,
     description: data.description,
     priceCents: data.priceCents,
+    durationMinutes: data.durationMinutes,
     displayOrder: data.displayOrder,
     status: data.status,
     items: {
@@ -84,6 +87,10 @@ export function validatePackageBody(body: unknown, partial: boolean): { value?: 
   if (!partial || "priceCents" in body) {
     if (!Number.isInteger(body.priceCents) || Number(body.priceCents) < 0) return { error: "Preco invalido." }
     data.priceCents = Number(body.priceCents)
+  }
+  if (!partial || "durationMinutes" in body) {
+    if (!Number.isInteger(body.durationMinutes) || Number(body.durationMinutes) <= 0) return { error: "Duracao invalida." }
+    data.durationMinutes = Number(body.durationMinutes)
   }
   if ("displayOrder" in body) {
     if (!Number.isInteger(body.displayOrder) || Number(body.displayOrder) < 0) return { error: "Ordem invalida." }
