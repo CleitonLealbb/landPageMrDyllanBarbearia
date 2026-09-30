@@ -4,8 +4,7 @@ import { prisma } from "@/lib/prisma"
 
 export async function GET() {
   try {
-    const barbershopId =
-      "2353b0a9-fd90-4331-a58e-0fd0df307cdf"
+    const barbershopId = "2353b0a9-fd90-4331-a58e-0fd0df307cdf"
 
     const media = await prisma.tvMedia.findMany({
       where: {
@@ -13,12 +12,8 @@ export async function GET() {
         active: true,
       },
       orderBy: [
-        {
-          order: "asc",
-        },
-        {
-          createdAt: "asc",
-        },
+        { order: "asc" },
+        { createdAt: "asc" },
       ],
       select: {
         id: true,
@@ -29,26 +24,18 @@ export async function GET() {
       },
     })
 
-    return NextResponse.json({
+    return Response.json({
       success: true,
+      serverTime: Math.floor(Date.now() / 1000),
       media,
     })
   } catch (error) {
-    console.error("Erro na playlist da TV:", error)
-
- return NextResponse.json(
-  {
-    success: false,
-    media: [],
-    debugVersion: "tv-player-v2",
-    error:
-      error instanceof Error
-        ? error.message
-        : String(error),
-  },
-  {
-    status: 500,
-  }
-)
+    return Response.json(
+      {
+        success: false,
+        error: "Erro ao carregar programação",
+      },
+      { status: 500 }
+    )
   }
 }

@@ -64,46 +64,88 @@ export async function POST(request: Request) {
         ? "IMAGE"
         : "VIDEO"
 
+    let duration: number | null = null
+
+    if (
+      type === "VIDEO" &&
+      typeof body.duration === "number" &&
+      Number.isFinite(body.duration) &&
+      body.duration > 0
+    ) {
+      duration = Math.ceil(body.duration)
+    }
+
     if (!name || !url) {
       return NextResponse.json(
-        { error: "Nome e URL são obrigatórios." },
+        {
+          error:
+            "Nome e URL são obrigatórios.",
+        },
         { status: 400 }
       )
     }
 
-    const lastMedia = await prisma.tvMedia.findFirst({
-      where: {
-        barbershopId: session.barbershopId,
-      },
-      orderBy: {
-        order: "desc",
-      },
-      select: {
-        order: true,
-      },
-    })
+    if (
+      type === "VIDEO" &&
+      duration === null
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "A duração do vídeo é obrigatória.",
+        },
+        { status: 400 }
+      )
+    }
 
-    const nextOrder = (lastMedia?.order ?? -1) + 1
+    const lastMedia =
+      await prisma.tvMedia.findFirst({
+        where: {
+          barbershopId:
+            session.barbershopId,
+        },
+        orderBy: {
+          order: "desc",
+        },
+        select: {
+          order: true,
+        },
+      })
 
-    const media = await prisma.tvMedia.create({
-      data: {
-        barbershopId: session.barbershopId,
-        name,
-        url,
-        type,
-        order: nextOrder,
-        active: true,
-      },
-    })
+    const nextOrder =
+      (lastMedia?.order ?? -1) + 1
 
-    return NextResponse.json(media, {
-      status: 201,
-    })
-  } catch (error) {
-    console.error("Erro ao cadastrar mídia:", error)
+    const media =
+      await prisma.tvMedia.create({
+        data: {
+          barbershopId:
+            session.barbershopId,
+          name,
+          url,
+          type,
+          duration,
+          order: nextOrder,
+          active: true,
+        },
+      })
 
     return NextResponse.json(
-      { error: "Não foi possível cadastrar a mídia." },
+      media,
+      {
+        status: 201,
+      }
+    )
+  } catch (error) {
+    console.error(
+      "Erro ao cadastrar mídia:",
+      error
+    )
+
+    return NextResponse.json(
+      {
+        error:
+          "Não foi possível cadastrar a mídia.",
+      },
       { status: 500 }
     )
   }

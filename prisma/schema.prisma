@@ -242,6 +242,7 @@ model TvMedia {
   type         String   @default("VIDEO")
   order        Int      @default(0)
   active       Boolean  @default(true)
+  duration     Int?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

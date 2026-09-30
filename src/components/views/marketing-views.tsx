@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { upload } from "@vercel/blob/client"
+
 import {
   Images,
   ListVideo,
@@ -21,31 +21,113 @@ type TvMedia = {
   type: "VIDEO" | "IMAGE"
   order: number
   active: boolean
+  duration: number | null
+}
+
+type UploadResponse = {
+  success: boolean
+  url?: string
+  key?: string
+  name?: string
+  contentType?: string
+  size?: number
+  error?: string
+}
+
+function getVideoDuration(file: File): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement("video")
+    const objectUrl = URL.createObjectURL(file)
+
+    video.preload = "metadata"
+
+    video.onloadedmetadata = () => {
+      const duration = Math.ceil(video.duration)
+
+      URL.revokeObjectURL(objectUrl)
+
+      if (!Number.isFinite(duration) || duration <= 0) {
+        reject(
+          new Error(
+            "Não foi possível identificar a duração do vídeo."
+          )
+        )
+        return
+      }
+
+      resolve(duration)
+    }
+
+    video.onerror = () => {
+      URL.revokeObjectURL(objectUrl)
+
+      reject(
+        new Error(
+          "Não foi possível ler a duração do vídeo."
+        )
+      )
+    }
+
+    video.src = objectUrl
+  })
+}
+
+function formatDuration(duration: number | null) {
+  if (!duration) return null
+
+  const minutes = Math.floor(duration / 60)
+  const seconds = duration % 60
+
+  if (minutes === 0) {
+    return `${seconds}s`
+  }
+
+  return `${minutes}:${seconds
+    .toString()
+    .padStart(2, "0")}`
 }
 
 export function MarketingView() {
-  const inputRef = useRef<HTMLInputElement | null>(null)
+  const inputRef =
+    useRef<HTMLInputElement | null>(null)
 
-  const [media, setMedia] = useState<TvMedia[]>([])
-  const [uploading, setUploading] = useState(false)
-  const [loading, setLoading] = useState(true)
- const [deletingId, setDeletingId] = useState<string | null>(null)
-const [updatingId, setUpdatingId] = useState<string | null>(null)
+  const [media, setMedia] =
+    useState<TvMedia[]>([])
+
+  const [uploading, setUploading] =
+    useState(false)
+
+  const [loading, setLoading] =
+    useState(true)
+
+  const [deletingId, setDeletingId] =
+    useState<string | null>(null)
+
+  const [updatingId, setUpdatingId] =
+    useState<string | null>(null)
+
   async function loadMedia() {
     try {
       setLoading(true)
 
-      const response = await fetch("/api/tv/media")
+      const response =
+        await fetch("/api/tv/media")
 
       if (!response.ok) {
-        throw new Error("Erro ao buscar mídias")
+        throw new Error(
+          "Erro ao buscar mídias"
+        )
       }
 
-      const data: TvMedia[] = await response.json()
+      const data: TvMedia[] =
+        await response.json()
 
       setMedia(data)
     } catch (error) {
-      console.error("Erro ao carregar mídias:", error)
+      console.error(
+        "Erro ao carregar mídias:",
+        error
+      )
     } finally {
       setLoading(false)
     }
@@ -55,79 +137,135 @@ const [updatingId, setUpdatingId] = useState<string | null>(null)
     void loadMedia()
   }, [])
 
- async function handleFileChange(
-  event: React.ChangeEvent<HTMLInputElement>
-) {
-  const file = event.target.files?.[0]
+  async function handleFileChange(
+    event: React.ChangeEvent<HTMLInputElement>
+  ) {
+    const file =
+      event.target.files?.[0]
 
-  if (!file) return
+    if (!file) return
 
-  try {
-    setUploading(true)
+    try {
+      setUploading(true)
 
-    const blob = await upload(
-      `tv/${file.name}`,
-      file,
-      {
-        access: "public",
-        handleUploadUrl: "/api/tv/upload",
-        multipart: true,
+      const mediaType:
+        | "VIDEO"
+        | "IMAGE" =
+        file.type.startsWith("image/")
+          ? "IMAGE"
+          : "VIDEO"
+
+      let duration: number | null = null
+
+      if (mediaType === "VIDEO") {
+        duration =
+          await getVideoDuration(file)
+
+        console.log(
+          "Duração detectada:",
+          duration,
+          "segundos"
+        )
       }
-    )
 
-    const mediaType: "VIDEO" | "IMAGE" =
-      file.type.startsWith("image/")
-        ? "IMAGE"
-        : "VIDEO"
+      /*
+       * Envia o arquivo para nossa API.
+       * A API envia para o Cloudflare R2.
+       */
+      const formData = new FormData()
 
-    const mediaResponse = await fetch(
-      "/api/tv/media",
-      {
-        method: "POST",
+      formData.append(
+        "file",
+        file
+      )
 
-        headers: {
-          "Content-Type":
-            "application/json",
-        },
+      const uploadResponse =
+        await fetch(
+          "/api/tv/upload",
+          {
+            method: "POST",
+            body: formData,
+          }
+        )
 
-        body: JSON.stringify({
-          name: file.name,
-          url: blob.url,
-          type: mediaType,
-        }),
+      const uploadData: UploadResponse =
+        await uploadResponse.json()
+
+      if (!uploadResponse.ok) {
+        throw new Error(
+          uploadData.error ??
+            "Erro ao enviar arquivo para o R2."
+        )
       }
-    )
 
-    if (!mediaResponse.ok) {
-      const data =
+      if (
+        !uploadData.success ||
+        !uploadData.url
+      ) {
+        throw new Error(
+          "O upload foi concluído, mas a URL do arquivo não foi retornada."
+        )
+      }
+
+      console.log(
+        "Upload R2 concluído:",
+        uploadData.url
+      )
+
+      /*
+       * Depois de enviar o arquivo ao R2,
+       * cadastramos a mídia no banco.
+       */
+      const mediaResponse =
+        await fetch(
+          "/api/tv/media",
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body: JSON.stringify({
+              name: file.name,
+              url: uploadData.url,
+              type: mediaType,
+              duration,
+            }),
+          }
+        )
+
+      const mediaData =
         await mediaResponse.json()
 
-      throw new Error(
-        data.error ??
-          "Erro ao salvar mídia"
+      if (!mediaResponse.ok) {
+        throw new Error(
+          mediaData.error ??
+            "Erro ao salvar mídia"
+        )
+      }
+
+      await loadMedia()
+    } catch (error) {
+      console.error(
+        "Erro no upload:",
+        error
       )
-    }
 
-    await loadMedia()
-  } catch (error) {
-    console.error(
-      "Erro no upload:",
-      error
-    )
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível enviar a mídia."
+      )
+    } finally {
+      setUploading(false)
 
-    alert(
-      error instanceof Error
-        ? error.message
-        : "Não foi possível enviar a mídia."
-    )
-  } finally {
-    setUploading(false)
-
-    if (inputRef.current) {
-      inputRef.current.value = ""
+      if (inputRef.current) {
+        inputRef.current.value = ""
+      }
     }
   }
-}
 
   const videos = media.filter(
     (item) => item.type === "VIDEO"
@@ -136,84 +274,99 @@ const [updatingId, setUpdatingId] = useState<string | null>(null)
   const images = media.filter(
     (item) => item.type === "IMAGE"
   )
- 
-  async function handleToggleActive(item: TvMedia) {
-  try {
-    setUpdatingId(item.id)
 
-    const response = await fetch(
-      `/api/tv/media/${item.id}`,
-      {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          active: !item.active,
-        }),
+  async function handleToggleActive(
+    item: TvMedia
+  ) {
+    try {
+      setUpdatingId(item.id)
+
+      const response =
+        await fetch(
+          `/api/tv/media/${item.id}`,
+          {
+            method: "PATCH",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body: JSON.stringify({
+              active: !item.active,
+            }),
+          }
+        )
+
+      if (!response.ok) {
+        const data =
+          await response.json()
+
+        throw new Error(
+          data.error ??
+            "Erro ao atualizar mídia"
+        )
       }
-    )
 
-    if (!response.ok) {
-      const data = await response.json()
+      await loadMedia()
+    } catch (error) {
+      console.error(error)
 
-      throw new Error(
-        data.error ?? "Erro ao atualizar mídia"
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível atualizar a mídia."
       )
+    } finally {
+      setUpdatingId(null)
     }
-
-    await loadMedia()
-  } catch (error) {
-    console.error(error)
-
-    alert(
-      error instanceof Error
-        ? error.message
-        : "Não foi possível atualizar a mídia."
-    )
-  } finally {
-    setUpdatingId(null)
   }
-}
 
-async function handleDelete(item: TvMedia) {
-  const confirmed = window.confirm(
-    `Excluir "${item.name}" da programação?`
-  )
+  async function handleDelete(
+    item: TvMedia
+  ) {
+    const confirmed =
+      window.confirm(
+        `Excluir "${item.name}" da programação?`
+      )
 
-  if (!confirmed) return
+    if (!confirmed) return
 
-  try {
-    setDeletingId(item.id)
+    try {
+      setDeletingId(item.id)
 
-    const response = await fetch(
-      `/api/tv/media/${item.id}`,
-      {
-        method: "DELETE",
+      const response =
+        await fetch(
+          `/api/tv/media/${item.id}`,
+          {
+            method: "DELETE",
+          }
+        )
+
+      if (!response.ok) {
+        const data =
+          await response.json()
+
+        throw new Error(
+          data.error ??
+            "Erro ao excluir mídia"
+        )
       }
-    )
 
-    if (!response.ok) {
-      const data = await response.json()
+      await loadMedia()
+    } catch (error) {
+      console.error(error)
 
-      throw new Error(
-        data.error ?? "Erro ao excluir mídia"
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível excluir a mídia."
       )
+    } finally {
+      setDeletingId(null)
     }
-
-    await loadMedia()
-  } catch (error) {
-    console.error(error)
-
-    alert(
-      error instanceof Error
-        ? error.message
-        : "Não foi possível excluir a mídia."
-    )
-  } finally {
-    setDeletingId(null)
   }
-}
+
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6">
       <div>
@@ -222,8 +375,10 @@ async function handleDelete(item: TvMedia) {
         </h2>
 
         <p className="mt-1 text-sm text-muted-foreground">
-          Gerencie campanhas, promoções e conteúdos exibidos
-          nas TVs da barbearia.
+          Gerencie campanhas,
+          promoções e conteúdos
+          exibidos nas TVs da
+          barbearia.
         </p>
       </div>
 
@@ -295,7 +450,8 @@ async function handleDelete(item: TvMedia) {
             </div>
 
             <p className="mt-1 text-sm text-muted-foreground">
-              Gerencie os vídeos e imagens exibidos nas
+              Gerencie os vídeos e
+              imagens exibidos nas
               televisões.
             </p>
           </div>
@@ -306,13 +462,17 @@ async function handleDelete(item: TvMedia) {
               type="file"
               accept="video/mp4,video/webm,image/png,image/jpeg,image/webp"
               className="hidden"
-              onChange={handleFileChange}
+              onChange={
+                handleFileChange
+              }
             />
 
             <button
               type="button"
               disabled={uploading}
-              onClick={() => inputRef.current?.click()}
+              onClick={() =>
+                inputRef.current?.click()
+              }
               className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"
             >
               {uploading ? (
@@ -345,8 +505,10 @@ async function handleDelete(item: TvMedia) {
             </h4>
 
             <p className="mt-1 max-w-md text-sm text-muted-foreground">
-              Adicione vídeos ou imagens para começar a montar a
-              programação das TVs.
+              Adicione vídeos ou
+              imagens para começar a
+              montar a programação das
+              TVs.
             </p>
           </div>
         ) : (
@@ -357,7 +519,8 @@ async function handleDelete(item: TvMedia) {
                 className="overflow-hidden rounded-xl border"
               >
                 <div className="aspect-video bg-muted">
-                  {item.type === "VIDEO" ? (
+                  {item.type ===
+                  "VIDEO" ? (
                     <video
                       src={item.url}
                       className="h-full w-full object-cover"
@@ -374,62 +537,94 @@ async function handleDelete(item: TvMedia) {
                 </div>
 
                 <div className="p-4">
-  <p className="truncate font-medium">
-    {item.name}
-  </p>
+                  <p className="truncate font-medium">
+                    {item.name}
+                  </p>
 
-  <div className="mt-1 flex items-center justify-between gap-2">
-    <p className="text-xs text-muted-foreground">
-      {item.type === "VIDEO"
-        ? "Vídeo"
-        : "Imagem"}
-    </p>
+                  <div className="mt-1 flex items-center justify-between gap-2">
+                    <div>
+                      <p className="text-xs text-muted-foreground">
+                        {item.type ===
+                        "VIDEO"
+                          ? "Vídeo"
+                          : "Imagem"}
+                      </p>
 
-    <span
-      className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-        item.active
-          ? "bg-green-500/10 text-green-500"
-          : "bg-muted text-muted-foreground"
-      }`}
-    >
-      {item.active ? "Ativo" : "Inativo"}
-    </span>
-  </div>
+                      {item.type ===
+                        "VIDEO" &&
+                        item.duration && (
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            Duração:{" "}
+                            {formatDuration(
+                              item.duration
+                            )}
+                          </p>
+                        )}
+                    </div>
 
-  <div className="mt-4 flex gap-2">
-    <button
-      type="button"
-      disabled={updatingId === item.id}
-      onClick={() => handleToggleActive(item)}
-      className="inline-flex flex-1 items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm font-medium hover:bg-muted disabled:opacity-50"
-    >
-      {updatingId === item.id ? (
-        <Loader2 className="h-4 w-4 animate-spin" />
-      ) : item.active ? (
-        <PowerOff className="h-4 w-4" />
-      ) : (
-        <Power className="h-4 w-4" />
-      )}
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                        item.active
+                          ? "bg-green-500/10 text-green-500"
+                          : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      {item.active
+                        ? "Ativo"
+                        : "Inativo"}
+                    </span>
+                  </div>
 
-      {item.active ? "Inativar" : "Ativar"}
-    </button>
+                  <div className="mt-4 flex gap-2">
+                    <button
+                      type="button"
+                      disabled={
+                        updatingId ===
+                        item.id
+                      }
+                      onClick={() =>
+                        handleToggleActive(
+                          item
+                        )
+                      }
+                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm font-medium hover:bg-muted disabled:opacity-50"
+                    >
+                      {updatingId ===
+                      item.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : item.active ? (
+                        <PowerOff className="h-4 w-4" />
+                      ) : (
+                        <Power className="h-4 w-4" />
+                      )}
 
-    <button
-      type="button"
-      disabled={deletingId === item.id}
-      onClick={() => handleDelete(item)}
-      className="inline-flex items-center justify-center gap-2 rounded-md border border-destructive/50 px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50"
-    >
-      {deletingId === item.id ? (
-        <Loader2 className="h-4 w-4 animate-spin" />
-      ) : (
-        <Trash2 className="h-4 w-4" />
-      )}
+                      {item.active
+                        ? "Inativar"
+                        : "Ativar"}
+                    </button>
 
-      Excluir
-    </button>
-  </div>
-</div>
+                    <button
+                      type="button"
+                      disabled={
+                        deletingId ===
+                        item.id
+                      }
+                      onClick={() =>
+                        handleDelete(item)
+                      }
+                      className="inline-flex items-center justify-center gap-2 rounded-md border border-destructive/50 px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50"
+                    >
+                      {deletingId ===
+                      item.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )}
+
+                      Excluir
+                    </button>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
