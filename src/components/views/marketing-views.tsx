@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react";
 
 import {
   Images,
@@ -12,200 +12,160 @@ import {
   Trash2,
   Tv,
   Upload,
-} from "lucide-react"
+} from "lucide-react";
 
 type TvMedia = {
-  id: string
-  name: string
-  url: string
-  type: "VIDEO" | "IMAGE"
-  order: number
-  active: boolean
-  duration: number | null
-}
+  id: string;
+  name: string;
+  url: string;
+  type: "VIDEO" | "IMAGE";
+  order: number;
+  active: boolean;
+  duration: number | null;
+};
 
 type UploadResponse = {
-  success: boolean
-  uploadUrl?: string
-  publicUrl?: string
-  key?: string
-  error?: string
-}
+  success: boolean;
+  uploadUrl?: string;
+  publicUrl?: string;
+  key?: string;
+  error?: string;
+};
 
 function getVideoDuration(file: File): Promise<number> {
   return new Promise((resolve, reject) => {
-    const video = document.createElement("video")
-    const objectUrl = URL.createObjectURL(file)
+    const video = document.createElement("video");
+    const objectUrl = URL.createObjectURL(file);
 
-    video.preload = "metadata"
+    video.preload = "metadata";
 
     video.onloadedmetadata = () => {
-      const duration = Math.ceil(video.duration)
+      const duration = Math.ceil(video.duration);
 
-      URL.revokeObjectURL(objectUrl)
+      URL.revokeObjectURL(objectUrl);
 
       if (!Number.isFinite(duration) || duration <= 0) {
-        reject(
-          new Error(
-            "Não foi possível identificar a duração do vídeo."
-          )
-        )
-        return
+        reject(new Error("Não foi possível identificar a duração do vídeo."));
+        return;
       }
 
-      resolve(duration)
-    }
+      resolve(duration);
+    };
 
     video.onerror = () => {
-      URL.revokeObjectURL(objectUrl)
+      URL.revokeObjectURL(objectUrl);
 
-      reject(
-        new Error(
-          "Não foi possível ler a duração do vídeo."
-        )
-      )
-    }
+      reject(new Error("Não foi possível ler a duração do vídeo."));
+    };
 
-    video.src = objectUrl
-  })
+    video.src = objectUrl;
+  });
 }
 
 function formatDuration(duration: number | null) {
-  if (!duration) return null
+  if (!duration) return null;
 
-  const minutes = Math.floor(duration / 60)
-  const seconds = duration % 60
+  const minutes = Math.floor(duration / 60);
+  const seconds = duration % 60;
 
   if (minutes === 0) {
-    return `${seconds}s`
+    return `${seconds}s`;
   }
 
-  return `${minutes}:${seconds
-    .toString()
-    .padStart(2, "0")}`
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
 
 export function MarketingView() {
-  const inputRef =
-    useRef<HTMLInputElement | null>(null)
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
-  const [media, setMedia] =
-    useState<TvMedia[]>([])
+  const [media, setMedia] = useState<TvMedia[]>([]);
 
-  const [uploading, setUploading] =
-    useState(false)
+  const [uploading, setUploading] = useState(false);
 
-  const [loading, setLoading] =
-    useState(true)
+  const [loading, setLoading] = useState(true);
 
-  const [deletingId, setDeletingId] =
-    useState<string | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const [updatingId, setUpdatingId] =
-    useState<string | null>(null)
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   async function loadMedia() {
     try {
-      setLoading(true)
+      setLoading(true);
 
-      const response =
-        await fetch("/api/tv/media")
+      const response = await fetch("/api/tv/media");
 
       if (!response.ok) {
-        throw new Error(
-          "Erro ao buscar mídias"
-        )
+        throw new Error("Erro ao buscar mídias");
       }
 
-      const data: TvMedia[] =
-        await response.json()
+      const data: TvMedia[] = await response.json();
 
-      setMedia(data)
+      setMedia(data);
     } catch (error) {
-      console.error(
-        "Erro ao carregar mídias:",
-        error
-      )
+      console.error("Erro ao carregar mídias:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   useEffect(() => {
-    void loadMedia()
-  }, [])
+    void loadMedia();
+  }, []);
 
-  async function handleFileChange(
-    event: React.ChangeEvent<HTMLInputElement>
-  ) {
-    const file =
-      event.target.files?.[0]
+  async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
 
-    if (!file) return
+    if (!file) return;
 
     try {
-      setUploading(true)
+      setUploading(true);
 
-      const mediaType:
-        | "VIDEO"
-        | "IMAGE" =
-        file.type.startsWith("image/")
-          ? "IMAGE"
-          : "VIDEO"
+      const mediaType: "VIDEO" | "IMAGE" = file.type.startsWith("image/")
+        ? "IMAGE"
+        : "VIDEO";
 
-      let duration: number | null = null
+      let duration: number | null = null;
 
       if (mediaType === "VIDEO") {
-        duration =
-          await getVideoDuration(file)
+        duration = await getVideoDuration(file);
 
-        console.log(
-          "Duração detectada:",
-          duration,
-          "segundos"
-        )
+        console.log("Duração detectada:", duration, "segundos");
+      } else {
+        duration = 10;
+
+        console.log("Duração da imagem:", duration, "segundos");
       }
 
       /*
        * 1. Pede para nossa API uma URL assinada
        * para upload direto no Cloudflare R2.
        */
-      const prepareResponse =
-        await fetch(
-          "/api/tv/upload",
-          {
-            method: "POST",
+      const prepareResponse = await fetch("/api/tv/upload", {
+        method: "POST",
 
-            headers: {
-              "Content-Type":
-                "application/json",
-            },
+        headers: {
+          "Content-Type": "application/json",
+        },
 
-            body: JSON.stringify({
-              name: file.name,
-              type: file.type,
-              size: file.size,
-            }),
-          }
-        )
+        body: JSON.stringify({
+          name: file.name,
+          type: file.type,
+          size: file.size,
+        }),
+      });
 
-      const prepareData: UploadResponse =
-        await prepareResponse.json()
+      const prepareData: UploadResponse = await prepareResponse.json();
 
       if (!prepareResponse.ok) {
         throw new Error(
-          prepareData.error ??
-            "Não foi possível preparar o upload."
-        )
+          prepareData.error ?? "Não foi possível preparar o upload.",
+        );
       }
 
-      if (
-        !prepareData.uploadUrl ||
-        !prepareData.publicUrl
-      ) {
+      if (!prepareData.uploadUrl || !prepareData.publicUrl) {
         throw new Error(
-          "A API não retornou as URLs necessárias para o upload."
-        )
+          "A API não retornou as URLs necessárias para o upload.",
+        );
       }
 
       /*
@@ -214,206 +174,148 @@ export function MarketingView() {
        *
        * O arquivo não passa pela Vercel.
        */
-      const r2Response =
-        await fetch(
-          prepareData.uploadUrl,
-          {
-            method: "PUT",
+      const r2Response = await fetch(prepareData.uploadUrl, {
+        method: "PUT",
 
-            headers: {
-              "Content-Type":
-                file.type,
-            },
+        headers: {
+          "Content-Type": file.type,
+        },
 
-            body: file,
-          }
-        )
+        body: file,
+      });
 
       if (!r2Response.ok) {
-        const responseText =
-          await r2Response.text()
+        const responseText = await r2Response.text();
 
-        console.error(
-          "Erro R2:",
-          r2Response.status,
-          responseText
-        )
+        console.error("Erro R2:", r2Response.status, responseText);
 
-        throw new Error(
-          "Não foi possível enviar o arquivo para o R2."
-        )
+        throw new Error("Não foi possível enviar o arquivo para o R2.");
       }
 
-      console.log(
-        "Upload R2 concluído:",
-        prepareData.publicUrl
-      )
+      console.log("Upload R2 concluído:", prepareData.publicUrl);
 
       /*
        * 3. Depois que o upload terminou,
        * cadastra a mídia no banco.
        */
-      const mediaResponse =
-        await fetch(
-          "/api/tv/media",
-          {
-            method: "POST",
+      const mediaResponse = await fetch("/api/tv/media", {
+        method: "POST",
 
-            headers: {
-              "Content-Type":
-                "application/json",
-            },
+        headers: {
+          "Content-Type": "application/json",
+        },
 
-            body: JSON.stringify({
-              name: file.name,
-              url: prepareData.publicUrl,
-              type: mediaType,
-              duration,
-            }),
-          }
-        )
+        body: JSON.stringify({
+          name: file.name,
+          url: prepareData.publicUrl,
+          type: mediaType,
+          duration,
+        }),
+      });
 
-      const mediaData =
-        await mediaResponse.json()
+      const mediaData = await mediaResponse.json();
 
       if (!mediaResponse.ok) {
-        throw new Error(
-          mediaData.error ??
-            "Erro ao salvar mídia"
-        )
+        throw new Error(mediaData.error ?? "Erro ao salvar mídia");
       }
 
-      await loadMedia()
+      await loadMedia();
     } catch (error) {
-      console.error(
-        "Erro no upload:",
-        error
-      )
+      console.error("Erro no upload:", error);
 
       alert(
         error instanceof Error
           ? error.message
-          : "Não foi possível enviar a mídia."
-      )
+          : "Não foi possível enviar a mídia.",
+      );
     } finally {
-      setUploading(false)
+      setUploading(false);
 
       if (inputRef.current) {
-        inputRef.current.value = ""
+        inputRef.current.value = "";
       }
     }
   }
 
-  const videos = media.filter(
-    (item) => item.type === "VIDEO"
-  )
+  const videos = media.filter((item) => item.type === "VIDEO");
 
-  const images = media.filter(
-    (item) => item.type === "IMAGE"
-  )
+  const images = media.filter((item) => item.type === "IMAGE");
 
-  async function handleToggleActive(
-    item: TvMedia
-  ) {
+  async function handleToggleActive(item: TvMedia) {
     try {
-      setUpdatingId(item.id)
+      setUpdatingId(item.id);
 
-      const response =
-        await fetch(
-          `/api/tv/media/${item.id}`,
-          {
-            method: "PATCH",
+      const response = await fetch(`/api/tv/media/${item.id}`, {
+        method: "PATCH",
 
-            headers: {
-              "Content-Type":
-                "application/json",
-            },
+        headers: {
+          "Content-Type": "application/json",
+        },
 
-            body: JSON.stringify({
-              active: !item.active,
-            }),
-          }
-        )
+        body: JSON.stringify({
+          active: !item.active,
+        }),
+      });
 
       if (!response.ok) {
-        const data =
-          await response.json()
+        const data = await response.json();
 
-        throw new Error(
-          data.error ??
-            "Erro ao atualizar mídia"
-        )
+        throw new Error(data.error ?? "Erro ao atualizar mídia");
       }
 
-      await loadMedia()
+      await loadMedia();
     } catch (error) {
-      console.error(error)
+      console.error(error);
 
       alert(
         error instanceof Error
           ? error.message
-          : "Não foi possível atualizar a mídia."
-      )
+          : "Não foi possível atualizar a mídia.",
+      );
     } finally {
-      setUpdatingId(null)
+      setUpdatingId(null);
     }
   }
 
-  async function handleDelete(
-    item: TvMedia
-  ) {
-    const confirmed =
-      window.confirm(
-        `Excluir "${item.name}" da programação?`
-      )
+  async function handleDelete(item: TvMedia) {
+    const confirmed = window.confirm(`Excluir "${item.name}" da programação?`);
 
-    if (!confirmed) return
+    if (!confirmed) return;
 
     try {
-      setDeletingId(item.id)
+      setDeletingId(item.id);
 
-      const response =
-        await fetch(
-          `/api/tv/media/${item.id}`,
-          {
-            method: "DELETE",
-          }
-        )
+      const response = await fetch(`/api/tv/media/${item.id}`, {
+        method: "DELETE",
+      });
 
       if (!response.ok) {
-        const data =
-          await response.json()
+        const data = await response.json();
 
-        throw new Error(
-          data.error ??
-            "Erro ao excluir mídia"
-        )
+        throw new Error(data.error ?? "Erro ao excluir mídia");
       }
 
-      await loadMedia()
+      await loadMedia();
     } catch (error) {
-      console.error(error)
+      console.error(error);
 
       alert(
         error instanceof Error
           ? error.message
-          : "Não foi possível excluir a mídia."
-      )
+          : "Não foi possível excluir a mídia.",
+      );
     } finally {
-      setDeletingId(null)
+      setDeletingId(null);
     }
   }
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6">
       <div>
-        <h2 className="text-2xl font-semibold">
-          Marketing
-        </h2>
+        <h2 className="text-2xl font-semibold">Marketing</h2>
 
         <p className="mt-1 text-sm text-muted-foreground">
-          Gerencie campanhas, promoções
-          e conteúdos exibidos nas TVs da
+          Gerencie campanhas, promoções e conteúdos exibidos nas TVs da
           barbearia.
         </p>
       </div>
@@ -426,13 +328,9 @@ export function MarketingView() {
             </div>
 
             <div>
-              <p className="text-sm text-muted-foreground">
-                Mídias
-              </p>
+              <p className="text-sm text-muted-foreground">Mídias</p>
 
-              <p className="text-2xl font-semibold">
-                {media.length}
-              </p>
+              <p className="text-2xl font-semibold">{media.length}</p>
             </div>
           </div>
         </div>
@@ -444,13 +342,9 @@ export function MarketingView() {
             </div>
 
             <div>
-              <p className="text-sm text-muted-foreground">
-                Vídeos
-              </p>
+              <p className="text-sm text-muted-foreground">Vídeos</p>
 
-              <p className="text-2xl font-semibold">
-                {videos.length}
-              </p>
+              <p className="text-2xl font-semibold">{videos.length}</p>
             </div>
           </div>
         </div>
@@ -462,13 +356,9 @@ export function MarketingView() {
             </div>
 
             <div>
-              <p className="text-sm text-muted-foreground">
-                Imagens
-              </p>
+              <p className="text-sm text-muted-foreground">Imagens</p>
 
-              <p className="text-2xl font-semibold">
-                {images.length}
-              </p>
+              <p className="text-2xl font-semibold">{images.length}</p>
             </div>
           </div>
         </div>
@@ -480,15 +370,11 @@ export function MarketingView() {
             <div className="flex items-center gap-2">
               <MonitorPlay className="h-5 w-5" />
 
-              <h3 className="font-semibold">
-                TV da Barbearia
-              </h3>
+              <h3 className="font-semibold">TV da Barbearia</h3>
             </div>
 
             <p className="mt-1 text-sm text-muted-foreground">
-              Gerencie os vídeos e
-              imagens exibidos nas
-              televisões.
+              Gerencie os vídeos e imagens exibidos nas televisões.
             </p>
           </div>
 
@@ -498,17 +384,13 @@ export function MarketingView() {
               type="file"
               accept="video/mp4,video/webm,image/png,image/jpeg,image/webp"
               className="hidden"
-              onChange={
-                handleFileChange
-              }
+              onChange={handleFileChange}
             />
 
             <button
               type="button"
               disabled={uploading}
-              onClick={() =>
-                inputRef.current?.click()
-              }
+              onClick={() => inputRef.current?.click()}
               className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"
             >
               {uploading ? (
@@ -536,26 +418,19 @@ export function MarketingView() {
               <MonitorPlay className="h-8 w-8 text-muted-foreground" />
             </div>
 
-            <h4 className="mt-4 font-medium">
-              Nenhuma mídia adicionada
-            </h4>
+            <h4 className="mt-4 font-medium">Nenhuma mídia adicionada</h4>
 
             <p className="mt-1 max-w-md text-sm text-muted-foreground">
-              Adicione vídeos ou imagens
-              para começar a montar a
-              programação das TVs.
+              Adicione vídeos ou imagens para começar a montar a programação das
+              TVs.
             </p>
           </div>
         ) : (
           <div className="grid gap-4 p-5 md:grid-cols-2 xl:grid-cols-3">
             {media.map((item) => (
-              <div
-                key={item.id}
-                className="overflow-hidden rounded-xl border"
-              >
+              <div key={item.id} className="overflow-hidden rounded-xl border">
                 <div className="aspect-video bg-muted">
-                  {item.type ===
-                  "VIDEO" ? (
+                  {item.type === "VIDEO" ? (
                     <video
                       src={item.url}
                       className="h-full w-full object-cover"
@@ -572,29 +447,19 @@ export function MarketingView() {
                 </div>
 
                 <div className="p-4">
-                  <p className="truncate font-medium">
-                    {item.name}
-                  </p>
+                  <p className="truncate font-medium">{item.name}</p>
 
                   <div className="mt-1 flex items-center justify-between gap-2">
                     <div>
                       <p className="text-xs text-muted-foreground">
-                        {item.type ===
-                        "VIDEO"
-                          ? "Vídeo"
-                          : "Imagem"}
+                        {item.type === "VIDEO" ? "Vídeo" : "Imagem"}
                       </p>
 
-                      {item.type ===
-                        "VIDEO" &&
-                        item.duration && (
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            Duração:{" "}
-                            {formatDuration(
-                              item.duration
-                            )}
-                          </p>
-                        )}
+                      {item.duration && (
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Duração: {formatDuration(item.duration)}
+                        </p>
+                      )}
                     </div>
 
                     <span
@@ -604,28 +469,18 @@ export function MarketingView() {
                           : "bg-muted text-muted-foreground"
                       }`}
                     >
-                      {item.active
-                        ? "Ativo"
-                        : "Inativo"}
+                      {item.active ? "Ativo" : "Inativo"}
                     </span>
                   </div>
 
                   <div className="mt-4 flex gap-2">
                     <button
                       type="button"
-                      disabled={
-                        updatingId ===
-                        item.id
-                      }
-                      onClick={() =>
-                        handleToggleActive(
-                          item
-                        )
-                      }
+                      disabled={updatingId === item.id}
+                      onClick={() => handleToggleActive(item)}
                       className="inline-flex flex-1 items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm font-medium hover:bg-muted disabled:opacity-50"
                     >
-                      {updatingId ===
-                      item.id ? (
+                      {updatingId === item.id ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : item.active ? (
                         <PowerOff className="h-4 w-4" />
@@ -633,29 +488,20 @@ export function MarketingView() {
                         <Power className="h-4 w-4" />
                       )}
 
-                      {item.active
-                        ? "Inativar"
-                        : "Ativar"}
+                      {item.active ? "Inativar" : "Ativar"}
                     </button>
 
                     <button
                       type="button"
-                      disabled={
-                        deletingId ===
-                        item.id
-                      }
-                      onClick={() =>
-                        handleDelete(item)
-                      }
+                      disabled={deletingId === item.id}
+                      onClick={() => handleDelete(item)}
                       className="inline-flex items-center justify-center gap-2 rounded-md border border-destructive/50 px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50"
                     >
-                      {deletingId ===
-                      item.id ? (
+                      {deletingId === item.id ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
                         <Trash2 className="h-4 w-4" />
                       )}
-
                       Excluir
                     </button>
                   </div>
@@ -666,5 +512,5 @@ export function MarketingView() {
         )}
       </section>
     </div>
-  )
+  );
 }
