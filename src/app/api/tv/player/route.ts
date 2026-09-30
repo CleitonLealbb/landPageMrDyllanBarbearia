@@ -21,14 +21,26 @@ export async function GET() {
         url: true,
         type: true,
         order: true,
+        duration: true,
       },
     })
 
-    return Response.json({
-      success: true,
-      serverTime: Math.floor(Date.now() / 1000),
-      media,
-    })
+    return NextResponse.json({
+  success: true,
+
+  serverTime: Math.floor(
+    Date.now() / 1000
+  ),
+
+  media: media.map((item) => ({
+    id: item.id,
+    name: item.name,
+    url: item.url,
+    type: item.type,
+    order: item.order,
+    duration: item.duration,
+  })),
+})
   } catch (error) {
     return Response.json(
       {
