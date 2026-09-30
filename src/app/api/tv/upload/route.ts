@@ -1,10 +1,30 @@
-import {
-  handleUpload,
-  type HandleUploadBody,
-} from "@vercel/blob/client"
+import { PutObjectCommand } from "@aws-sdk/client-s3"
 import { NextResponse } from "next/server"
 
 import { getSession } from "@/lib/tv-session"
+import {
+  r2,
+  R2_BUCKET_NAME,
+  R2_PUBLIC_URL,
+} from "@/lib/r2"
+
+const allowedTypes = [
+  "video/mp4",
+  "video/webm",
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+]
+
+const MAX_FILE_SIZE =
+  500 * 1024 * 1024
+
+function sanitizeFileName(fileName: string) {
+  return fileName
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9._-]/g, "-")
+}
 
 export async function POST(request: Request) {
   const session = await getSession()
@@ -21,75 +41,84 @@ export async function POST(request: Request) {
     )
   }
 
-  const blobToken = process.env.BLOB_READ_WRITE_TOKEN
-
-  if (!blobToken) {
-    console.error(
-      "BLOB_READ_WRITE_TOKEN não está disponível no servidor."
-    )
-
-    return NextResponse.json(
-      {
-        error:
-          "BLOB_READ_WRITE_TOKEN não está configurado no ambiente local.",
-      },
-      { status: 500 }
-    )
-  }
-
   try {
-    const body =
-      (await request.json()) as HandleUploadBody
+    const formData =
+      await request.formData()
 
-    const response = await handleUpload({
-      body,
-      request,
+    const file =
+      formData.get("file")
 
-      // Forçamos o token explicitamente
-      token: blobToken,
+    if (!(file instanceof File)) {
+      return NextResponse.json(
+        {
+          error:
+            "Arquivo não informado.",
+        },
+        { status: 400 }
+      )
+    }
 
-      onBeforeGenerateToken: async () => {
-        return {
-          allowedContentTypes: [
-            "video/mp4",
-            "video/webm",
-            "image/png",
-            "image/jpeg",
-            "image/webp",
-          ],
+    if (
+      !allowedTypes.includes(file.type)
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Tipo de arquivo não permitido.",
+        },
+        { status: 400 }
+      )
+    }
 
-          maximumSizeInBytes:
-            500 * 1024 * 1024,
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json(
+        {
+          error:
+            "O arquivo excede o limite de 500 MB.",
+        },
+        { status: 400 }
+      )
+    }
 
-          addRandomSuffix: true,
+    const buffer =
+      Buffer.from(
+        await file.arrayBuffer()
+      )
 
-          tokenPayload: JSON.stringify({
-            barbershopId:
-              session.barbershopId,
-          }),
-        }
-      },
+    const safeName =
+      sanitizeFileName(file.name)
 
-      onUploadCompleted: async ({
-        blob,
-        tokenPayload,
-      }) => {
-        console.log(
-          "Upload Blob concluído:",
-          blob.url
-        )
+    const key =
+      `tv/${session.barbershopId}/${Date.now()}-${safeName}`
 
-        console.log(
-          "Token payload:",
-          tokenPayload
-        )
-      },
+    await r2.send(
+      new PutObjectCommand({
+        Bucket: R2_BUCKET_NAME,
+        Key: key,
+        Body: buffer,
+        ContentType: file.type,
+      })
+    )
+
+    const url =
+      `${R2_PUBLIC_URL}/${key}`
+
+    console.log(
+      "Upload R2 concluído:",
+      url
+    )
+
+    return NextResponse.json({
+      success: true,
+      url,
+      key,
+      name: file.name,
+      contentType: file.type,
+      size: file.size,
     })
-
-    return NextResponse.json(response)
   } catch (error) {
     console.error(
-      "Erro no upload da TV:",
+      "Erro no upload R2 da TV:",
       error
     )
 
@@ -100,7 +129,7 @@ export async function POST(request: Request) {
             ? error.message
             : "Erro ao realizar upload",
       },
-      { status: 400 }
+      { status: 500 }
     )
   }
 }

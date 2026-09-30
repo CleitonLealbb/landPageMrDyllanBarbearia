@@ -1,0 +1,2 @@
+ALTER TABLE "TvMedia"
+ADD COLUMN "duration" INTEGER;
