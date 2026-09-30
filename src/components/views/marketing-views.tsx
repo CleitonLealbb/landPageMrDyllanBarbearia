@@ -26,11 +26,9 @@ type TvMedia = {
 
 type UploadResponse = {
   success: boolean
-  url?: string
+  uploadUrl?: string
+  publicUrl?: string
   key?: string
-  name?: string
-  contentType?: string
-  size?: number
   error?: string
 }
 
@@ -169,52 +167,91 @@ export function MarketingView() {
       }
 
       /*
-       * Envia o arquivo para nossa API.
-       * A API envia para o Cloudflare R2.
+       * 1. Pede para nossa API uma URL assinada
+       * para upload direto no Cloudflare R2.
        */
-      const formData = new FormData()
-
-      formData.append(
-        "file",
-        file
-      )
-
-      const uploadResponse =
+      const prepareResponse =
         await fetch(
           "/api/tv/upload",
           {
             method: "POST",
-            body: formData,
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body: JSON.stringify({
+              name: file.name,
+              type: file.type,
+              size: file.size,
+            }),
           }
         )
 
-      const uploadData: UploadResponse =
-        await uploadResponse.json()
+      const prepareData: UploadResponse =
+        await prepareResponse.json()
 
-      if (!uploadResponse.ok) {
+      if (!prepareResponse.ok) {
         throw new Error(
-          uploadData.error ??
-            "Erro ao enviar arquivo para o R2."
+          prepareData.error ??
+            "Não foi possível preparar o upload."
         )
       }
 
       if (
-        !uploadData.success ||
-        !uploadData.url
+        !prepareData.uploadUrl ||
+        !prepareData.publicUrl
       ) {
         throw new Error(
-          "O upload foi concluído, mas a URL do arquivo não foi retornada."
+          "A API não retornou as URLs necessárias para o upload."
+        )
+      }
+
+      /*
+       * 2. Envia o arquivo diretamente
+       * do navegador para o Cloudflare R2.
+       *
+       * O arquivo não passa pela Vercel.
+       */
+      const r2Response =
+        await fetch(
+          prepareData.uploadUrl,
+          {
+            method: "PUT",
+
+            headers: {
+              "Content-Type":
+                file.type,
+            },
+
+            body: file,
+          }
+        )
+
+      if (!r2Response.ok) {
+        const responseText =
+          await r2Response.text()
+
+        console.error(
+          "Erro R2:",
+          r2Response.status,
+          responseText
+        )
+
+        throw new Error(
+          "Não foi possível enviar o arquivo para o R2."
         )
       }
 
       console.log(
         "Upload R2 concluído:",
-        uploadData.url
+        prepareData.publicUrl
       )
 
       /*
-       * Depois de enviar o arquivo ao R2,
-       * cadastramos a mídia no banco.
+       * 3. Depois que o upload terminou,
+       * cadastra a mídia no banco.
        */
       const mediaResponse =
         await fetch(
@@ -229,7 +266,7 @@ export function MarketingView() {
 
             body: JSON.stringify({
               name: file.name,
-              url: uploadData.url,
+              url: prepareData.publicUrl,
               type: mediaType,
               duration,
             }),
@@ -375,9 +412,8 @@ export function MarketingView() {
         </h2>
 
         <p className="mt-1 text-sm text-muted-foreground">
-          Gerencie campanhas,
-          promoções e conteúdos
-          exibidos nas TVs da
+          Gerencie campanhas, promoções
+          e conteúdos exibidos nas TVs da
           barbearia.
         </p>
       </div>
@@ -505,10 +541,9 @@ export function MarketingView() {
             </h4>
 
             <p className="mt-1 max-w-md text-sm text-muted-foreground">
-              Adicione vídeos ou
-              imagens para começar a
-              montar a programação das
-              TVs.
+              Adicione vídeos ou imagens
+              para começar a montar a
+              programação das TVs.
             </p>
           </div>
         ) : (

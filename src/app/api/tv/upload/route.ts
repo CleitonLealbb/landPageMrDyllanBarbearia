@@ -1,4 +1,5 @@
 import { PutObjectCommand } from "@aws-sdk/client-s3"
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import { NextResponse } from "next/server"
 
 import { getSession } from "@/lib/auth/session"
@@ -42,25 +43,31 @@ export async function POST(request: Request) {
   }
 
   try {
-    const formData =
-      await request.formData()
+    const body = await request.json()
 
-    const file =
-      formData.get("file")
+    const name =
+      typeof body.name === "string"
+        ? body.name
+        : ""
 
-    if (!(file instanceof File)) {
+    const type =
+      typeof body.type === "string"
+        ? body.type
+        : ""
+
+    const size =
+      typeof body.size === "number"
+        ? body.size
+        : 0
+
+    if (!name || !type) {
       return NextResponse.json(
-        {
-          error:
-            "Arquivo não informado.",
-        },
+        { error: "Arquivo inválido." },
         { status: 400 }
       )
     }
 
-    if (
-      !allowedTypes.includes(file.type)
-    ) {
+    if (!allowedTypes.includes(type)) {
       return NextResponse.json(
         {
           error:
@@ -70,64 +77,60 @@ export async function POST(request: Request) {
       )
     }
 
-    if (file.size > MAX_FILE_SIZE) {
+    if (
+      size <= 0 ||
+      size > MAX_FILE_SIZE
+    ) {
       return NextResponse.json(
         {
           error:
-            "O arquivo excede o limite de 500 MB.",
+            "Arquivo inválido ou maior que 500 MB.",
         },
         { status: 400 }
       )
     }
 
-    const buffer =
-      Buffer.from(
-        await file.arrayBuffer()
-      )
-
     const safeName =
-      sanitizeFileName(file.name)
+      sanitizeFileName(name)
 
     const key =
       `tv/${session.barbershopId}/${Date.now()}-${safeName}`
 
-    await r2.send(
+    const command =
       new PutObjectCommand({
         Bucket: R2_BUCKET_NAME,
         Key: key,
-        Body: buffer,
-        ContentType: file.type,
+        ContentType: type,
       })
-    )
 
-    const url =
+    const uploadUrl =
+      await getSignedUrl(
+        r2,
+        command,
+        {
+          expiresIn: 900,
+        }
+      )
+
+    const publicUrl =
       `${R2_PUBLIC_URL}/${key}`
-
-    console.log(
-      "Upload R2 concluído:",
-      url
-    )
 
     return NextResponse.json({
       success: true,
-      url,
+      uploadUrl,
+      publicUrl,
       key,
-      name: file.name,
-      contentType: file.type,
-      size: file.size,
     })
   } catch (error) {
     console.error(
-      "Erro no upload R2 da TV:",
+      "Erro ao gerar URL R2:",
       error
     )
 
     return NextResponse.json(
       {
         error:
-          error instanceof Error
-            ? error.message
-            : "Erro ao realizar upload",
+          "Não foi possível preparar o upload.",
       },
       { status: 500 }
     )
