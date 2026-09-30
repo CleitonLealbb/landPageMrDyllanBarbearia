@@ -67,7 +67,6 @@ export async function POST(request: Request) {
     let duration: number | null = null
 
     if (
-      type === "VIDEO" &&
       typeof body.duration === "number" &&
       Number.isFinite(body.duration) &&
       body.duration > 0
@@ -93,6 +92,19 @@ export async function POST(request: Request) {
         {
           error:
             "A duração do vídeo é obrigatória.",
+        },
+        { status: 400 }
+      )
+    }
+
+    if (
+      type === "IMAGE" &&
+      duration === null
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "A duração da imagem é obrigatória.",
         },
         { status: 400 }
       )
