@@ -2,14 +2,94 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import crypto from "crypto"
 import { Resend } from "resend"
+import { getCurrentBarbershop, getSession } from "@/lib/auth/session"
+import { adminProfessionalSelect, presentAdminProfessional } from "@/lib/professionals/admin-presentation"
 
+function internalServerErrorResponse() {
+  return NextResponse.json(
+    { message: "Erro interno do servidor." },
+    { status: 500 }
+  )
+}
+
+const PROFESSIONAL_PERMISSION_LEVELS = ["BARBER", "ASSISTANT"] as const
+
+type ProfessionalPermissionLevel =
+  (typeof PROFESSIONAL_PERMISSION_LEVELS)[number]
+
+function isProfessionalPermissionLevel(
+  value: unknown
+): value is ProfessionalPermissionLevel {
+  return PROFESSIONAL_PERMISSION_LEVELS.some(
+    (permissionLevel) => permissionLevel === value
+  )
+}
 
 export async function POST(req: Request) {
+  try {
+    const session = await getSession()
+
+  if (!session) {
+    return NextResponse.json(
+      { message: "Nao autenticado." },
+      { status: 401 }
+    )
+  }
+
+  if (
+    session.type !== "USER" ||
+    session.globalRole !== null ||
+    session.tenantRole !== "BARBERSHOP_OWNER" ||
+    session.barbershopId === null
+  ) {
+    return NextResponse.json(
+      { message: "Acesso negado." },
+      { status: 403 }
+    )
+  }
+
+  const barbershop = await getCurrentBarbershop()
+
+  if (
+    !barbershop ||
+    barbershop.id !== session.barbershopId
+  ) {
+    return NextResponse.json(
+      { message: "Barbearia nao vinculada ao usuario." },
+      { status: 404 }
+    )
+  }
+
+  const ownerMembership = await prisma.barbershopUser.findFirst({
+    where: {
+      userId: session.userId,
+      barbershopId: session.barbershopId,
+      role: "BARBERSHOP_OWNER",
+    },
+    select: {
+      id: true,
+    },
+  })
+
+  if (!ownerMembership) {
+    return NextResponse.json(
+      { message: "Acesso negado." },
+      { status: 403 }
+    )
+  }
+
   const body = await req.json()
+
+  if (Object.prototype.hasOwnProperty.call(body, "userId")) {
+    return NextResponse.json(
+      { message: "Campo de vinculo nao permitido neste fluxo." },
+      { status: 400 }
+    )
+  }
 
   if (!body.name || !body.email || !body.role) {
     return NextResponse.json(
-      { message: "Nome, e-mail e cargo são obrigatórios." },
+      { message: "Nome, e-mail e cargo sao obrigatorios." },
       { status: 400 }
     )
   }
@@ -21,8 +101,18 @@ export async function POST(req: Request) {
     )
   }
 
+  const permissionLevel: unknown = body.permissionLevel
+
+  if (!isProfessionalPermissionLevel(permissionLevel)) {
+    return NextResponse.json(
+      { message: "Nível de permissão inválido." },
+      { status: 400 }
+    )
+  }
+
   const exists = await prisma.professional.findFirst({
     where: {
+      barbershopId: barbershop.id,
       OR: [
         { name: { equals: body.name.trim(), mode: "insensitive" } },
         { email: { equals: body.email.trim(), mode: "insensitive" } },
@@ -32,7 +122,18 @@ export async function POST(req: Request) {
 
   if (exists) {
     return NextResponse.json(
-      { message: "Já existe um profissional com esse nome ou e-mail." },
+      { message: "Ja existe um profissional com esse nome ou e-mail." },
+      { status: 409 }
+    )
+  }
+
+  const userWithEmail = await prisma.user.findUnique({
+    where: { email: body.email.trim().toLowerCase() },
+    select: { id: true },
+  })
+  if (userWithEmail) {
+    return NextResponse.json(
+      { message: "Nao foi possivel criar o profissional com esse e-mail." },
       { status: 409 }
     )
   }
@@ -43,14 +144,15 @@ export async function POST(req: Request) {
     Date.now() + 1000 * 60 * 60 * 24
   )
 
- const inviteLink = `${process.env.NEXT_PUBLIC_APP_URL}/primeiro-acesso?token=${inviteToken}`
+  const inviteLink = `${process.env.NEXT_PUBLIC_APP_URL}/primeiro-acesso?token=${inviteToken}`
 
   const professional = await prisma.professional.create({
     data: {
       name: body.name.trim(),
+      barbershopId: barbershop.id,
       email: body.email.trim(),
       role: body.role,
-      permissionLevel: body.permissionLevel,
+      permissionLevel,
       commission: Number(body.commission),
       specialties: body.specialties,
       photoUrl: body.photoUrl,
@@ -58,44 +160,137 @@ export async function POST(req: Request) {
       inviteToken,
       inviteExpires,
     },
+    select: adminProfessionalSelect,
   })
 
   if (!process.env.RESEND_API_KEY) {
     return NextResponse.json(
-      { message: "Profissional criado, mas RESEND_API_KEY não configurada." },
+      { message: "Profissional criado, mas RESEND_API_KEY nao configurada." },
       { status: 201 }
     )
   }
-  
+
   const resend = new Resend(process.env.RESEND_API_KEY)
-  
+
   await resend.emails.send({
-    from: "Mr Dyllan Barbearia <onboarding@resend.dev>",
+    from: process.env.MAIL_FROM!,
     to: body.email.trim(),
-    subject: "Crie sua senha de acesso",
+    subject: "Crie sua senha de acesso ao Agendo Barber",
     html: `
-      <h2>Olá, ${body.name}</h2>
-      <p>Você foi cadastrado no sistema da Mr Dyllan Barbearia.</p>
-      <p>Clique no link abaixo para criar sua senha:</p>
-      <p>
-        <a href="${inviteLink}">
-          Criar minha senha
-        </a>
-      </p>
-      <p>Esse link expira em 24 horas.</p>
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2>Bem-vindo ao Agendo Barber</h2>
+
+        <p>Ola, ${body.name}.</p>
+
+        <p>
+          Voce foi convidado para acessar o sistema
+          ${barbershop.name ? `da barbearia <strong>${barbershop.name}</strong>` : "da sua barbearia"}.
+        </p>
+
+        <p>Clique no botao abaixo para criar sua senha de acesso:</p>
+
+        <p>
+          <a
+            href="${inviteLink}"
+            style="
+              background:#facc15;
+              color:#000;
+              padding:12px 20px;
+              text-decoration:none;
+              border-radius:8px;
+              display:inline-block;
+              font-weight:bold;
+            "
+          >
+            Criar minha senha
+          </a>
+        </p>
+
+        <p>Este link expira em 24 horas.</p>
+
+        <p>Se voce nao reconhece este convite, ignore este e-mail.</p>
+
+        <hr />
+
+        <small>
+          ${barbershop.name ?? "Agendo Barber"}
+        </small>
+      </div>
     `,
   })
 
-  return NextResponse.json(professional)
+    return NextResponse.json(presentAdminProfessional(professional))
+  } catch {
+    return internalServerErrorResponse()
+  }
+
 }
 
-
 export async function GET() {
-  const professionals = await prisma.professional.findMany({
-    orderBy: {
-      createdAt: "desc",
+  try {
+    const session = await getSession()
+
+  if (!session) {
+    return NextResponse.json(
+      { message: "Nao autenticado." },
+      { status: 401 }
+    )
+  }
+
+  if (
+    session.type !== "USER" ||
+    session.globalRole !== null ||
+    session.tenantRole !== "BARBERSHOP_OWNER" ||
+    session.barbershopId === null
+  ) {
+    return NextResponse.json(
+      { message: "Acesso negado." },
+      { status: 403 }
+    )
+  }
+
+  const barbershop = await getCurrentBarbershop()
+
+  if (
+    !barbershop ||
+    barbershop.id !== session.barbershopId
+  ) {
+    return NextResponse.json(
+      { message: "Barbearia nao vinculada ao usuario." },
+      { status: 404 }
+    )
+  }
+
+  const ownerMembership = await prisma.barbershopUser.findFirst({
+    where: {
+      userId: session.userId,
+      barbershopId: session.barbershopId,
+      role: "BARBERSHOP_OWNER",
+    },
+    select: {
+      id: true,
     },
   })
 
-  return NextResponse.json(professionals)
+  if (!ownerMembership) {
+    return NextResponse.json(
+      { message: "Acesso negado." },
+      { status: 403 }
+    )
+  }
+
+  const professionals = await prisma.professional.findMany({
+    where: {
+      barbershopId: barbershop.id,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    select: adminProfessionalSelect,
+  })
+
+    return NextResponse.json(professionals.map(presentAdminProfessional))
+  } catch {
+    return internalServerErrorResponse()
+  }
 }

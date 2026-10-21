@@ -14,31 +14,72 @@ enum Role {
   ASSISTANT
 }
 
+enum TenantRole {
+  BARBERSHOP_OWNER
+  BARBER
+  ASSISTANT
+}
+
+enum ProfessionalPermissionLevel {
+  BARBER
+  ASSISTANT
+}
+
+enum CustomerStatus {
+  ACTIVE
+  BLOCKED
+}
+
+enum ServiceStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum CategoryStatus {
+  ACTIVE
+  INACTIVE
+}
+
 model User {
-  id          String           @id @default(uuid())
-  name        String
-  email       String           @unique
-  password    String
-  role        Role             @default(BARBER)
-  photoUrl    String?
-  createdAt   DateTime         @default(now())
-  memberships BarbershopUser[]
+  id             String           @id @default(uuid())
+  name           String
+  email          String           @unique
+  password       String
+  role           Role             @default(BARBER)
+  sessionVersion Int              @default(0)
+  photoUrl       String?
+  resetToken     String?
+  resetExpires   DateTime?
+  createdAt      DateTime         @default(now())
+  memberships    BarbershopUser[]
 }
 
 model Professional {
-  id              String    @id @default(uuid())
+  id              String                      @id @default(uuid())
+  barbershopId    String
+  userId          String?
   name            String
-  email           String?   @unique
+  email           String?                     @unique
   role            String
-  permissionLevel String?
+  permissionLevel ProfessionalPermissionLevel
+  sessionVersion  Int                         @default(0)
   commission      Int
   specialties     String[]
   photoUrl        String?
-  status          String    @default("PENDING")
+  status          String                      @default("PENDING")
   password        String?
   inviteToken     String?
   inviteExpires   DateTime?
-  createdAt       DateTime  @default(now())
+  resetToken      String?
+  resetExpires    DateTime?
+  createdAt       DateTime                    @default(now())
+
+  barbershop Barbershop            @relation(fields: [barbershopId], references: [id])
+  membership BarbershopUser?       @relation(fields: [barbershopId, userId], references: [barbershopId, userId])
+  services   ProfessionalService[]
+
+  @@unique([barbershopId, id])
+  @@unique([barbershopId, userId])
 }
 
 model Barbershop {
@@ -49,22 +90,148 @@ model Barbershop {
   address   String?
   status    String   @default("ACTIVE")
   createdAt DateTime @default(now())
+  slug      String   @unique
+  timezone  String   @default("America/Cuiaba")
 
-  members BarbershopUser[]
-  tvMedia TvMedia[]
+  members           BarbershopUser[]
+  professionals     Professional[]
+  customers         BarbershopCustomer[]
+  services          Service[]
+  serviceCategories ServiceCategory[]
+  servicePackages   ServicePackage[]
+  tvMedia           TvMedia[]
 }
 
 model BarbershopUser {
-  id           String   @id @default(uuid())
+  id           String     @id @default(uuid())
   userId       String
   barbershopId String
-  role         Role
-  createdAt    DateTime @default(now())
+  role         TenantRole
+  createdAt    DateTime   @default(now())
 
-  user       User       @relation(fields: [userId], references: [id])
-  barbershop Barbershop @relation(fields: [barbershopId], references: [id])
+  user                 User           @relation(fields: [userId], references: [id])
+  barbershop           Barbershop     @relation(fields: [barbershopId], references: [id])
+  professionalProfiles Professional[]
 
   @@unique([userId, barbershopId])
+  @@unique([barbershopId, userId])
+}
+
+model CustomerAccount {
+  id             String   @id @default(uuid())
+  name           String
+  email          String   @unique
+  passwordHash   String
+  phone          String?
+  sessionVersion Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  barbershops BarbershopCustomer[]
+}
+
+model BarbershopCustomer {
+  id                String         @id @default(uuid())
+  barbershopId      String
+  customerAccountId String
+  status            CustomerStatus @default(ACTIVE)
+  internalNotes     String?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  barbershop      Barbershop      @relation(fields: [barbershopId], references: [id])
+  customerAccount CustomerAccount @relation(fields: [customerAccountId], references: [id])
+
+  @@unique([barbershopId, customerAccountId])
+  @@index([barbershopId, status])
+  @@index([customerAccountId])
+}
+
+model Service {
+  id              String        @id @default(uuid())
+  barbershopId    String
+  categoryId      String?
+  name            String
+  description     String?
+  priceCents      Int
+  durationMinutes Int
+  status          ServiceStatus @default(ACTIVE)
+  displayOrder    Int           @default(0)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  barbershop    Barbershop            @relation(fields: [barbershopId], references: [id])
+  professionals ProfessionalService[]
+  category      ServiceCategory?      @relation(fields: [barbershopId, categoryId], references: [barbershopId, id])
+  packageItems  ServicePackageItem[]
+
+  @@unique([barbershopId, id])
+  @@unique([barbershopId, name])
+  @@index([barbershopId, status, displayOrder])
+}
+
+model ServicePackage {
+  id              String        @id @default(uuid())
+  barbershopId    String
+  name            String
+  description     String?
+  priceCents      Int
+  durationMinutes Int
+  displayOrder    Int           @default(0)
+  status          ServiceStatus @default(ACTIVE)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  barbershop Barbershop           @relation(fields: [barbershopId], references: [id])
+  items      ServicePackageItem[]
+
+  @@unique([barbershopId, id])
+  @@unique([barbershopId, name])
+  @@index([barbershopId, status, displayOrder])
+}
+
+model ServicePackageItem {
+  barbershopId String
+  packageId    String
+  serviceId    String
+  displayOrder Int    @default(0)
+
+  package ServicePackage @relation(fields: [barbershopId, packageId], references: [barbershopId, id])
+  service Service        @relation(fields: [barbershopId, serviceId], references: [barbershopId, id])
+
+  @@id([barbershopId, packageId, serviceId])
+  @@index([barbershopId, serviceId])
+}
+
+model ServiceCategory {
+  id           String         @id @default(uuid())
+  barbershopId String
+  name         String
+  description  String?
+  displayOrder Int            @default(0)
+  status       CategoryStatus @default(ACTIVE)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  barbershop Barbershop @relation(fields: [barbershopId], references: [id])
+  services   Service[]
+
+  @@unique([barbershopId, id])
+  @@unique([barbershopId, name])
+  @@index([barbershopId, status, displayOrder])
+}
+
+model ProfessionalService {
+  barbershopId   String
+  professionalId String
+  serviceId      String
+  createdAt      DateTime @default(now())
+
+  professional Professional @relation(fields: [barbershopId, professionalId], references: [barbershopId, id])
+  service      Service      @relation(fields: [barbershopId, serviceId], references: [barbershopId, id])
+
+  @@id([barbershopId, professionalId, serviceId])
+  @@index([barbershopId, serviceId])
 }
 
 model TvMedia {

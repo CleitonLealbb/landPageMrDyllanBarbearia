@@ -5,8 +5,6 @@ import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
 import { PanelLeft } from "lucide-react"
 
-import { useIsMobile } from "@/hooks/use-mobile"
-import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
@@ -24,6 +22,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { useIsMobile } from "@/hooks/use-mobile"
+import { cn } from "@/lib/utils"
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
@@ -204,7 +204,7 @@ const Sidebar = React.forwardRef<
           <SheetContent
             data-sidebar="sidebar"
             data-mobile="true"
-            className="w-[--sidebar-width] bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
+            className="w-[--sidebar-width] max-w-[calc(100vw-2rem)] bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
             style={
               {
                 "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
@@ -333,7 +333,7 @@ const SidebarInset = React.forwardRef<
       ref={ref}
       className={cn(
       
-        "relative flex w-full flex-1 flex-col bg-background",
+        "relative flex w-full min-w-0 flex-1 flex-col bg-background",
         "md:peer-data-[variant=inset]:m-2 md:peer-data-[state=collapsed]:peer-data-[variant=inset]:ml-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow",
         className
       )}
@@ -619,18 +619,18 @@ const SidebarMenuAction = React.forwardRef<
       className={cn(
         // Base
         "absolute right-1 flex aspect-glass w-8 items-center justify-center rounded-sm p-0",
-        "text-[var(--primary)] outline-none ring-sidebar-ring transition-transform",
+        "text-primary outline-none ring-sidebar-ring transition-transform",
       
         // Hover / focus
-        "hover:bg-[var(--primary)]",
-        "hover:text-[var(--primary)]",
+        "hover:bg-primary",
+        "hover:text-primary-foreground",
         "focus-visible:ring-2",
       
         // SVG
         "[&>svg]:size-4 [&>svg]:shrink-0",
       
         // Peer hover
-        "peer-hover/menu-button:text-[var(--primary)]",
+        "peer-hover/menu-button:text-primary",
       
         // Mobile hit area
         "after:absolute after:-inset-2 after:md:hidden",
@@ -649,7 +649,7 @@ const SidebarMenuAction = React.forwardRef<
             "group-focus-within/menu-item:opacity-100",
             "group-hover/menu-item:opacity-100",
             "data-[state=open]:opacity-100",
-            "peer-data-[active=true]/menu-button:text-[var(--accent)]",
+            "peer-data-[active=true]/menu-button:text-accent",
             "md:opacity-0",
           ]
       )}
@@ -759,7 +759,7 @@ const SidebarMenuSubButton = React.forwardRef<
       data-active={isActive}
       className={cn(
         "flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sidebar-foreground outline-none ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-sidebar-accent-foreground",
-        "data-[active=true]:bg-[var(--primary)] data-[active=true]:text-sidebar-accent-foreground",
+        "data-[active=true]:bg-primary data-[active=true]:text-sidebar-accent-foreground",
         size === "sm" && "text-xs",
         size === "md" && "text-sm",
         "group-data-[collapsible=icon]:hidden",

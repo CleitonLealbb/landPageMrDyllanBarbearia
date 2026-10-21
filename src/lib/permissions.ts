@@ -1,47 +1,63 @@
-export type Role = "OWNER" | "BARBER" | "ASSISTANT"
+export type Role =
+  | "SUPER_ADMIN"
+  | "BARBERSHOP_OWNER"
+  | "BARBER"
+  | "ASSISTANT"
 
-export type Permission =
+type Permission =
   | "professionals:view"
   | "professionals:create"
   | "professionals:update"
   | "professionals:delete"
-  | "schedule:view_all"
-  | "schedule:view_own"
-  | "clients:view"
-  | "clients:create"
-  | "financial:view"
-  | "reports:view"
+  | "services:view"
+  | "services:create"
+  | "services:update"
+  | "settings:view"
+  | "barbershops:view"
+  | "barbershops:create"
+  | "barbershops:update"
+  | "barbershops:delete"
 
-const permissions: Record<Role, Permission[]> = {
-  OWNER: [
+const permissions: Record<Role, readonly Permission[]> = {
+  SUPER_ADMIN: [
+    "barbershops:view",
+    "barbershops:create",
+    "barbershops:update",
+    "barbershops:delete",
+  ],
+
+  BARBERSHOP_OWNER: [
     "professionals:view",
     "professionals:create",
     "professionals:update",
     "professionals:delete",
-    "schedule:view_all",
-    "clients:view",
-    "clients:create",
-    "financial:view",
-    "reports:view",
+    "services:view",
+    "services:create",
+    "services:update",
+    "settings:view",
   ],
 
-  BARBER: [
-    "schedule:view_own",
-    "clients:view",
-  ],
+  BARBER: [],
 
-  ASSISTANT: [
-    "schedule:view_all",
-    "clients:view",
-    "clients:create",
-  ],
+  ASSISTANT: [],
+}
+
+function isRole(value: unknown): value is Role {
+  return (
+    value === "SUPER_ADMIN" ||
+    value === "BARBERSHOP_OWNER" ||
+    value === "BARBER" ||
+    value === "ASSISTANT"
+  )
 }
 
 export function canAccess(
-  role: string | undefined,
+  role: unknown,
   permission: Permission
-) {
-  if (!role) return false
+): boolean {
+  if (!isRole(role)) {
+    return false
+  }
 
-  return permissions[role as Role]?.includes(permission) ?? false
+  return permissions[role].includes(permission)
 }

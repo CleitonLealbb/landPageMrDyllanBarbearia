@@ -1,5 +1,46 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { getCurrentBarbershop, getSession } from "@/lib/auth/session"
+import { adminProfessionalSelect, presentAdminProfessional } from "@/lib/professionals/admin-presentation"
+
+function internalServerErrorResponse() {
+  return NextResponse.json(
+    { message: "Erro interno do servidor." },
+    { status: 500 }
+  )
+}
+
+function professionalNotFoundResponse() {
+  return NextResponse.json(
+    { message: "Profissional nao encontrado." },
+    { status: 404 }
+  )
+}
+
+function isPrismaNotFoundError(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    error.code === "P2025"
+  )
+}
+
+const PROFESSIONAL_PERMISSION_LEVELS = [
+  "BARBER",
+  "ASSISTANT",
+] as const
+
+type ProfessionalPermissionLevel =
+  (typeof PROFESSIONAL_PERMISSION_LEVELS)[number]
+
+function isProfessionalPermissionLevel(
+  value: unknown
+): value is ProfessionalPermissionLevel {
+  return PROFESSIONAL_PERMISSION_LEVELS.some(
+    (permissionLevel) => permissionLevel === value
+  )
+}
 
 type Params = Promise<{
   id: string
@@ -9,36 +50,278 @@ export async function PUT(
   req: Request,
   context: { params: Params }
 ) {
+  try {
+    const session = await getSession()
+
+  if (!session) {
+    return NextResponse.json(
+      { message: "Nao autenticado." },
+      { status: 401 }
+    )
+  }
+
+  if (
+    session.type !== "USER" ||
+    session.globalRole !== null ||
+    session.tenantRole !== "BARBERSHOP_OWNER" ||
+    session.barbershopId === null
+  ) {
+    return NextResponse.json(
+      { message: "Acesso negado." },
+      { status: 403 }
+    )
+  }
+
+  const barbershop = await getCurrentBarbershop()
+
+  if (!barbershop) {
+    return NextResponse.json(
+      { message: "Barbearia nao vinculada ao usuario." },
+      { status: 404 }
+    )
+  }
+
+  const ownerMembership = await prisma.barbershopUser.findFirst({
+    where: {
+      userId: session.userId,
+      barbershopId: session.barbershopId,
+      role: "BARBERSHOP_OWNER",
+    },
+    select: {
+      id: true,
+    },
+  })
+
+  if (!ownerMembership) {
+    return NextResponse.json(
+      { message: "Acesso negado." },
+      { status: 403 }
+    )
+  }
+
   const { id } = await context.params
+
+  const exists = await prisma.professional.findFirst({
+    where: {
+      id,
+      barbershopId: barbershop.id,
+    },
+  })
+
+  if (!exists) {
+    return NextResponse.json(
+      { message: "Profissional nao encontrado." },
+      { status: 404 }
+    )
+  }
+
   const body = await req.json()
+
+  if (Object.prototype.hasOwnProperty.call(body, "userId")) {
+    return NextResponse.json(
+      { message: "Campo de vinculo nao permitido neste fluxo." },
+      { status: 400 }
+    )
+  }
+  if (exists.userId != null && Object.prototype.hasOwnProperty.call(body, "email")) {
+    return NextResponse.json(
+      { message: "O e-mail de acesso deve ser alterado na conta administrativa." },
+      { status: 400 }
+    )
+  }
+  const linkedProfile = exists.userId != null
+
+  if (Object.prototype.hasOwnProperty.call(body, "status")) {
+    if (Object.keys(body).length !== 1 || body.status !== "ACTIVE") {
+      return NextResponse.json(
+        { message: "Alteracao de status invalida." },
+        { status: 400 }
+      )
+    }
+    if (linkedProfile) {
+      return NextResponse.json(
+        { message: "O status do perfil vinculado nao pode ser alterado neste fluxo." },
+        { status: 400 }
+      )
+    }
+    const reactivated = await prisma.professional.update({
+      where: { id },
+      data: { status: "ACTIVE" },
+      select: adminProfessionalSelect,
+    })
+    return NextResponse.json(presentAdminProfessional(reactivated))
+  }
+
+  if (linkedProfile && Object.prototype.hasOwnProperty.call(body, "permissionLevel")) {
+    return NextResponse.json(
+      { message: "O acesso do perfil vinculado nao pode ser alterado neste fluxo." },
+      { status: 400 }
+    )
+  }
+
+  if (linkedProfile && exists.permissionLevel !== "BARBER") {
+    return NextResponse.json(
+      { message: "Perfil vinculado com configuracao de acesso invalida." },
+      { status: 409 }
+    )
+  }
+
+  const permissionLevel: unknown = linkedProfile
+    ? exists.permissionLevel
+    : body.permissionLevel
+
+  if (!isProfessionalPermissionLevel(permissionLevel)) {
+    return NextResponse.json(
+      { message: "Nível de permissão inválido." },
+      { status: 400 }
+    )
+  }
+
+  const permissionLevelChanged =
+    exists.permissionLevel !== permissionLevel
+
+  const normalizedEmail = body.email?.trim().toLowerCase()
+  if (normalizedEmail && normalizedEmail !== exists.email?.toLowerCase()) {
+    const userWithEmail = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
+      select: { id: true },
+    })
+    if (userWithEmail) {
+      return NextResponse.json(
+        { message: "Nao foi possivel atualizar o profissional com esse e-mail." },
+        { status: 409 }
+      )
+    }
+  }
 
   const professional = await prisma.professional.update({
     where: { id },
     data: {
       name: body.name?.trim(),
-      email: body.email?.trim(),
+      ...(exists.userId == null ? { email: normalizedEmail } : {}),
       role: body.role,
-      permissionLevel: body.permissionLevel,
+      ...(!linkedProfile ? { permissionLevel } : {}),
       commission: Number(body.commission),
       specialties: body.specialties ?? [],
       photoUrl: body.photoUrl,
+      ...(!linkedProfile && permissionLevelChanged
+        ? {
+            sessionVersion: {
+              increment: 1,
+            },
+          }
+        : {}),
     },
+    select: adminProfessionalSelect,
   })
 
-  return NextResponse.json(professional)
+    return NextResponse.json(presentAdminProfessional(professional))
+  } catch (error) {
+    if (isPrismaNotFoundError(error)) {
+      return professionalNotFoundResponse()
+    }
+
+    return internalServerErrorResponse()
+  }
 }
 
 export async function DELETE(
   req: Request,
   context: { params: Params }
 ) {
+  try {
+    const session = await getSession()
+
+  if (!session) {
+    return NextResponse.json(
+      { message: "Nao autenticado." },
+      { status: 401 }
+    )
+  }
+
+  if (
+    session.type !== "USER" ||
+    session.globalRole !== null ||
+    session.tenantRole !== "BARBERSHOP_OWNER" ||
+    session.barbershopId === null
+  ) {
+    return NextResponse.json(
+      { message: "Acesso negado." },
+      { status: 403 }
+    )
+  }
+
+  const barbershop = await getCurrentBarbershop()
+
+  if (!barbershop) {
+    return NextResponse.json(
+      { message: "Barbearia nao vinculada ao usuario." },
+      { status: 404 }
+    )
+  }
+
+  const ownerMembership = await prisma.barbershopUser.findFirst({
+    where: {
+      userId: session.userId,
+      barbershopId: session.barbershopId,
+      role: "BARBERSHOP_OWNER",
+    },
+    select: {
+      id: true,
+    },
+  })
+
+  if (!ownerMembership) {
+    return NextResponse.json(
+      { message: "Acesso negado." },
+      { status: 403 }
+    )
+  }
+
   const { id } = await context.params
 
-  await prisma.professional.delete({
-    where: { id },
+  const exists = await prisma.professional.findFirst({
+    where: {
+      id,
+      barbershopId: barbershop.id,
+    },
   })
 
-  return NextResponse.json({
-    message: "Profissional excluído com sucesso.",
+  if (!exists) {
+    return NextResponse.json(
+      { message: "Profissional nao encontrado." },
+      { status: 404 }
+    )
+  }
+
+  if (exists.userId != null) {
+    return NextResponse.json(
+      { message: "O perfil vinculado ao proprietario nao pode ser inativado." },
+      { status: 400 }
+    )
+  }
+
+  if (exists.status === "INACTIVE") {
+    return NextResponse.json({ message: "Profissional ja estava inativo." })
+  }
+
+  await prisma.professional.update({
+    where: { id },
+    data: {
+      status: "INACTIVE",
+      sessionVersion: { increment: 1 },
+    },
+    select: { id: true },
   })
+
+    return NextResponse.json({
+    message: "Profissional inativado com sucesso.",
+    })
+  } catch (error) {
+    if (isPrismaNotFoundError(error)) {
+      return professionalNotFoundResponse()
+    }
+
+    return internalServerErrorResponse()
+  }
 }

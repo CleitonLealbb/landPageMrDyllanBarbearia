@@ -1,0 +1,9 @@
+import { NextResponse } from "next/server"
+import { prisma } from "@/lib/prisma"
+import { internalErrorResponse, isPrismaUniqueError, requireCatalogOwner } from "@/lib/services/catalog"
+import { adminCategorySelect, validateCategoryBody } from "@/lib/services/categories"
+type Context = { params: Promise<{ id: string }> }
+const bad = (message: string) => NextResponse.json({ message }, { status: 400 })
+const missing = () => NextResponse.json({ message: "Categoria nao encontrada." }, { status: 404 })
+export async function PUT(request: Request, context: Context) { try { const auth = await requireCatalogOwner(); if (auth.response) return auth.response; const { id } = await context.params; const exists = await prisma.serviceCategory.findFirst({ where: { id, barbershopId: auth.owner.barbershopId }, select: { id: true } }); if (!exists) return missing(); const validation = validateCategoryBody(await request.json(), true); if (validation.error) return bad(validation.error); return NextResponse.json(await prisma.serviceCategory.update({ where: { id }, data: validation.value!, select: adminCategorySelect })) } catch (error) { if (isPrismaUniqueError(error)) return NextResponse.json({ message: "Ja existe uma categoria com este nome." }, { status: 409 }); return internalErrorResponse() } }
+export async function DELETE(_request: Request, context: Context) { try { const auth = await requireCatalogOwner(); if (auth.response) return auth.response; const { id } = await context.params; const exists = await prisma.serviceCategory.findFirst({ where: { id, barbershopId: auth.owner.barbershopId }, select: adminCategorySelect }); if (!exists) return missing(); if (exists.status === "INACTIVE") return NextResponse.json(exists); return NextResponse.json(await prisma.serviceCategory.update({ where: { id }, data: { status: "INACTIVE" }, select: adminCategorySelect })) } catch { return internalErrorResponse() } }

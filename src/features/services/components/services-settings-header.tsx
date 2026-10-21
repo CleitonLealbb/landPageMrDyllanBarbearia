@@ -1,0 +1,2 @@
+import { SidebarTrigger } from "@/components/ui/sidebar"
+export function ServicesSettingsHeader() { return <header className="flex items-start gap-3"><SidebarTrigger className="mt-1 shrink-0" /><div><h1 className="text-2xl font-bold sm:text-3xl">Configurações de Serviços e Equipe</h1><p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">Configure o catálogo da barbearia e defina quais serviços cada profissional realiza.</p></div></header> }
