@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 
 import { prisma } from "@/lib/prisma"
-import { getSession } from "@/lib/auth/session"
+import { getSession } from "@/lib/tv-session"
 
 export async function PATCH(request: Request) {
   const session = await getSession()

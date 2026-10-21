@@ -61,7 +61,7 @@ export default function Home() {
 
           <div className="nav-actions">
             <a
-              href={whatsappLink}
+             href="https://mrdyllanbarbearia.booksy.com"
               target="_blank"
               rel="noreferrer"
               className="btn btn-primary"
@@ -87,7 +87,7 @@ export default function Home() {
             <a href="#beneficios" onClick={() => setMenuOpen(false)}>Benefícios</a>
             <a href="#contato" onClick={() => setMenuOpen(false)}>Contato</a>
             <a
-              href={whatsappLink}
+              href="https://mrdyllanbarbearia.booksy.com"
               target="_blank"
               rel="noreferrer"
               className="btn btn-primary"
@@ -192,7 +192,7 @@ export default function Home() {
               </ul>
 
               <a
-                href={whatsappLink}
+               href="https://mrdyllanbarbearia.booksy.com"
                 target="_blank"
                 rel="noreferrer"
                 className="btn btn-primary"
@@ -250,7 +250,7 @@ export default function Home() {
             <div className="banner-overlay">
               <h3>Agende agora e garanta seu horário</h3>
               <a
-                href={whatsappLink}
+               href="https://mrdyllanbarbearia.booksy.com"
                 target="_blank"
                 rel="noreferrer"
                 className="btn btn-primary"
