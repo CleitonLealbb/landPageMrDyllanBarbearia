@@ -19,7 +19,7 @@ const dashboardViews: readonly ViewKey[] = [
 ]
 
 export default function DashboardPage() {
-  const requestedView = useSearchParams().get("view")
+  const requestedView = useSearchParams()?.get("view") ?? null
   const view: ViewKey = requestedView && dashboardViews.includes(requestedView as ViewKey) ? requestedView as ViewKey : "agenda"
 
   return (
