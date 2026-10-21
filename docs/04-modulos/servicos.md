@@ -17,4 +17,4 @@ Fontes: `src/app/api/services`, `src/features/services`, `src/lib/services/catal
 
 ## Combos / Pacotes
 
-O owner combina ao menos dois serviços ativos, define nome, descrição, preço promocional, ordem e status. O preço original, a duração total e a economia são derivados. Criação e substituição de itens são transacionais; inativação é lógica, idempotente e preserva itens. A interface oferece busca, estados vazio/sem resultado, edição e switch acessível.
+O owner combina ao menos dois serviços ativos e define nome, descrição, preço promocional, duração oficial, ordem e status. O preço original e a economia são derivados; o preço cobrado e a duração vêm sempre do pacote. Criação e substituição de itens são transacionais; inativação é lógica, idempotente e preserva itens. A interface oferece busca, estados vazio/sem resultado, edição e switch acessível.

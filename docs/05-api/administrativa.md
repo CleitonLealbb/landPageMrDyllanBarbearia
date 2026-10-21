@@ -22,4 +22,4 @@ Todas as rotas derivam autorização da sessão; corpo e parâmetros não escolh
 
 Fontes: `src/app/api/**/route.ts` e testes de rota.
 
-Combos exigem dois serviços ativos do tenant. O preço promocional não supera a soma atual. `PUT` substitui itens atomicamente apenas com `serviceIds`; `DELETE` inativa de modo idempotente.
+Combos exigem dois serviços ativos do tenant, preço em centavos e duração inteira positiva. O preço promocional não supera a soma atual. `PUT` substitui itens atomicamente apenas com `serviceIds`; `DELETE` inativa de modo idempotente.

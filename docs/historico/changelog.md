@@ -2,6 +2,7 @@
 
 ## 2026-08-14
 
+- Adicionada duração persistida/editável nos pacotes e o alias compatível `/combos`, que reexporta `/packages`, a implementação pública principal; ambos retornam o mesmo contrato.
 - Adicionados Combos/Pacotes tenant-safe: migration aditiva, APIs administrativas, catálogo público, interface, inativação lógica e testes dedicados.
 
 - Criada a central de documentação viva no commit-base `bfd4872`.
