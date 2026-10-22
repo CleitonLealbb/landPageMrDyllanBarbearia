@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { getCurrentBarbershop, getSession } from "@/lib/auth/session"
+import { executiveSummary } from "@/lib/dashboard/summary"
 
 const emptySummary = {
   barbershops: 0,
@@ -16,9 +17,14 @@ function internalServerErrorResponse() {
   )
 }
 
-export async function GET() {
+export function GET(): Promise<Response>
+export function GET(request: Request): Promise<Response>
+export async function GET(request: Request = new Request("http://localhost/api/dashboard/summary")) {
   try {
     const session = await getSession()
+    if (request && new URL(request.url).searchParams.get("executive") === "true") {
+      return await executiveSummary(request, session)
+    }
 
   if (!session) {
     return NextResponse.json(

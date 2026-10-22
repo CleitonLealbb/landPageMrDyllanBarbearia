@@ -1,0 +1,5 @@
+import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
+export function DashboardLoading() { return <div role="status" aria-label="Carregando dashboard" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{Array.from({ length: 8 }, (_, i) => <Skeleton key={i} className="h-32 motion-reduce:animate-none" />)}<span className="sr-only">Carregando indicadores…</span></div> }
+export function DashboardError({ message, retry }: { message: string; retry: () => void }) { return <div role="alert" className="rounded-xl border border-destructive p-6"><p>{message}</p><Button variant="outline" className="mt-4" onClick={retry}>Tentar novamente</Button></div> }
+export function InsufficientData({ reason }: { reason: string }) { return <div className="flex min-h-40 flex-col items-center justify-center rounded-lg border border-dashed p-5 text-center"><p className="text-sm font-medium">Dados insuficientes</p><p className="mt-2 max-w-md text-xs leading-5 text-muted-foreground">{reason}</p></div> }

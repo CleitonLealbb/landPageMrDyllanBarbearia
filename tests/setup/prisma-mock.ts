@@ -7,6 +7,9 @@ function forbiddenPrismaCall(model: string, method: string) {
 }
 
 export const prismaMock = {
+  barbershopCustomer: {
+    count: forbiddenPrismaCall("barbershopCustomer", "count"),
+  },
   $transaction: forbiddenPrismaCall("prisma", "$transaction"),
   user: {
     findUnique: forbiddenPrismaCall("user", "findUnique"),

@@ -1,6 +1,7 @@
 "use client"
 
 import { useSearchParams } from "next/navigation"
+import { useDashboardRole } from "@/components/layout/dashboard-shell"
 import { AgendaView } from "@/components/views/agenda-views"
 import { CheckoutView } from "@/components/views/checkout-views"
 import { CustomerView } from "@/features/customers/components/customer-view"
@@ -20,7 +21,10 @@ const dashboardViews: readonly ViewKey[] = [
 
 export default function DashboardPage() {
   const requestedView = useSearchParams()?.get("view") ?? null
-  const view: ViewKey = requestedView && dashboardViews.includes(requestedView as ViewKey) ? requestedView as ViewKey : "agenda"
+  const role = useDashboardRole()
+  const view: ViewKey = requestedView && dashboardViews.includes(requestedView as ViewKey) ? requestedView as ViewKey : role === "BARBERSHOP_OWNER" ? "dashboard" : "agenda"
+
+  if (view === "dashboard" && role !== "BARBERSHOP_OWNER") return <p role="alert" className="p-6">Sem permissão para o Dashboard Executivo.</p>
 
   return (
     <>
