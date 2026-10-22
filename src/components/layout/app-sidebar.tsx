@@ -157,7 +157,7 @@ export function AppSidebar({ tenantRole, ...props }: React.ComponentProps<typeof
   const router = useRouter()
   const pathname = usePathname() ?? ""
   const requestedView = useSearchParams()?.get("view") ?? null
-  const activeView: ViewKey = pathname.startsWith("/dashboard/configuracoes") ? "config" : requestedView && data.navMain.some((item) => item.view === requestedView) ? requestedView as ViewKey : "agenda"
+  const activeView: ViewKey = pathname.startsWith("/dashboard/configuracoes") ? "config" : requestedView && data.navMain.some((item) => item.view === requestedView) ? requestedView as ViewKey : tenantRole === "BARBERSHOP_OWNER" ? "dashboard" : "agenda"
   const [storedUser, setStoredUser] = React.useState<StoredUser | null>(cachedStoredUser ?? null)
   const [sidebarReady, setSidebarReady] = React.useState(cachedStoredUser !== undefined)
 
