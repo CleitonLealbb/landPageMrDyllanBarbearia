@@ -5,6 +5,10 @@ export type Role =
   | "ASSISTANT"
 
 type Permission =
+  | "checkout:sales"
+  | "checkout:cash"
+  | "checkout:cancel"
+  | "checkout:discount"
   | "professionals:view"
   | "professionals:create"
   | "professionals:update"
@@ -27,6 +31,7 @@ const permissions: Record<Role, readonly Permission[]> = {
   ],
 
   BARBERSHOP_OWNER: [
+    "checkout:sales", "checkout:cash", "checkout:cancel", "checkout:discount",
     "professionals:view",
     "professionals:create",
     "professionals:update",
@@ -37,9 +42,9 @@ const permissions: Record<Role, readonly Permission[]> = {
     "settings:view",
   ],
 
-  BARBER: [],
+  BARBER: ["checkout:sales"],
 
-  ASSISTANT: [],
+  ASSISTANT: ["checkout:sales", "checkout:cash"],
 }
 
 function isRole(value: unknown): value is Role {

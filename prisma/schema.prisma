@@ -511,6 +511,7 @@ model SaleItem {
   packageId                     String?
   productId                     String?
   nameSnapshot                  String
+  durationMinutesSnapshot       Int?
   unitPriceCents                Int
   originalUnitPriceCents        Int
   quantity                      Int
@@ -539,6 +540,7 @@ model SaleServiceComponent {
   serviceId                 String?
   professionalId            String
   serviceNameSnapshot       String
+  durationMinutesSnapshot   Int?
   professionalNameSnapshot  String
   unitOrdinal               Int
   componentOrdinal          Int

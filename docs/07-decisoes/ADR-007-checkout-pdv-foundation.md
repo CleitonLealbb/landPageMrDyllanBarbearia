@@ -2,6 +2,32 @@
 
 Data: 22/10/2026. Escopo autorizado: schema, migration aditiva não aplicada, documentação e testes estruturais. Branch inicial limpa: `feat/checkout-pdv`, igual à `main` e `origin/main` em `a0f6f85`.
 
+Atualização em 22/10/2026: as seções originais abaixo registram a entrega 2A. A seção **Complemento aprovado — Fase 2B** registra os serviços e APIs agora implementados, sem aplicação de migrations ou habilitação em produção.
+
+## Complemento aprovado — Fase 2B
+
+Foi criada a migration separada `20261022130000_checkout_duration_snapshots`, posterior à fundação, sem modificar o SQL já validado. Ela adiciona somente `SaleItem.durationMinutesSnapshot Int?` e `SaleServiceComponent.durationMinutesSnapshot Int?`, com dois checks. Valores preenchidos precisam ser positivos; produtos mantêm duração null. Não há default nem backfill: null representa duração histórica desconhecida, que não pode ser inventada a partir do catálogo atual.
+
+A duração é por unidade. A duração total do item pode ser derivada de `durationMinutesSnapshot × quantity`; cada componente já representa uma unidade executável. Novas vendas de serviços/combos e seus componentes exigem inteiros positivos no domínio. A finalização rejeita snapshots de serviço ainda desconhecidos; a leitura de históricos aceita null. A duração não fica em metadata de auditoria.
+
+As triggers existentes `SaleItem_guard_snapshot` e `SaleServiceComponent_guard_snapshot` executam em qualquer INSERT/UPDATE e recusam a operação quando a venda foi finalizada ou cancelada. Elas não usam lista de colunas e, portanto, protegem também as novas durações sem substituição. Os testes estruturais conferem tipos/nulabilidade acumulando as duas migrations, checks aditivos, congelamento abrangente e hash da migration original.
+
+Os serviços em `src/lib/checkout` separam autorização, entrada, cálculos, snapshots, reconciliação, transações, caixa, vendas, finalização, cancelamento, apresentação e erros. Os oito endpoints administrativos estão documentados em [Checkout administrativo](../05-api/checkout.md). Nenhuma interface foi implementada.
+
+São reutilizados `getSession`, tenant da sessão, `canAccess` e Prisma. USER revalida membership ativa; PROFESSIONAL revalida perfil ativo e papel. O ator histórico registra nome/papel no momento da operação. OWNER vende, opera caixa, cancela e concede desconto; ASSISTANT vende/opera caixa; BARBER vende/lê/finaliza apenas comandas cujos componentes e gorjetas sejam próprios, com ao menos um serviço próprio. Vendas só de produtos ficam para OWNER/ASSISTANT. SUPER_ADMIN sem tenant não acessa o Checkout.
+
+Não existe limite/configuração de desconto comum versus especial. A política conservadora desta fase classifica **todo desconto manual como especial**, exigindo OWNER; não foi inventado um limite silencioso. Não há cupom operacional.
+
+Toda mutação usa uma transação Serializable com maxWait de 5 s e timeout de 20 s, incluindo ator, lançamentos, auditoria e idempotência. O hash canônico inclui operação, entrada validada e identidade do operador; a chave é isolada por tenant/operação. Replay revalida autorização e propriedade. Conflitos retornam 409; se houver vencedor da mesma chave, apenas sua resposta é relida em uma transação limitada. Não se repete automaticamente o trabalho financeiro.
+
+A finalização trava caixa aberto, venda e depois os saldos de produtos em ordem estável; confere versão e agregados históricos, agrega quantidades do mesmo produto e baixa estoque com condição `quantity >= necessária`. Pagamentos confirmados manualmente precisam somar exatamente o total. Somente CASH admite troco e gera entrada no caixa pelo valor aplicado. PIX/cartões não aumentam a gaveta. Pagamentos entram antes de PAID; comissão EARNED usa o snapshot após desconto. Gorjeta entra integralmente no total devido ao profissional, fora da comissão, e seu vínculo histórico é preservado no cancelamento.
+
+Cancelamento integral exige OWNER e motivo. Trava o caixa de devolução antes da venda quando informado; dinheiro exige sessão aberta e saldo suficiente, podendo ser outra sessão do mesmo tenant. Confere lançamentos originais, marca CANCELED antes de estornar Payment, restaura estoque, insere REVERSAL de comissão antes de mudar o EARNED para REVERSED e reverte caixa. Não muda os totais/snapshots nem apaga registros. Gorjetas de vendas canceladas deixam de ser devidas pelo estado da venda; o reembolso integral de Payment inclui seu valor.
+
+Os testes locais usam Prisma mockado, impedem rede e verificam cálculos, contratos HTTP, permissões, tenant, ordem transacional, efeitos únicos e propagação de falhas/rollback. Isso não substitui validação PostgreSQL da nova migration e dos serviços concorrentes. Os 22 PASS informados para o PostgreSQL descartável referem-se à fundação 2A; a migration de duração e os serviços 2B não foram executados contra banco nesta entrega. Sua aplicação/teste real requer autorização separada. Migrations antigas, .env e DATABASE_URL não foram alterados.
+
+Validações locais da Fase 2B: Prisma format/validate/generate executados separadamente; 208 testes específicos e 577 testes na suíte completa (35 arquivos), todos aprovados; TypeScript e build webpack aprovados; lint dos arquivos alterados sem erros/avisos. O build inicial revelou assinatura incompatível dos handlers com o contexto do Next 16; foram separadas as fábricas de rotas com/sem ID e adicionados dois testes de regressão. Avisos de ferramentas preexistentes permanecem: output do Prisma, middleware, Browserslist e configuração Vite. Não foram atualizadas dependências para eliminá-los.
+
 ## Contexto e limites
 
 O projeto persiste barbearias, identidades administrativas, profissionais, clientes, serviços, categorias e combos. Agenda e Checkout ainda não têm infraestrutura transacional. O Dashboard integrado mantém os indicadores financeiros indisponíveis. Esta ADR não habilita vendas, caixa ou indicadores em produção.
