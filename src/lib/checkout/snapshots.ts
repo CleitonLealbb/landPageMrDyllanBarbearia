@@ -6,7 +6,7 @@ import { allowDiscount, ownOperation, type Context, type Identity } from "./auth
 import type { CreateSaleInput } from "./validation"
 
 type Component = Omit<SaleServiceComponent, "id" | "barbershopId" | "saleItemId" | "createdAt">
-type Item = Omit<SaleItem, "id" | "barbershopId" | "saleId" | "createdAt"> & { components: Component[] }
+type Item = Omit<SaleItem, "id" | "barbershopId" | "saleId" | "createdAt" | "removedAt" | "removedById" | "removedReason"> & { components: Component[] }
 export async function snapshots(tx: CheckoutDatabase, ctx: Context, who: Identity, input: CreateSaleInput) {
   allowDiscount(ctx, input.discount)
   const barbershopId = ctx.barbershopId

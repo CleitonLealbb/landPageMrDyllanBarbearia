@@ -8,7 +8,7 @@ import { check, isConflict } from "./errors"
 import { identity, ownOperation, type Context, type Identity } from "./authorization"
 import { json, saleSelect } from "./presentation"
 
-export type MutationResult = { status: number; body: Prisma.InputJsonObject; saleId?: string; entity: string; entityId: string }
+export type MutationResult = { status: number; body: Prisma.InputJsonObject; saleId?: string; entity: string; entityId: string; audit?: Prisma.InputJsonObject }
 function canonical(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`
   if (value && typeof value === "object") return `{${Object.entries(value).filter(([, value]) => value !== undefined).sort(([a], [b]) => a.localeCompare(b)).map(([key, value]) => `${JSON.stringify(key)}:${canonical(value)}`).join(",")}}`
@@ -39,7 +39,7 @@ export async function mutate(client: CheckoutClient, ctx: Context, operation: st
       const snapshot = { identityType: who.identityType, userId: who.userId, professionalId: who.professionalId, nameSnapshot: who.nameSnapshot, roleSnapshot: who.roleSnapshot }
       const actor = await tx.checkoutActor.create({ data: { ...snapshot, barbershopId: ctx.barbershopId }, select: { id: true } })
       const result = await work(tx, actor.id, who)
-      await tx.checkoutAuditEvent.create({ data: { barbershopId: ctx.barbershopId, actorId: actor.id, action: operation, entity: result.entity, entityId: result.entityId, metadata: { idempotencyKey: key } } })
+      await tx.checkoutAuditEvent.create({ data: { barbershopId: ctx.barbershopId, actorId: actor.id, action: operation, entity: result.entity, entityId: result.entityId, metadata: { ...result.audit, idempotencyKey: key } } })
       await tx.checkoutIdempotency.create({ data: { barbershopId: ctx.barbershopId, actorId: actor.id, operation, key, requestHash: hash, responseStatus: result.status, result: json(result.body), saleId: result.saleId ?? null } })
       return { status: result.status, body: result.body }
     })

@@ -13,6 +13,7 @@ function checkoutDelegate(model: string) {
 
 export const prismaMock = {
   barbershopCustomer: {
+    findMany: forbiddenPrismaCall("barbershopCustomer", "findMany"),
     count: forbiddenPrismaCall("barbershopCustomer", "count"),
     findFirst: forbiddenPrismaCall("barbershopCustomer", "findFirst"),
   },

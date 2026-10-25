@@ -1,6 +1,6 @@
 # Dashboard Executivo
 
-Implementação local na branch `feat/dashboard-executivo`, sem migration ou alteração do banco.
+Dashboard integrado ao Checkout na branch `feat/checkout-pdv`, sem mudança de schema, migrations ou escrita no banco.
 
 ## Arquitetura e acesso
 
@@ -21,29 +21,44 @@ Filtros são globais. Datas locais são convertidas em limites UTC semiabertos n
 
 Clientes não possuem associação com profissional. Ao filtrar um profissional, as contagens de clientes ficam indisponíveis em vez de atribuir totais gerais a ele. Lista de profissionais é uma dimensão cadastral, não uma métrica filtrada por data.
 
-## Dependências que faltam
+## Financeiro real do Checkout
 
-O schema não contém agendamentos, vendas, pagamentos, itens vendidos, estoque ou jornadas persistidas. Por isso os seguintes indicadores e gráficos mostram **Dados insuficientes**, com motivo na própria seção:
+O resumo executivo inclui `finance: { source: "CHECKOUT", scope, current, previous }`. `previous` é null sem comparação. As consultas financeiras dos dois períodos usam uma transação de leitura RepeatableRead, sempre com tenant da sessão e projeção explícita. O contrato legado sem `executive=true` permanece intacto.
+
+`Sale` é a única fonte financeira oficial. Só entram vendas atualmente PAID com `finalizedAt` no intervalo local convertido para UTC (`gte` inclusivo, `lt` exclusivo). DRAFT, PENDING e CANCELED nunca compõem receita, itens vendidos ou comissões ativas. Isso também vale retrospectivamente: um cancelamento posterior retira a venda do faturamento ativo do período original, sem debitar seu valor uma segunda vez no período do cancelamento.
+
+Campos de cada período: `paidTotalCents`, `paidSales`, `averageTicketCents`, `servicesRevenueCents`, `productsRevenueCents`, `discountsCents`, `tipsCents`, `postedCommissionsCents`, `commissionReversalsCents`, `canceledSales`, `canceledAmountCents`, `refundedPaymentCents`, `productsQuantity`, `servicesQuantity`, `payments`, `daily`, `ranking` e `professionals`. Sem movimento, valores e contagens são zero. `metrics.grossCents` e `metrics.averageTicketCents` também refletem o total pago e o ticket do Checkout, identificados na interface.
+
+O total pago soma `Sale.totalCents` uma vez por venda e inclui gorjetas. Receita de serviços/combos e produtos soma `SaleItem.totalCents`, já após desconto; gorjeta fica separada. Descontos são informativos, não deduzidos novamente. Ticket divide total pago por quantidade de vendas, arredondando para centavos. Quantidade de serviços conta os componentes históricos, inclusive os de combos; o ranking de combos conta unidades do item. Não se usam preços atuais do catálogo, custo ou percentuais atuais de comissão para calcular receita ou comissão.
+
+Pagamentos somam `appliedCents - refundedCents`, excluindo REFUNDED e valores sem saldo ativo. Não se consultam `cashReceivedCents` ou `changeCents`. Uma venda mista conta uma vez no total geral; em cada método, conta no máximo uma vez, e as contagens por método não são somáveis. Comissões geradas usam somente lançamentos EARNED/POSTED das vendas PAID. Reversões POSTED e pagamentos estornados de vendas CANCELED são exibidos separadamente, pela competência de `canceledAt`. O valor das comandas canceladas pode incluir pendentes sem pagamentos; não é tratado como receita estornada.
+
+O filtro profissional seleciona comandas com componentes de serviço daquele profissional, mantendo as relações filtradas pelo tenant. `scope: "SALES_WITH_PROFESSIONAL"` significa que receita, produtos e pagamentos continuam sendo da comanda inteira; não há rateio financeiro inventado por profissional. Produção individual usa o rateio histórico `allocatedGrossCents - allocatedDiscountCents`; comissões e reversões individuais pertencem apenas ao selecionado. Sem filtro, `scope` é TENANT.
+
+Não há soma com receita de agenda. Indicadores de agenda/atendimento continuam operacionais e indisponíveis quando não existem registros. Receita líquida não é estimada sem custos e taxas. Cadastro de comissão continua identificado como configuração, separado de comissão efetivamente gerada. Cancelamentos do Checkout têm indicador próprio e não substituem cancelamentos da agenda.
+
+Ao retornar da view Checkout, o Dashboard monta novamente e consulta o resumo sem cache. O botão **Atualizar relatório** permite atualização explícita após movimentos em outras abas. Loading, erro seguro e estados vazios são mantidos. Erros de consulta não viram zeros artificiais.
+
+## Dependências que ainda faltam
+
+Ainda faltam agenda, jornadas, custos e taxas suficientes para estes indicadores, que permanecem como **Dados insuficientes**:
 
 | Relatório | Campos/módulos necessários |
 | --- | --- |
-| Faturamento e ticket médio | Venda/atendimento, tenant, profissional, cliente, data de competência, status, total e descontos em centavos |
-| Receita líquida e comissões | Base de comissão por venda, percentual histórico, comissão apurada, taxas, estornos e regra de competência |
-| Formas de pagamento e recebíveis | Método, vencimento, recebido em centavos, saldo e estornos vinculados à venda |
+| Receita líquida | Custos e taxas históricos; comissões reais já são exibidas separadamente |
 | Conclusões, cancelamentos e no-show | Agendamento com status, início/fim e data de cancelamento |
 | Ocupação e mapa de calor | Agenda por profissional, jornadas, pausas, bloqueios e minutos efetivamente ocupados |
 | Retenção, retorno e clientes atendidos | Histórico de atendimentos concluídos por cliente |
-| Ranking de serviços, combos e produtos | Itens vendidos com quantidade, preço praticado e custo histórico |
 
-Não foram criadas fórmulas financeiras ou status artificiais. Antes de implementá-los, é necessário aprovar um modelo transacional e definir explicitamente quais status contam para faturamento, conclusão, cancelamento e no-show. Todos os valores monetários deverão ser inteiros em centavos, formatados com `Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })`; não derivar receita do preço do catálogo ou comissão de cadastro. Não é possível testar cálculos de faturamento, ticket ou ocupação sem esse modelo; os testes atuais verificam que permanecem indisponíveis.
+Valores monetários permanecem em centavos inteiros e são formatados em reais. Testes cobrem snapshots, pagamentos, cancelamentos, comparação, isolamento, fuso e renderização, sem acessar banco externo. Agregados além do limite de inteiros seguros falham explicitamente em vez de perder precisão.
 
-Recharts já está instalado. Não há série real para desenhar gráficos ou tooltips; nenhuma série fictícia foi criada. PDF, Excel e impressão estão explicitamente desabilitados. Próxima etapa: definir exportação consistente com filtros, autorização e conteúdo imprimível, então habilitar ações reais. Nenhuma dependência adicionada.
+A evolução diária usa dados reais do Checkout em barras simples e acessíveis; dias sem movimento representam receita zero. PDF, Excel e impressão continuam explicitamente desabilitados. Nenhuma dependência adicionada.
 
 ## Validação
 
 Testes específicos cobrem permissões, isolamento das consultas, recusa de tenant externo, profissional externo, intervalos e fuso, comparação, ausência de dados e renderização de loading/erro/dados insuficientes. Testes de renderização são feitos no servidor; não substituem verificação visual em navegador autenticado.
 
-Resultados locais em 21/10/2026:
+Histórico da implementação inicial em 21/10/2026 (anterior à integração Checkout):
 
 - Testes do Dashboard: 30 passaram (3 arquivos).
 - Suíte completa: 369 passaram (31 arquivos).

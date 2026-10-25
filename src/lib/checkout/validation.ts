@@ -29,6 +29,14 @@ export const createSaleSchema = z.object({
 export const paymentSchema = z.object({ method: z.enum(["CASH", "PIX", "CREDIT_CARD", "DEBIT_CARD"]), appliedCents: positive, cashReceivedCents: positive.optional(), confirmed: z.literal(true) }).strict()
 export const finalizeSchema = z.object({ cashSessionId: identifier, expectedVersion: z.number().int().min(0).max(MAX_CENTS), payments: z.array(paymentSchema).max(20) }).strict()
 export const cancelSchema = z.object({ cashSessionId: identifier.optional(), reason: z.string().trim().min(1).max(500) }).strict()
+const voidReason = z.string().transform(value => value.normalize("NFKC").replace(/[\u200B-\u200D\uFEFF]/g, "").replace(/\s+/gu, " ").trim()).pipe(z.string().min(1).max(500))
+export const voidSchema = z.object({ reason: voidReason, expectedVersion: z.number().int().min(0).max(MAX_CENTS) }).strict()
 export type CreateSaleInput = z.infer<typeof createSaleSchema>
+export const editSaleSchema = z.object({ expectedVersion: z.number().int().min(0).max(MAX_CENTS), ...createSaleSchema.shape }).strict().superRefine((input, ctx) => {
+  const result = createSaleSchema.safeParse({ customerId: input.customerId, items: input.items, discount: input.discount, tips: input.tips })
+  if (!result.success) result.error.issues.forEach(issue => ctx.addIssue({ code: "custom", message: issue.message, path: issue.path }))
+})
+export type EditSaleInput = z.infer<typeof editSaleSchema>
 export type FinalizeInput = z.infer<typeof finalizeSchema>
 export type CancelInput = z.infer<typeof cancelSchema>
+export type VoidInput = z.infer<typeof voidSchema>

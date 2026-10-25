@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs"
 import { PrismaClient, type Prisma } from "@prisma/client"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { db, knownError, owner, productSale, setupCheckout } from "../setup/checkout"
+import { db, knownError, owner, productSale, sale, setupCheckout } from "../setup/checkout"
 import type { CheckoutClient, CheckoutDatabase } from "@/lib/checkout/client"
 
 // If the factory or any transitive dependency imports the singleton, collection fails.
@@ -34,14 +34,15 @@ describe("Checkout: injeção sem singleton", () => {
     expect(findFirst).toHaveBeenCalledOnce()
     expect(db.cashSession.findFirst).not.toHaveBeenCalled()
   })
-  it.each(["open", "move", "close", "create", "finalize", "cancel"] as const)("%s usa apenas o tx recebido do cliente injetado", async operation => {
+  it.each(["open", "move", "close", "create", "finalize", "cancel", "void"] as const)("%s usa apenas o tx recebido do cliente injetado", async operation => {
     const { services, transaction } = root()
     if (operation === "open") { db.cashSession.findFirst.mockResolvedValue(null); await services.openCash(owner, "key", { cashRegisterId: "register", shift: "Manhã", openingBalanceCents: 0 }) }
     if (operation === "move") await services.moveCash(owner, "key", { cashSessionId: "cash", kind: "SUPPLY", amountCents: 1, reason: "Teste" })
     if (operation === "close") await services.closeCash(owner, "key", "cash", { countedBalanceCents: 5000 })
     if (operation === "create") await services.createSale(owner, "key", saleInput)
     if (operation === "finalize") await services.finalizeSale(owner, "key", "sale", payInput)
-    if (operation === "cancel") await services.cancelSale(owner, "key", "sale", { reason: "Teste" })
+    if (operation === "cancel") { db.sale.findFirst.mockResolvedValue(sale({ status: "PAID", finalizedAt: new Date(), saleItem_sale: [] })); await services.cancelSale(owner, "key", "sale", { reason: "Teste" }) }
+    if (operation === "void") await services.voidSale(owner, "key", "sale", { reason: "Teste", expectedVersion: 0 })
     expect(transaction).toHaveBeenCalledWith(expect.any(Function), { isolationLevel: "Serializable", maxWait: 5000, timeout: 20000 })
     expect(db.$transaction).not.toHaveBeenCalled()
     expect(db.checkoutAuditEvent.create).toHaveBeenCalledOnce()

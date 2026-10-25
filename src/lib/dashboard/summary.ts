@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import type { Session } from "@/lib/auth/session"
 import { dashboardPeriod } from "./period"
+import { checkoutFinance } from "./checkout-finance"
 
 export async function executiveSummary(request: Request, session: Session | null) {
   const json = (body: unknown, status = 200) => NextResponse.json(body, { status, headers: { "Cache-Control": "private, no-store" } })
@@ -24,5 +25,6 @@ export async function executiveSummary(request: Request, session: Session | null
     prisma.barbershopCustomer.count({ where: { barbershopId, status: "ACTIVE", createdAt: { lt: period.current.lt } } }),
     ...(period.compare ? [prisma.barbershopCustomer.count({ where: { barbershopId, createdAt: period.previous } })] : []),
   ])
-  return json({ period: { start: period.start, end: period.end, timezone: period.timezone, previousStart: period.previousStart, previousEnd: period.previousEnd }, compare: period.compare, professionalId, professionals, metrics: { grossCents: null, netCents: null, appointments: null, averageTicketCents: null, servedCustomers: null, newCustomers: counts?.[0] ?? null, cancellations: null, occupancy: null, activeCustomers: counts?.[1] ?? null, previousNewCustomers: period.compare ? counts?.[2] ?? null : null } })
+  const finance = await prisma.$transaction(tx => checkoutFinance(tx, barbershopId, period, professionalId), { isolationLevel: "RepeatableRead", maxWait: 5000, timeout: 20000 })
+  return json({ period: { start: period.start, end: period.end, timezone: period.timezone, previousStart: period.previousStart, previousEnd: period.previousEnd }, compare: period.compare, professionalId, professionals, finance, metrics: { grossCents: finance.current.paidTotalCents, netCents: null, appointments: null, averageTicketCents: finance.current.averageTicketCents, servedCustomers: null, newCustomers: counts?.[0] ?? null, cancellations: null, occupancy: null, activeCustomers: counts?.[1] ?? null, previousNewCustomers: period.compare ? counts?.[2] ?? null : null } })
 }

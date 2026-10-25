@@ -16,7 +16,7 @@ export function finalizeSale(client: CheckoutClient, ctx: Context, key: string, 
     await lockCash(tx, barbershopId, input.cashSessionId)
     const sale = await lockSale(tx, barbershopId, id)
     ownOperation(ctx, who, sale.saleItem_sale.flatMap(i => i.saleServiceComponent_saleItem), sale.saleTip_sale)
-    check(["DRAFT", "PENDING"].includes(sale.status) && sale.finalizedAt === null && sale.version === input.expectedVersion, 409, "Venda já finalizada, cancelada ou versão desatualizada.")
+    check(sale.status === "PENDING" && sale.finalizedAt === null && sale.version === input.expectedVersion, 409, "Venda já encerrada ou versão desatualizada.")
     check(sale.payment_sale.length === 0, 409, "Venda já possui pagamentos registrados.")
     reconcile(sale)
     const confirmed = payments(sale.totalCents, input.payments)
@@ -34,7 +34,7 @@ export function finalizeSale(client: CheckoutClient, ctx: Context, key: string, 
       const row = await tx.payment.create({ data: { ...payment, barbershopId, saleId: id, actorId }, select: { id: true } })
       if (payment.method === "CASH") await tx.cashMovement.create({ data: { barbershopId, cashSessionId: input.cashSessionId, saleId: id, paymentId: row.id, actorId, kind: "SALE", amountCents: payment.appliedCents, reason: "Recebimento de venda" } })
     }
-    const updated = await tx.sale.updateMany({ where: { barbershopId, id, version: input.expectedVersion, status: { in: ["DRAFT", "PENDING"] }, finalizedAt: null }, data: { status: "PAID", cashSessionId: input.cashSessionId, finalizedAt: new Date(), version: { increment: 1 } } })
+    const updated = await tx.sale.updateMany({ where: { barbershopId, id, version: input.expectedVersion, status: "PENDING", finalizedAt: null }, data: { status: "PAID", cashSessionId: input.cashSessionId, finalizedAt: new Date(), version: { increment: 1 } } })
     check(updated.count === 1, 409, "Venda alterada por outra operação.")
     const components = sale.saleItem_sale.flatMap(item => item.saleServiceComponent_saleItem)
     if (components.length) await tx.commissionEntry.createMany({ data: components.map(component => ({ barbershopId, componentId: component.id, professionalId: component.professionalId, actorId, kind: "EARNED", baseCents: component.commissionBaseCents, basisPoints: component.commissionBasisPoints, amountCents: component.commissionCents })) })

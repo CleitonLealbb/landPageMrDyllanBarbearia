@@ -36,7 +36,9 @@ describe("Checkout: contrato HTTP e autorização", () => {
   })
   it("expõe os oito endpoints com respostas privadas", async () => {
     db.cashSession.findFirst.mockResolvedValueOnce(null)
-    const responses = [await open(request({ cashRegisterId: "register", shift: "Manhã", openingBalanceCents: 0 })), await current(new Request("http://test/api/checkout/cash-sessions/current?cashRegisterId=register")), await move(request({ cashSessionId: "cash", kind: "SUPPLY", amountCents: 100, reason: "Suprimento" })), await close(request({ countedBalanceCents: 5000 }), cashParams()), await create(request(creation)), await read(new Request("http://test"), params()), await finalize(request(payment), params()), await cancel(request({ reason: "Desistência" }), params())]
+    const responses = [await open(request({ cashRegisterId: "register", shift: "Manhã", openingBalanceCents: 0 })), await current(new Request("http://test/api/checkout/cash-sessions/current?cashRegisterId=register")), await move(request({ cashSessionId: "cash", kind: "SUPPLY", amountCents: 100, reason: "Suprimento" })), await close(request({ countedBalanceCents: 5000 }), cashParams()), await create(request(creation)), await read(new Request("http://test"), params()), await finalize(request(payment), params())]
+    db.sale.findFirst.mockResolvedValue(sale({ status: "PAID", finalizedAt: new Date(), saleItem_sale: [] }))
+    responses.push(await cancel(request({ reason: "Desistência" }), params()))
     expect(responses.map(r => r.status)).toEqual([201, 200, 201, 200, 201, 200, 200, 200])
     for (const response of responses) {
       expect(response.headers.get("Cache-Control")).toBe("private, no-store")

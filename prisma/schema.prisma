@@ -305,6 +305,7 @@ enum SaleStatus {
   PENDING
   PAID
   CANCELED
+  VOIDED
 }
 
 enum SaleItemKind {
@@ -370,6 +371,9 @@ model CheckoutActor {
   professional              Professional?         @relation("CheckoutActor_professional", fields: [barbershopId, professionalId], references: [barbershopId, id], onDelete: Restrict, onUpdate: Restrict)
   sale_operator             Sale[]                @relation("Sale_operator")
   sale_canceledBy           Sale[]                @relation("Sale_canceledBy")
+  sale_voidedBy             Sale[]                @relation("Sale_voidedBy")
+  removedItems              SaleItem[]            @relation("SaleItem_removedBy")
+  removedTips               SaleTip[]             @relation("SaleTip_removedBy")
   inventoryMovement_actor   InventoryMovement[]   @relation("InventoryMovement_actor")
   payment_actor             Payment[]             @relation("Payment_actor")
   commissionEntry_actor     CommissionEntry[]     @relation("CommissionEntry_actor")
@@ -468,6 +472,7 @@ model Sale {
   customerId               String?
   operatorId               String
   canceledById             String?
+  voidedById               String?
   cashSessionId            String?
   origin                   SaleOrigin            @default(WALK_IN)
   status                   SaleStatus            @default(DRAFT)
@@ -485,6 +490,8 @@ model Sale {
   finalizedAt              DateTime?
   canceledAt               DateTime?
   cancellationReason       String?
+  voidedAt                 DateTime?
+  voidReason               String?
   barbershop               Barbershop            @relation("Sale_barbershop", fields: [barbershopId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   customer                 BarbershopCustomer?   @relation("Sale_customer", fields: [barbershopId, customerId], references: [barbershopId, id], onDelete: Restrict, onUpdate: Restrict)
   cashSession              CashSession?          @relation("Sale_cashSession", fields: [barbershopId, cashSessionId], references: [barbershopId, id], onDelete: Restrict, onUpdate: Restrict)
@@ -495,11 +502,14 @@ model Sale {
   checkoutIdempotency_sale CheckoutIdempotency[] @relation("CheckoutIdempotency_sale")
   operator                 CheckoutActor         @relation("Sale_operator", fields: [barbershopId, operatorId], references: [barbershopId, id], onDelete: Restrict, onUpdate: Restrict)
   canceledBy               CheckoutActor?        @relation("Sale_canceledBy", fields: [barbershopId, canceledById], references: [barbershopId, id], onDelete: Restrict, onUpdate: Restrict)
+  voidedBy                 CheckoutActor?        @relation("Sale_voidedBy", fields: [barbershopId, voidedById], references: [barbershopId, id], onDelete: Restrict, onUpdate: Restrict)
 
   @@unique([barbershopId, id])
   @@index([barbershopId, status, createdAt])
   @@index([barbershopId, customerId, createdAt])
   @@index([barbershopId, operatorId, createdAt])
+  @@index([barbershopId, status, voidedAt])
+  @@index([barbershopId, voidedById])
 }
 
 model SaleItem {
@@ -518,6 +528,10 @@ model SaleItem {
   subtotalCents                 Int
   discountCents                 Int                    @default(0)
   totalCents                    Int
+  removedAt                     DateTime?
+  removedById                   String?
+  removedReason                 String?
+  removedBy                     CheckoutActor?         @relation("SaleItem_removedBy", fields: [barbershopId, removedById], references: [barbershopId, id], onDelete: Restrict, onUpdate: Restrict)
   createdAt                     DateTime               @default(now())
   barbershop                    Barbershop             @relation("SaleItem_barbershop", fields: [barbershopId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   inventoryMovement_saleItem    InventoryMovement[]    @relation("InventoryMovement_saleItem")
@@ -531,6 +545,8 @@ model SaleItem {
   @@unique([barbershopId, id, saleId])
   @@unique([barbershopId, id, productId])
   @@index([barbershopId, saleId])
+  @@index([barbershopId, saleId, removedAt])
+  @@index([barbershopId, removedById])
 }
 
 model SaleServiceComponent {
@@ -565,19 +581,25 @@ model SaleServiceComponent {
 }
 
 model SaleTip {
-  id                       String       @id @default(uuid())
+  id                       String         @id @default(uuid())
   barbershopId             String
   saleId                   String
   professionalId           String
   professionalNameSnapshot String
   amountCents              Int
-  createdAt                DateTime     @default(now())
-  barbershop               Barbershop   @relation("SaleTip_barbershop", fields: [barbershopId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  sale                     Sale         @relation("SaleTip_sale", fields: [barbershopId, saleId], references: [barbershopId, id], onDelete: Restrict, onUpdate: Restrict)
-  professional             Professional @relation("SaleTip_professional", fields: [barbershopId, professionalId], references: [barbershopId, id], onDelete: Restrict, onUpdate: Restrict)
+  removedAt                DateTime?
+  removedById              String?
+  removedReason            String?
+  removedBy                CheckoutActor? @relation("SaleTip_removedBy", fields: [barbershopId, removedById], references: [barbershopId, id], onDelete: Restrict, onUpdate: Restrict)
+  createdAt                DateTime       @default(now())
+  barbershop               Barbershop     @relation("SaleTip_barbershop", fields: [barbershopId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  sale                     Sale           @relation("SaleTip_sale", fields: [barbershopId, saleId], references: [barbershopId, id], onDelete: Restrict, onUpdate: Restrict)
+  professional             Professional   @relation("SaleTip_professional", fields: [barbershopId, professionalId], references: [barbershopId, id], onDelete: Restrict, onUpdate: Restrict)
 
   @@unique([barbershopId, id])
-  @@unique([barbershopId, saleId, professionalId])
+  // Active beneficiary uniqueness is enforced by SaleTip_one_active_professional in SQL.
+  @@index([barbershopId, saleId, removedAt])
+  @@index([barbershopId, removedById])
 }
 
 model Payment {

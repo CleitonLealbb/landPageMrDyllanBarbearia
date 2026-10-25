@@ -7,6 +7,10 @@ const migrationName = "20261022120000_checkout_pdv_foundation"
 const sql = readFileSync(`prisma/migrations/${migrationName}/migration.sql`, "utf8")
 const durationMigrationName = "20261022130000_checkout_duration_snapshots"
 const durationSql = readFileSync(`prisma/migrations/${durationMigrationName}/migration.sql`, "utf8")
+const voidGuardsSql = readFileSync("prisma/migrations/20261024160100_checkout_sale_voided_guards/migration.sql", "utf8")
+const pendingSql = readFileSync("prisma/migrations/20261024170000_checkout_pending_snapshots/migration.sql", "utf8")
+const additionsSql = `${durationSql}\n${voidGuardsSql}\n${pendingSql}`
+const completeSql = `${sql}\n${additionsSql}`
 const schema = readFileSync("prisma/schema.prisma", "utf8")
 const models = Prisma.dmmf.datamodel.models
 const newModels = [
@@ -18,8 +22,8 @@ const existingModels = ["User", "Professional", "Barbershop", "BarbershopUser", 
 const model = (name: string) => models.find(m => m.name === name)!
 const field = (name: string, property: string) => model(name).fields.find(f => f.name === property)!
 const quotedNames = (value: string) => [...value.matchAll(/"([^"]+)"/g)].map(m => m[1])
-const sqlIndexes = [...sql.matchAll(/CREATE (UNIQUE )?INDEX "([^"]+)" ON "([^"]+)"\(([^)]+)\)([^;]*);/g)].map(m => ({ unique: Boolean(m[1]), name: m[2], table: m[3], columns: quotedNames(m[4]), predicate: m[5].trim(), position: m.index! }))
-const sqlForeignKeys = [...sql.matchAll(/ALTER TABLE "([^"]+)" ADD CONSTRAINT "([^"]+)" FOREIGN KEY \(([^)]+)\) REFERENCES "([^"]+)"\(([^)]+)\) ON DELETE (\w+) ON UPDATE (\w+);/g)].map(m => ({ table: m[1], name: m[2], columns: quotedNames(m[3]), target: m[4], references: quotedNames(m[5]), onDelete: m[6], onUpdate: m[7], position: m.index! }))
+const sqlIndexes = [...completeSql.matchAll(/CREATE (UNIQUE )?INDEX "([^"]+)" ON "([^"]+)"\(([^)]+)\)([^;]*);/g)].filter(m => !completeSql.slice(m.index! + m[0].length).includes(`DROP INDEX "${m[2]}";`)).map(m => ({ unique: Boolean(m[1]), name: m[2], table: m[3], columns: quotedNames(m[4]), predicate: m[5].trim(), position: m.index! }))
+const sqlForeignKeys = [...completeSql.matchAll(/ALTER TABLE "([^"]+)" ADD CONSTRAINT "([^"]+)" FOREIGN KEY \(([^)]+)\) REFERENCES "([^"]+)"\(([^)]+)\) ON DELETE (\w+) ON UPDATE (\w+);/g)].map(m => ({ table: m[1], name: m[2], columns: quotedNames(m[3]), target: m[4], references: quotedNames(m[5]), onDelete: m[6], onUpdate: m[7], position: m.index! }))
 const sqlFunctions = [...sql.matchAll(/CREATE FUNCTION "([^"]+)"\(\) RETURNS trigger LANGUAGE plpgsql AS \$\$([\s\S]*?)\$\$;/g)].map(m => ({ name: m[1], body: m[2], position: m.index! }))
 const sqlTriggers = [...sql.matchAll(/CREATE TRIGGER "([^"]+)" BEFORE ([\w ]+) ON "([^"]+)" FOR EACH ROW EXECUTE FUNCTION "([^"]+)"\(\);/g)].map(m => ({ name: m[1], events: m[2], table: m[3], fn: m[4], position: m.index! }))
 
@@ -59,7 +63,9 @@ describe("Checkout: revisão cruzada integral dos artefatos", () => {
     for (const [, name, values] of enums) {
       const datamodel = Prisma.dmmf.datamodel.enums.find(e => e.name === name)
       expect(datamodel, name).toBeDefined()
-      expect([...values.matchAll(/'([^']+)'/g)].map(v => v[1])).toEqual(datamodel!.values.map(v => v.name))
+      const foundationValues = [...values.matchAll(/'([^']+)'/g)].map(v => v[1])
+      // The foundation remains immutable; VOIDED is introduced separately.
+      expect(name === "SaleStatus" ? [...foundationValues, "VOIDED"] : foundationValues).toEqual(datamodel!.values.map(v => v.name))
     }
     const usedEnums = new Set(newModels.flatMap(name => model(name).fields.filter(f => f.kind === "enum").map(f => f.type)))
     expect([...usedEnums].filter(name => !["TenantRole", "CategoryStatus"].includes(name)).sort()).toEqual(enums.map(e => e[1]).sort())
@@ -100,7 +106,7 @@ describe("Checkout: revisão cruzada integral dos artefatos", () => {
     const names = [...constraints, ...sqlIndexes.map(i => i.name), ...sqlFunctions.map(f => f.name), ...sqlTriggers.map(t => t.name)]
     expect(new Set(names).size).toBe(names.length)
     for (const name of names) expect(Buffer.byteLength(name, "utf8"), name).toBeLessThanOrEqual(63)
-    const previousSql = readdirSync("prisma/migrations", { withFileTypes: true }).filter(e => e.isDirectory() && e.name !== migrationName && e.name !== durationMigrationName).map(e => readFileSync(`prisma/migrations/${e.name}/migration.sql`, "utf8")).join("\n")
+    const previousSql = readdirSync("prisma/migrations", { withFileTypes: true }).filter(e => e.isDirectory() && e.name < migrationName).map(e => readFileSync(`prisma/migrations/${e.name}/migration.sql`, "utf8")).join("\n")
     for (const name of names) expect(previousSql.includes(`"${name}"`), name).toBe(false)
   })
 
@@ -193,7 +199,7 @@ describe("Checkout: tenant, identidade e snapshots", () => {
   it.each(newModels)("%s mantém SQL consistente com tipos e nulabilidade do datamodel", name => {
     const table = sql.match(new RegExp(`CREATE TABLE "${name}" \\(([\\s\\S]*?)\\n\\);`))?.[1] ?? ""
     const types: Record<string, string> = { String: "TEXT", Int: "INTEGER", Boolean: "BOOLEAN", DateTime: "TIMESTAMP(3)", Json: "JSONB" }
-    const additions = [...durationSql.matchAll(new RegExp(`ALTER TABLE "${name}" ADD COLUMN "(\\w+)" ([^;]+);`, "g"))].map(m => `    "${m[1]}" ${m[2]}`)
+    const additions = [...additionsSql.matchAll(new RegExp(`ALTER TABLE "${name}" ADD COLUMN "(\\w+)" ([^;]+);`, "g"))].map(m => `    "${m[1]}" ${m[2]}`)
     const columns = [...[table, ...additions].join("\n").matchAll(/^\s+"(\w+)" ([^\n]+)/gm)]
     const scalars = model(name).fields.filter(f => f.kind !== "object")
     expect(columns.map(c => c[1]).sort()).toEqual(scalars.map(f => f.name).sort())
@@ -345,7 +351,7 @@ describe("Checkout: migration exclusivamente aditiva", () => {
   "20260924_add_tv_media": "b748b5c342cf75cd586872051825abe62f3a08fad662ce85e873488acb1b9506",
   "20260929_add_tv_media_duration": "fec745eafd755599ce4e81507a46ca4f13a7fabca409c289e399266d8bfcf02a"
 }
-    expect(readdirSync("prisma/migrations", { withFileTypes: true }).filter(e => e.isDirectory() && e.name !== migrationName && e.name !== durationMigrationName).map(e => e.name).sort()).toEqual(Object.keys(hashes).sort())
+    expect(readdirSync("prisma/migrations", { withFileTypes: true }).filter(e => e.isDirectory() && e.name < migrationName).map(e => e.name).sort()).toEqual(Object.keys(hashes).sort())
     for (const [name, hash] of Object.entries(hashes)) expect(createHash("sha256").update(readFileSync(`prisma/migrations/${name}/migration.sql`, "utf8").replace(/\r\n/g, "\n")).digest("hex")).toBe(hash)
   })
 

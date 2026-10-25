@@ -190,9 +190,9 @@ describe("Checkout: cancelamento e reversões", () => {
     expect(db.payment.update).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ status: "REFUNDED", refundedCents: 2000 }) }))
     expect(db.saleItem.update).not.toHaveBeenCalled(); expect(db.saleServiceComponent.update).not.toHaveBeenCalled()
   })
-  it("cancela pendente sem exigir caixa nem criar reversões", async () => {
-    await cancelSale(owner, "pending", "sale", { reason: "Desistência" })
-    expect(db.sale.update).toHaveBeenCalledOnce()
+  it("recusa cancelamento financeiro de pendente sem criar reversões", async () => {
+    await expect(cancelSale(owner, "pending", "sale", { reason: "Desistência" })).rejects.toMatchObject({ status: 409 })
+    expect(db.sale.update).not.toHaveBeenCalled()
     expect(db.inventoryMovement.create).not.toHaveBeenCalled(); expect(db.payment.update).not.toHaveBeenCalled()
   })
   it("segundo cancelamento e estorno sem caixa não criam reversões", async () => {
@@ -213,6 +213,7 @@ describe("Checkout: cancelamento e reversões", () => {
 
 describe("Checkout: idempotência transacional", () => {
   it.each(["finalize", "cancel"] as const)("repetição de %s não repete pagamentos ou reversões", async operation => {
+    if (operation === "cancel") db.sale.findFirst.mockResolvedValue(sale({ status: "PAID", finalizedAt: new Date(), saleItem_sale: [] }))
     const run = () => operation === "finalize" ? finalizeSale(owner, "same", "sale", finalizeInput()) : cancelSale(owner, "same", "sale", { reason: "Desistência" })
     await run()
     const saved = db.checkoutIdempotency.create.mock.calls[0][0] as { data: object }

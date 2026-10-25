@@ -2,7 +2,7 @@ import type { Prisma, PrismaClient } from "@prisma/client"
 
 // Shared delegates of a root client and an interactive transaction client.
 export type CheckoutDatabase = Pick<Prisma.TransactionClient,
-  "$queryRaw" | "barbershopUser" | "professional" | "barbershopCustomer" |
+  "$queryRaw" | "barbershop" | "barbershopUser" | "professional" | "barbershopCustomer" |
   "service" | "product" | "servicePackage" | "sale" | "saleItem" |
   "saleServiceComponent" | "saleTip" | "payment" | "inventoryBalance" |
   "inventoryMovement" | "commissionEntry" | "cashRegister" | "cashSession" |

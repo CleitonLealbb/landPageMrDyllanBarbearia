@@ -14,7 +14,7 @@ export function cancelSale(client: CheckoutClient, ctx: Context, key: string, id
     const barbershopId = ctx.barbershopId
     if (input.cashSessionId) await lockCash(tx, barbershopId, input.cashSessionId)
     const sale = await lockSale(tx, barbershopId, id)
-    check(sale.status !== "CANCELED", 409, "Venda já cancelada.")
+    check(sale.status === "PAID" && sale.finalizedAt !== null, 409, "Somente vendas finalizadas podem ser canceladas.")
     check(sale.payment_sale.every(payment => payment.status === "RECORDED" && payment.refundedCents === 0), 409, "Venda possui estorno anterior.")
     const cashTotal = sum(sale.payment_sale.filter(p => p.method === "CASH").map(p => p.appliedCents))
     if (cashTotal) {
@@ -26,11 +26,9 @@ export function cancelSale(client: CheckoutClient, ctx: Context, key: string, id
     const stock = await tx.inventoryMovement.findMany({ where: { barbershopId, saleItemId: { in: productItems.map(i => i.id) }, kind: "SALE" } })
     const commissions = await tx.commissionEntry.findMany({ where: { barbershopId, componentId: { in: components.map(c => c.id) }, kind: "EARNED" } })
     const cash = await tx.cashMovement.findMany({ where: { barbershopId, saleId: id, kind: "SALE" } })
-    if (sale.status === "PAID") {
-      check(stock.length === productItems.length && productItems.every(item => stock.some(m => m.saleItemId === item.id && m.productId === item.productId && m.quantityDelta === -item.quantity)), 409, "Histórico de estoque incompleto.")
-      check(commissions.length === components.length && commissions.every(c => c.status === "POSTED"), 409, "Histórico de comissão incompleto.")
-      check(cash.length === sale.payment_sale.filter(p => p.method === "CASH").length && cash.every(m => sale.payment_sale.some(p => p.id === m.paymentId && p.method === "CASH" && p.appliedCents === m.amountCents)), 409, "Histórico de caixa incompleto.")
-    } else check(stock.length === 0 && commissions.length === 0 && sale.payment_sale.length === 0 && cash.length === 0, 409, "Venda pendente possui lançamentos incompatíveis.")
+    check(stock.length === productItems.length && productItems.every(item => stock.some(m => m.saleItemId === item.id && m.productId === item.productId && m.quantityDelta === -item.quantity)), 409, "Histórico de estoque incompleto.")
+    check(commissions.length === components.length && commissions.every(c => c.status === "POSTED"), 409, "Histórico de comissão incompleto.")
+    check(cash.length === sale.payment_sale.filter(p => p.method === "CASH").length && cash.every(m => sale.payment_sale.some(p => p.id === m.paymentId && p.method === "CASH" && p.appliedCents === m.amountCents)), 409, "Histórico de caixa incompleto.")
     // Cancellation must precede Payment UPDATE; snapshot totals remain unchanged.
     await tx.sale.update({ where: { barbershopId_id: { barbershopId, id } }, data: { status: "CANCELED", canceledById: actorId, canceledAt: new Date(), cancellationReason: input.reason, version: { increment: 1 } } })
     for (const movement of [...stock].sort((a, b) => a.productId.localeCompare(b.productId))) {
