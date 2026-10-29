@@ -5,10 +5,14 @@ import { finalizeSale } from "./finalization"
 import { cancelSale } from "./cancellation"
 import { voidSale } from "./voiding"
 import { editSale } from "./editing"
+import { createRegister, listRegisters, updateRegister } from "./registers"
 import { listSales, saleHistory, listCashSessions, cashHistory } from "./history"
 
 export function createCheckoutServices(client: CheckoutClient) {
   return {
+    createRegister: createRegister.bind(null, client),
+    listRegisters: listRegisters.bind(null, client),
+    updateRegister: updateRegister.bind(null, client),
     editSale: editSale.bind(null, client),
     listSales: listSales.bind(null, client),
     saleHistory: saleHistory.bind(null, client),

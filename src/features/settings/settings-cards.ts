@@ -1,6 +1,7 @@
 export type SettingsCard = { id: string; title: string; description: string; keywords: readonly string[]; href: string | null; available: boolean }
 
 export const settingsCards: readonly SettingsCard[] = [
+  { id: "caixa-pdv", title: "Caixa e PDV", description: "Cadastre, renomeie e gerencie os caixas físicos da barbearia.", keywords: ["caixa", "pdv", "checkout", "recepção"], href: "/dashboard/configuracoes/caixa-pdv", available: true },
   { id: "empresa", title: "Detalhes da Empresa", description: "Dados, identidade e informações da empresa.", keywords: ["empresa", "perfil", "dados"], href: null, available: false },
   { id: "servicos", title: "Configurações de Serviços", description: "Gerencie o catálogo, preços, durações e profissionais.", keywords: ["serviços", "catálogo", "preços"], href: "/dashboard/configuracoes/servicos", available: true },
   { id: "agendamentos", title: "Agendamentos Online", description: "Defina regras e preferências para reservas online.", keywords: ["agenda", "reservas", "horários"], href: null, available: false },

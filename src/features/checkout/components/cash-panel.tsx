@@ -14,6 +14,7 @@ import { Choice, Field } from "./fields";
 import { displayName } from "../display";
 import { money } from "../helpers";
 import type { CheckoutController, CheckoutState } from "../controller";
+import { RegisterManager } from "./register-manager";
 
 type Action = "open" | "close" | "SUPPLY" | "WITHDRAWAL";
 const titles: Record<Action, string> = {
@@ -32,6 +33,7 @@ export function CashPanel({
   const [action, setAction] = useState<Action | null>(null),
     [value, setValue] = useState(""),
     [reason, setReason] = useState("");
+  const [configuring, setConfiguring] = useState(false);
   const data = state.data!,
     session = data.openSessions.find(
       (s) => s.cashRegisterId === state.registerId,
@@ -77,6 +79,13 @@ export function CashPanel({
           vendas.
         </p>
       )}
+      {!data.cashRegisters.length && data.operator.role === "BARBERSHOP_OWNER" && <Button variant="outline" disabled={locked} onClick={() => setConfiguring(true)}>Configurar caixas</Button>}
+      <Dialog open={configuring} onOpenChange={setConfiguring}>
+        <DialogContent className="max-h-[85dvh] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader><DialogTitle>Caixa e PDV</DialogTitle><DialogDescription>Configuração dos caixas físicos da barbearia.</DialogDescription></DialogHeader>
+          {configuring && data.operator.role === "BARBERSHOP_OWNER" && <RegisterManager onSaved={async id => { await controller.registerUpdated(id); setConfiguring(false); }} />}
+        </DialogContent>
+      </Dialog>
       {session && (session.operatorName || session.openedAt) && (
         <p className="text-[10px] text-muted-foreground">
           {session.operatorName ? `Aberto por ${displayName(session.operatorName, "Operador")}` : "Caixa aberto"}

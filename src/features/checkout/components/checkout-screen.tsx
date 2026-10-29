@@ -99,7 +99,10 @@ export function CheckoutScreen({
       {state.data && view === "sale" && <div className="p-4"><Catalog state={state} controller={controller} /></div>}
       </section>
       {state.data && view === "sale" && <ReceiptPanel state={state} controller={controller} itemCount={itemCount} total={mobileTotal} />}
-      {state.data && view !== "sale" && <CheckoutHistoryPanel key={view} kind={view} data={state.data} />}
+      {state.data && view !== "sale" && <CheckoutHistoryPanel key={view} kind={view} data={state.data}
+        blockedSaleId={state.busy || state.retry || state.editing ? state.sale?.id : undefined}
+        onOperate={async (id, edit) => { const opened = await controller.openFromHistory(id, edit); if (opened) setView("sale"); return opened }}
+        onMutation={id => { if (state.sale?.id === id && !state.editing) void controller.readSale() }} />}
     </div>
   );
 }

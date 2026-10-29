@@ -6,6 +6,7 @@ import { check } from "./errors"
 import { cashBalance } from "./calculations"
 import { json, presentSale, saleClosureKind, saleSelect } from "./presentation"
 import { historyPeriod, historyQuery, pageResult, pageScope } from "./history-query"
+import { cashHistoryTotals, historyPaymentMethods } from "./history-totals"
 
 // Read snapshots consistently; no locks, financial writes, audit inserts or idempotency consumption.
 function read<T>(client: CheckoutClient, work: (tx: CheckoutDatabase) => Promise<T>) {
@@ -44,11 +45,15 @@ function saleFilters(barbershopId: string, query: ReturnType<typeof historyQuery
       ...(query.professionalId ? { professionalId: query.professionalId } : {}), ...(query.professionalQuery ? { professionalNameSnapshot: { contains: query.professionalQuery, mode: "insensitive" } } : {}),
     } } } } } : {}) }
 }
-function saleStateFilter(status: string | null): Prisma.SaleWhereInput {
+function saleStateFilter(query: ReturnType<typeof historyQuery>): Prisma.SaleWhereInput {
+  const { status, view, includeVoided } = query
+  if (view === "open") return { status: "PENDING" }
   // Legacy unpaid cancellations remain unchanged in storage and idempotency responses.
   if (status === "VOIDED") return { OR: [{ status: "VOIDED" }, { status: "CANCELED", finalizedAt: null }] }
   if (status === "CANCELED") return { status: "CANCELED", finalizedAt: { not: null } }
-  return status ? { status: status as SaleStatus } : {}
+  if (status) return { status: status as SaleStatus }
+  return { OR: [{ status: "PAID", finalizedAt: { not: null } }, { status: "CANCELED", finalizedAt: { not: null } },
+    ...(includeVoided ? [{ status: "VOIDED" as const }, { status: "CANCELED" as const, finalizedAt: null }] : [])] }
 }
 function salePeriodFilter(dateField: string, range: { gte: Date; lt: Date }): Prisma.SaleWhereInput {
   // A legacy discard kept its original canceledAt. Never pretend that field was migrated.
@@ -87,16 +92,18 @@ export function listSales(client: CheckoutClient, ctx: Context, params: URLSearc
     if (ctx.session.tenantRole === "BARBER" && query.professionalId) check(query.professionalId === who.ownProfessionalId, 403, "Acesso negado.")
     const period = historyPeriod(params, timezone), barbershopId = ctx.barbershopId
     const rows = await tx.sale.findMany({
-      where: { barbershopId, AND: [owned(ctx, who), saleFilters(barbershopId, query), boundary(query.cursor, "createdAt"), saleStateFilter(query.status), salePeriodFilter(query.dateField, period.current)],
+      where: { barbershopId, AND: [owned(ctx, who), saleFilters(barbershopId, query), boundary(query.cursor, "createdAt"), saleStateFilter(query), salePeriodFilter(query.dateField, period.current)],
         ...(query.cashSessionId ? { cashSessionId: query.cashSessionId } : {}) },
       orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: query.pageSize + 1,
       select: { id: true, status: true, createdAt: true, finalizedAt: true, canceledAt: true, voidedAt: true, totalCents: true,
+        payment_sale: { where: { barbershopId }, select: { method: true } },
         customer: { select: customerSelect }, cashSession: { select: { cashRegister: { select: { name: true } } } },
         saleItem_sale: { where: { barbershopId, removedAt: null }, select: { quantity: true, saleServiceComponent_saleItem: { where: { barbershopId }, select: { professionalId: true, professionalNameSnapshot: true } } } } },
     })
     const page = pageResult(rows, query.pageSize, scope, row => row.createdAt)
     const items = page.items.map(row => ({ id: row.id, status: row.status, closureKind: saleClosureKind(row), createdAt: row.createdAt, finalizedAt: row.finalizedAt, canceledAt: row.canceledAt, voidedAt: row.voidedAt, totalCents: row.totalCents,
       customer: row.customer ? { id: row.customer.id, name: row.customer.customerAccount.name } : null,
+      paymentMethods: historyPaymentMethods.filter(method => row.payment_sale.some(payment => payment.method === method)),
       cashRegisterName: row.cashSession?.cashRegister.name ?? null, itemCount: row.saleItem_sale.reduce((sum, item) => sum + item.quantity, 0),
       professionals: [...new Map(row.saleItem_sale.flatMap(item => item.saleServiceComponent_saleItem).map(c => [c.professionalId, { id: c.professionalId, name: c.professionalNameSnapshot }])).values()] }))
     return { status: 200, body: json({ ...page, items, period: { start: period.start, end: period.end, timezone, dateField: query.dateField } }) }
@@ -158,12 +165,15 @@ export function cashHistory(client: CheckoutClient, ctx: Context, id: string, pa
     const { timezone } = await context(tx, ctx, true), barbershopId = ctx.barbershopId
     const row = await tx.cashSession.findFirst({ where: { barbershopId, id }, select: { ...sessionSelect, ...(ctx.session.tenantRole === "BARBERSHOP_OWNER" ? { notes: true } : {}) } })
     check(row, 404, "Sessão de caixa não encontrada.")
-    const [movements, groups] = await Promise.all([
+    const eligible = { barbershopId, cashSessionId: id, finalizedAt: { not: null }, status: { in: ["PAID", "CANCELED"] as SaleStatus[] } }
+    const [movements, groups, payments, sales] = await Promise.all([
       tx.cashMovement.findMany({ where: { barbershopId, cashSessionId: id, AND: [boundary(query.cursor, "createdAt")] }, take: query.pageSize + 1, orderBy: [{ createdAt: "desc" }, { id: "desc" }], select: movementSelect }),
       tx.cashMovement.groupBy({ by: ["kind"], where: { barbershopId, cashSessionId: id }, _sum: { amountCents: true } }),
+      tx.payment.groupBy({ by: ["method"], where: { barbershopId, sale: eligible }, _sum: { appliedCents: true, refundedCents: true, cashReceivedCents: true, changeCents: true } }),
+      tx.sale.groupBy({ by: ["status"], where: eligible, _sum: { totalCents: true } }),
     ])
     const totals = groups.map(g => ({ kind: g.kind, amountCents: g._sum.amountCents ?? 0 })), page = pageResult(movements, query.pageSize, scope, m => m.createdAt)
     return { status: 200, body: json({ session: sessionDto(row), notes: ctx.session.tenantRole === "BARBERSHOP_OWNER" ? row.notes ?? null : null,
-      ledgerBalanceCents: cashBalance(totals), totals, movements: { ...page, items: page.items.map(movementDto) }, timezone }) }
+      ledgerBalanceCents: cashBalance(totals), totals, ...cashHistoryTotals(payments, sales), movements: { ...page, items: page.items.map(movementDto) }, timezone }) }
   })
 }

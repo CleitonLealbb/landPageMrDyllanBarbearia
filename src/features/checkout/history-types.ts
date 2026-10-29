@@ -1,4 +1,4 @@
-import type { Sale } from "./types"
+import type { Sale, Method } from "./types"
 
 export type HistoryKind = "sales" | "cash-sessions"
 export type HistoryPage<T> = {
@@ -6,6 +6,7 @@ export type HistoryPage<T> = {
   period: { start: string; end: string; timezone: string; dateField: string }
 }
 export type SaleHistoryRow = {
+  paymentMethods: Method[];
   id: string; status: Sale["status"]; closureKind: "VOIDED" | "CANCELED" | "LEGACY_VOIDED" | null;
   createdAt: string; finalizedAt: string | null; canceledAt: string | null; voidedAt: string | null;
   totalCents: number; customer: { id: string; name: string } | null;
@@ -35,6 +36,9 @@ export type SaleHistoryDetail = Omit<Sale, "payments"> & {
   }
 }
 export type CashHistoryDetail = {
+  paymentTotals: { method: Method; appliedCents: number; refundedCents: number; netAppliedCents: number }[];
+  cashReceivedCents: number; cashChangeCents: number; cashOriginalEffectCents: number;
+  finalizedSalesTotalCents: number; currentlyPaidSalesTotalCents: number; canceledSalesTotalCents: number;
   session: CashHistoryRow; notes: string | null; ledgerBalanceCents: number;
   totals: { kind: string; amountCents: number }[];
   movements: { items: HistoryMovement[]; pageSize: number; hasMore: boolean; nextCursor: string | null };

@@ -15,7 +15,7 @@ const req = (suffix = query) => new Request(`http://test/api/checkout/history?${
 const params = (id = "sale") => ({ params: Promise.resolve({ id }) })
 function listRow(id = "sale") {
   return { id, status: "PAID", createdAt: at, finalizedAt: at, canceledAt: null, voidedAt: null, totalCents: 1000,
-    customer: { id: "customer", customerAccount: { name: "Cliente histórico" } }, cashSession: { cashRegister: { name: "Caixa antigo" } },
+    payment_sale: [], customer: { id: "customer", customerAccount: { name: "Cliente histórico" } }, cashSession: { cashRegister: { name: "Caixa antigo" } },
     saleItem_sale: [{ quantity: 1, saleServiceComponent_saleItem: [{ professionalId: "pro", professionalNameSnapshot: "Profissional histórico" }] }] }
 }
 function cashRow() {
@@ -29,6 +29,8 @@ beforeEach(() => {
   setupCheckout(); session.mockResolvedValue(owner.session)
   db.barbershop.findFirst.mockResolvedValue({ timezone: "America/Sao_Paulo" })
   db.sale.findMany.mockResolvedValue([listRow()])
+  db.sale.groupBy.mockResolvedValue([])
+  db.payment.groupBy.mockResolvedValue([])
   db.sale.findFirst.mockResolvedValue(detailed())
   db.cashSession.findMany.mockResolvedValue([cashRow()])
   db.cashSession.findFirst.mockResolvedValue(cashRow())
@@ -112,13 +114,13 @@ describe("Históricos Checkout: endpoints e isolamento", () => {
     expect(db.checkoutIdempotency.update).not.toHaveBeenCalled()
   })
   it("filtro Descarta inclui VOIDED e legado sem incluir cancelamento financeiro", async () => {
-    await sales(req(`${query}&status=VOIDED`))
+    await sales(req(`${query}&includeVoided=true&status=VOIDED`))
     expect(db.sale.findMany.mock.calls[0][0]).toMatchObject({ where: { barbershopId: "shop", AND: expect.arrayContaining([
       { OR: [{ status: "VOIDED" }, { status: "CANCELED", finalizedAt: null }] },
     ]) } })
   })
   it("data de descarte respeita o timezone e usa canceledAt somente para legados", async () => {
-    await sales(req("period=custom&start=2026-10-01&end=2026-10-01&status=VOIDED&dateField=voidedAt"))
+    await sales(req("period=custom&start=2026-10-01&end=2026-10-01&includeVoided=true&status=VOIDED&dateField=voidedAt"))
     const range = { gte: new Date("2026-10-01T03:00:00Z"), lt: new Date("2026-10-02T03:00:00Z") }
     expect(db.sale.findMany.mock.calls[0][0]).toMatchObject({ where: { AND: expect.arrayContaining([
       { OR: [{ status: "VOIDED", voidedAt: range }, { status: "CANCELED", finalizedAt: null, canceledAt: range }] },

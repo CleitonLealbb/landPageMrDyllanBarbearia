@@ -3,7 +3,7 @@ import type { Session } from "@/lib/auth/claims"
 import { canAccess } from "@/lib/permissions"
 import { check } from "./errors"
 
-export type CheckoutPermission = "checkout:sales" | "checkout:cash" | "checkout:cancel" | "checkout:discount"
+export type CheckoutPermission = "checkout:sales" | "checkout:cash" | "checkout:cancel" | "checkout:discount" | "checkout:registers"
 export type Context = { session: Exclude<Session, { globalRole: "SUPER_ADMIN" }>; barbershopId: string }
 export function allowDiscount(ctx: Context, discount: unknown) {
   check(!discount || canAccess(ctx.session.tenantRole, "checkout:discount"), 403, "Desconto manual exige proprietário.")

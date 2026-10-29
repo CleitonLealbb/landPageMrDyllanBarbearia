@@ -166,6 +166,12 @@ export class CheckoutController {
         this.state.tipProfessionalId || data.operator.professionalId || "",
     });
   }
+  async registerUpdated(id: string) {
+    try {
+      await this.refresh();
+      if (this.state.data?.cashRegisters.some(row => row.id === id)) this.patch({ registerId: id });
+    } catch (error) { this.fail(error); }
+  }
   async searchCustomers(query: string) {
     const version = ++this.searchVersion,
       normalized = query.normalize("NFKC").trim().replace(/\s+/g, " ");
@@ -582,7 +588,14 @@ export class CheckoutController {
         }
       }
       await this.mutate(async () => {
-        const result = await this.http.post<CashResult>(path, input);
+        let result: CashResult;
+        try { result = await this.http.post<CashResult>(path, input); }
+        catch (error) {
+          if (error instanceof CheckoutRequestError && error.status === 409) {
+            try { await this.refresh(); } catch { /* Preserve the original conflict. */ }
+          }
+          throw error;
+        }
         this.patch({
           cashResult: action === "close" ? result : null,
           notice: "Operação de caixa concluída.",
@@ -645,6 +658,25 @@ export class CheckoutController {
     } finally {
       this.patch({ busy: false });
     }
+  }
+  async openFromHistory(id: string, edit = false) {
+    const current = this.state
+    if (current.busy || current.retry || current.editing || (current.sale?.id !== id && (current.lines.length > 0 && !current.sale || current.sale?.status === "PENDING"))) {
+      this.patch({ error: "Conclua, salve ou descarte a comanda atual antes de abrir outra venda." }); return false;
+    }
+    this.patch({ busy: true, error: null });
+    try {
+      const sale = await this.http.get<Sale>(`sales/${encodeURIComponent(id)}`);
+      if (sale.status !== "PENDING") throw new CheckoutInputError("A comanda não está mais pendente. Atualize o histórico.");
+      const same = current.sale?.id === id, changed = same && financialSnapshot(current.sale!) !== financialSnapshot(sale);
+      if (!same) this.http.newIntent();
+      this.patch({ sale, lines: [], customer: null, extraTips: [], editing: false,
+        payments: same ? current.payments.map(payment => changed ? { ...payment, confirmed: false, reviewRequired: true } : payment) : [],
+        notice: changed ? "A comanda foi alterada. Revise e confirme novamente os pagamentos." : "Comanda recuperada. Confira os dados atuais antes de continuar." });
+    } catch (error) { this.fail(error); return false; }
+    finally { this.patch({ busy: false }); }
+    if (edit) this.beginEdit();
+    return !edit || this.state.editing === true;
   }
   private async mutate(work: () => Promise<void>) {
     if (this.state.busy || this.state.retry) return;

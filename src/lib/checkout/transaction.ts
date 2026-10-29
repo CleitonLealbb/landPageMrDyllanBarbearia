@@ -16,7 +16,7 @@ function canonical(value: unknown): string {
 }
 const replaySelect = { requestHash: true, result: true, responseStatus: true, saleId: true } satisfies Prisma.CheckoutIdempotencySelect
 export async function mutate(client: CheckoutClient, ctx: Context, operation: string, key: string, payload: unknown, work: (tx: CheckoutDatabase, actorId: string, who: Identity) => Promise<MutationResult>) {
-  check(canAccess(ctx.session.tenantRole, operation.startsWith("cash.") ? "checkout:cash" : operation === "sale.cancel" ? "checkout:cancel" : "checkout:sales"), 403, "Acesso negado.")
+  check(canAccess(ctx.session.tenantRole, operation.startsWith("cash_register.") ? "checkout:registers" : operation.startsWith("cash.") ? "checkout:cash" : operation === "sale.cancel" ? "checkout:cancel" : "checkout:sales"), 403, "Acesso negado.")
   const session = ctx.session
   const principal = session.type === "USER" ? `USER:${session.userId}` : `PROFESSIONAL:${session.professionalId}`
   const hash = createHash("sha256").update(canonical({ operation, payload, principal })).digest("hex")

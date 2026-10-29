@@ -7,6 +7,7 @@ import { check } from "./errors"
 import { cashSelect, json } from "./presentation"
 import { lockCash, mutate } from "./transaction"
 import type { closeSchema, movementSchema, openSchema } from "./validation"
+import { lockRegister } from "./registers"
 
 export async function balance(tx: CheckoutDatabase, barbershopId: string, cashSessionId: string) {
   const rows = await tx.cashMovement.groupBy({ by: ["kind"], where: { barbershopId, cashSessionId }, _sum: { amountCents: true } })
@@ -15,7 +16,10 @@ export async function balance(tx: CheckoutDatabase, barbershopId: string, cashSe
 }
 export function openCash(client: CheckoutClient, ctx: Context, key: string, input: z.infer<typeof openSchema>) {
   return mutate(client, ctx, "cash.open", key, input, async (tx, actorId) => {
-    check(await tx.cashRegister.findFirst({ where: { id: input.cashRegisterId, barbershopId: ctx.barbershopId, active: true }, select: { id: true } }), 404, "Caixa não encontrado.")
+    await lockRegister(tx, ctx, input.cashRegisterId)
+    const register = await tx.cashRegister.findFirst({ where: { id: input.cashRegisterId, barbershopId: ctx.barbershopId }, select: { active: true } })
+    check(register, 404, "Caixa não encontrado.")
+    check(register.active === true, 409, "Caixa inativo. Atualize os caixas antes de abrir uma sessão.")
     check(!await tx.cashSession.findFirst({ where: { barbershopId: ctx.barbershopId, cashRegisterId: input.cashRegisterId, status: "OPEN" }, select: { id: true } }), 409, "Já existe sessão aberta neste caixa.")
     const session = await tx.cashSession.create({ data: { ...input, barbershopId: ctx.barbershopId, openedById: actorId }, select: cashSelect })
     await tx.cashMovement.create({ data: { barbershopId: ctx.barbershopId, cashSessionId: session.id, actorId, kind: "OPENING", amountCents: input.openingBalanceCents, reason: "Abertura de caixa" } })

@@ -1,6 +1,6 @@
-# Checkout — Fase 2D.1: históricos somente leitura
+# Checkout — Histórico e conferência
 
-Implementa consultas e conferência sem criar correções, editar PENDING, alterar pagamentos ou reverter movimentos. Nenhuma mudança de schema é necessária para esta subfase.
+As consultas e agregações são somente leitura. A interface organiza comandas abertas, histórico financeiro e descartes, e encaminha operações autorizadas aos contratos transacionais já existentes. Nenhuma mudança de schema ou migration foi criada nesta reformulação.
 
 ## Contratos
 
@@ -8,13 +8,13 @@ Todos os endpoints exigem sessão autenticada, tenant ativo e vínculo revalidad
 
 | Endpoint | Resposta |
 | --- | --- |
-| GET `/api/checkout/sales` | Página de vendas com cliente mínimo, profissionais históricos, estado, datas, quantidade e total original. |
+| GET `/api/checkout/sales` | Página de vendas com cliente mínimo, profissionais históricos, estado, datas, quantidade, total original e `paymentMethods` únicos em ordem CASH, PIX, DEBIT_CARD, CREDIT_CARD. Métodos estornados continuam históricos; a seleção ocorre na mesma consulta, sem N+1. |
 | GET `/api/checkout/sales/[id]` | Contrato anterior preservado. |
 | GET `/api/checkout/sales/[id]?include=history` | Contrato complementar com operador, cliente atual, caixa mínimo, cancelamento, estoque, pagamentos, gorjetas e, conforme papel, comissão e auditoria. |
 | GET `/api/checkout/cash-sessions` | Página de sessões abertas/fechadas, inclusive de caixas inativos e dias anteriores. |
 | GET `/api/checkout/cash-sessions/[id]` | Abertura/fechamento originais, totais da sessão inteira, saldo calculado e página dos movimentos. |
 
-Nenhum POST/PATCH/DELETE foi acrescentado. O histórico não consome chave de idempotência, cria ator/auditoria ou altera dados. Leituras relacionadas usam o cliente injetado em transação `RepeatableRead`, com timeout de 20 segundos e espera de 5 segundos; um TransactionClient injetado continua pertencendo ao chamador.
+Nenhum endpoint de escrita foi acrescentado. Os GETs não consomem chave de idempotência, criam ator/auditoria ou alteram dados. Leituras relacionadas usam o cliente injetado em transação `RepeatableRead`, com timeout de 20 segundos e espera de 5 segundos; um TransactionClient injetado continua pertencendo ao chamador. Descarte e cancelamento na interface usam seus POSTs existentes, com chave de idempotência, motivo e autorização no backend.
 
 ## Permissões
 
@@ -28,7 +28,9 @@ O GET individual sem `include=history` conserva a projeção e as permissões an
 
 Listagens aceitam `period` com os presets do Dashboard: today, yesterday, week, month, previousMonth, year e custom. O padrão é month. custom exige start/end em YYYY-MM-DD; limite de 366 dias. Limites financeiros usam meia-noite local da barbearia, início inclusivo e fim exclusivo, inclusive em transições de horário de verão.
 
-- `status`: estados de venda ou OPEN/CLOSED para sessões. Em vendas, VOIDED seleciona comandas descartadas e inclui os legados CANCELED sem finalizedAt; CANCELED seleciona exclusivamente cancelamentos financeiros com finalização anterior.
+- `view=history|open`: contexto da listagem de vendas. O padrão history inclui PAID e CANCELED com finalização anterior. open inclui somente PENDING. `status=PENDING` sem view continua selecionando o contexto aberto para compatibilidade.
+- `includeVoided=true|false`: exclusivo de vendas; false por padrão. No histórico principal, true inclui VOIDED e legados CANCELED sem finalizedAt. Não pode ser combinado com open.
+- `status`: estados de venda ou OPEN/CLOSED para sessões. Em vendas, VOIDED exige includeVoided=true, seleciona descartadas e inclui os legados CANCELED sem finalizedAt; CANCELED seleciona exclusivamente cancelamentos financeiros com finalização anterior. Filtros incompatíveis com o contexto são rejeitados.
 - `customerId`, `professionalId`: referências opcionais, sempre subordinadas ao tenant.
 - `customerQuery`, `professionalQuery`: nome normalizado com NFKC/espaços, entre 2 e 80 caracteres. Cliente usa cadastro atual; profissional usa snapshot histórico. Incluem vínculos históricos inativos, sem carregar toda a base de clientes.
 - Vendas: `dateField=createdAt|finalizedAt|voidedAt|canceledAt`, padrão createdAt; `cashSessionId` opcional. A data voidedAt considera canceledAt somente para descartes legados, sem alterar seus dados originais.
@@ -42,11 +44,21 @@ O cursor inclui data e desempate por ID, com fingerprint dos filtros, operador, 
 
 No detalhe de caixa, apenas pageSize/cursor são aceitos e paginam movimentos. Totais e saldo são calculados a partir de todos os movimentos da sessão. Fechamento esperado, contado e diferença originais não são regravados. Auditoria complementar de venda exibe no máximo 50 eventos recentes, com indicador de existência de mais eventos.
 
+### Indicadores financeiros da sessão
+
+O detalhe acrescenta `paymentTotals` com método, `appliedCents` original, `refundedCents` acumulado e `netAppliedCents` (aplicado menos estornado). Considera somente pagamentos de vendas que foram finalizadas na sessão original, mesmo quando o estorno ocorreu posteriormente em outra sessão. Os quatro métodos têm ordem estável e zero quando não há movimento.
+
+`cashReceivedCents` e `cashChangeCents` preservam dinheiro entregue e troco originais. `cashOriginalEffectCents` é a diferença calculada no servidor. `finalizedSalesTotalCents` inclui vendas PAID e CANCELED com finalizedAt; `currentlyPaidSalesTotalCents` inclui somente PAID; `canceledSalesTotalCents` inclui somente CANCELED com finalização anterior. PENDING, VOIDED e cancelamentos legados sem finalização ficam excluídos.
+
+Essas agregações são consultas de grupo da sessão inteira, independentes de página/cursor, sem N+1 e dentro da mesma fotografia de leitura. O saldo físico `ledgerBalanceCents` mantém seu cálculo original exclusivamente por CashMovement. PIX/cartões e estornos financeiros de outra sessão não alteram esse saldo. Reversões físicas pertencem somente à sessão do respectivo CashMovement; os valores originais do fechamento permanecem intactos. Nenhum total financeiro é refeito no frontend.
+
 ## Interface
 
-Áreas Nova venda, Histórico de vendas e, para papéis autorizados, Histórico de caixas na tela existente `/dashboard?view=checkout`. O controlador da venda permanece montado ao navegar: carrinho, pagamentos e intenção idempotente não são reinicializados. Históricos oferecem filtros, páginas, atualização, estados de carregamento/erro/vazio e detalhes somente leitura. A venda vinculada a um movimento pode ser consultada a partir da conferência do caixa.
+Áreas Nova venda, Histórico de vendas e, para papéis autorizados, Histórico de caixas na tela existente `/dashboard?view=checkout`. O controlador da venda permanece montado ao navegar. O histórico principal mostra vendas finalizadas/canceladas; comandas PENDING possuem contexto separado. Descartes só aparecem com o filtro ativo. Linhas compactas mostram identificação curta, data no timezone da barbearia, cliente, profissional/múltiplos, total original, métodos históricos, badge e menu de ações. A venda vinculada a um movimento continua consultável pela conferência.
 
-Não existem botões de edição, correção, reclassificação, ajuste, cancelamento ou reabertura nesses detalhes. Layout e componentes usam os tokens do design system existente.
+O detalhe usa Sheet lateral com cabeçalho e ações fixos e rolagem somente no conteúdo interno, com seções recolhíveis. PENDING permite continuar, editar no Checkout e descartar; PAID permite cancelamento somente para proprietário; CANCELED e VOIDED são somente leitura. A retomada obtém a versão atual por GET e não sobrescreve outra comanda em andamento ou rascunho local. Pagamentos da mesma comanda são preservados, exigindo revisão se a composição mudou.
+
+Cancelamento e descarte exigem confirmação/motivo. Devolução em dinheiro seleciona sessão aberta e continua validada pelo backend. Duplo envio é bloqueado. Resposta incerta mantém conteúdo/chave e impede fechar até repetir com segurança; uma falha de leitura após confirmação não repete a operação financeira. Não há exclusão, correção/reclassificação de pagamento, comprovante fictício, reabertura nem ajuste financeiro novo. Layout e componentes usam os tokens do design system existente.
 
 ## Descarte e cancelamento financeiro
 

@@ -5,6 +5,7 @@ export type Role =
   | "ASSISTANT"
 
 type Permission =
+  | "checkout:registers"
   | "checkout:sales"
   | "checkout:cash"
   | "checkout:cancel"
@@ -31,6 +32,7 @@ const permissions: Record<Role, readonly Permission[]> = {
   ],
 
   BARBERSHOP_OWNER: [
+    "checkout:registers",
     "checkout:sales", "checkout:cash", "checkout:cancel", "checkout:discount",
     "professionals:view",
     "professionals:create",

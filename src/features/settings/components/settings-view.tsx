@@ -10,7 +10,7 @@ import { filterSettingsCards, settingsCards, type SettingsCard } from "../settin
 
 const icons: Record<string, LucideIcon> = { empresa: Building2, servicos: Sparkles, agendamentos: CalendarDays, pagamentos: CreditCard, estoque: Boxes, equipe: ShieldCheck, notificacoes: Bell, assinatura: CreditCard, avancado: Settings2 }
 function CardBody({ card }: { card: SettingsCard }) {
-  const Icon = icons[card.id]
+  const Icon = icons[card.id] ?? CreditCard
   return <CardContent className="flex min-h-52 h-full flex-col p-5 sm:p-6"><div className="flex items-start justify-between gap-3"><span className="flex size-11 items-center justify-center rounded-xl bg-primary text-primary-foreground"><Icon aria-hidden="true" className="size-5" /></span>{!card.available && <Badge variant="secondary">Em breve</Badge>}</div><h2 className="mt-6 text-lg font-semibold">{card.title}</h2><p className="mt-2 flex-1 text-sm leading-6 text-muted-foreground">{card.description}</p>{card.available ? <span className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-primary">Acessar <ChevronRight aria-hidden="true" className="size-4" /></span> : <span className="mt-5 text-sm text-muted-foreground">Indisponível nesta fase</span>}</CardContent>
 }
 export function SettingsView() {

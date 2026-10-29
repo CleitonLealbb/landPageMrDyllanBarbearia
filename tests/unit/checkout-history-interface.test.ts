@@ -18,10 +18,10 @@ function bootstrap(): Bootstrap {
 }
 const date = "2026-10-22T12:00:00.000Z"
 function salesPage(nextCursor: string | null = null): HistoryPage<SaleHistoryRow> {
-  return { items: [{ id: "technical-sale-id", status: "PAID", closureKind: null, totalCents: 1000, itemCount: 1, customer: { id: "customer", name: "Cliente histórico" }, professionals: [{ id: "pro", name: "Profissional antigo" }], createdAt: date, finalizedAt: date, canceledAt: null, voidedAt: null, cashRegisterName: "Caixa antigo" }], pageSize: 20, nextCursor, hasMore: nextCursor !== null, period: { start: "2026-10-01", end: "2026-10-31", timezone: "America/Sao_Paulo", dateField: "createdAt" } }
+  return { items: [{ id: "technical-sale-id", status: "PAID", paymentMethods: ["PIX"], closureKind: null, totalCents: 1000, itemCount: 1, customer: { id: "customer", name: "Cliente histórico" }, professionals: [{ id: "pro", name: "Profissional antigo" }], createdAt: date, finalizedAt: date, canceledAt: null, voidedAt: null, cashRegisterName: "Caixa antigo" }], pageSize: 20, nextCursor, hasMore: nextCursor !== null, period: { start: "2026-10-01", end: "2026-10-31", timezone: "America/Sao_Paulo", dateField: "createdAt" } }
 }
 function cashDetail(): CashHistoryDetail {
-  return { session: { id: "cash-id", cashRegisterName: "CHECKOUT_VISUAL_TEST_1234567890abcdef12345678 Caixa visual", status: "CLOSED", shift: "Manhã", openedAt: date, closedAt: date, openedBy: "Operador", closedBy: "Responsável", openingBalanceCents: 5000, expectedBalanceCents: 5000, countedBalanceCents: 4900, differenceCents: -100 }, notes: null, ledgerBalanceCents: 5000, totals: [{ kind: "OPENING", amountCents: 5000 }], movements: { items: [], pageSize: 20, nextCursor: null, hasMore: false }, timezone: "America/Sao_Paulo" }
+  return { paymentTotals: [], cashReceivedCents: 0, cashChangeCents: 0, cashOriginalEffectCents: 0, finalizedSalesTotalCents: 0, currentlyPaidSalesTotalCents: 0, canceledSalesTotalCents: 0, session: { id: "cash-id", cashRegisterName: "CHECKOUT_VISUAL_TEST_1234567890abcdef12345678 Caixa visual", status: "CLOSED", shift: "Manhã", openedAt: date, closedAt: date, openedBy: "Operador", closedBy: "Responsável", openingBalanceCents: 5000, expectedBalanceCents: 5000, countedBalanceCents: 4900, differenceCents: -100 }, notes: null, ledgerBalanceCents: 5000, totals: [{ kind: "OPENING", amountCents: 5000 }], movements: { items: [], pageSize: 20, nextCursor: null, hasMore: false }, timezone: "America/Sao_Paulo" }
 }
 function saleDetail(): SaleHistoryDetail {
   return JSON.parse(JSON.stringify({ ...presentSale(sale()), history: { customerName: "Cliente histórico", operatorName: "Operador", canceledByName: "Responsável", cashSession: null, stock: [], cash: [], commissions: [], audit: [], auditHasMore: false, timezone: "America/Sao_Paulo" } })) as SaleHistoryDetail
@@ -34,7 +34,7 @@ function setup(kind: "sales" | "cash-sessions" = "sales") {
 describe("Históricos: controlador somente GET", () => {
   it("carrega sem tenant, ator, papel ou chave de escrita", async () => {
     const { fetcher, controller } = setup(); await controller.load()
-    expect(fetcher.mock.calls[0][0]).toBe("/api/checkout/sales?period=month&pageSize=20&dateField=createdAt")
+    expect(fetcher.mock.calls[0][0]).toBe("/api/checkout/sales?period=month&pageSize=20&dateField=createdAt&view=history")
     expect(fetcher.mock.calls[0][1]).toMatchObject({ method: "GET", cache: "no-store", credentials: "same-origin" })
     expect(fetcher.mock.calls[0][1]).not.toHaveProperty("body")
     expect(fetcher.mock.calls[0][1]?.headers).toBeUndefined()
@@ -162,7 +162,7 @@ describe("Históricos: componentes e permissões visuais", () => {
       { ...page.items[0], id: "legacy", status: "CANCELED", closureKind: "LEGACY_VOIDED", finalizedAt: null, canceledAt: date },
       { ...page.items[0], id: "canceled", status: "CANCELED", closureKind: "CANCELED", canceledAt: date },
     ]
-    fetcher.mockResolvedValueOnce(Response.json(page)); await controller.load()
+    fetcher.mockResolvedValueOnce(Response.json(page)); controller.setFilters({ includeVoided: true }); await controller.apply()
     const html = renderToStaticMarkup(createElement(CheckoutHistoryPanel, { kind: "sales", data: bootstrap(), provided: controller }))
     expect(html).toContain('<option value="VOIDED">Descartada</option>')
     expect(html).toContain('<option value="voidedAt">Descarte (inclui legado)</option>')

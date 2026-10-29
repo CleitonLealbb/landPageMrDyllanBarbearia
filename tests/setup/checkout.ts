@@ -31,7 +31,7 @@ export function setupCheckout() {
   db.checkoutActor.create.mockResolvedValue({ id: "actor" })
   db.checkoutAuditEvent.create.mockResolvedValue({ id: "audit" })
   db.checkoutIdempotency.create.mockResolvedValue({ id: "key" })
-  db.cashRegister.findFirst.mockResolvedValue({ id: "register" })
+  db.cashRegister.findFirst.mockResolvedValue({ id: "register", active: true })
   db.cashSession.findFirst.mockResolvedValue({ id: "cash", status: "OPEN" })
   db.cashSession.create.mockResolvedValue({ id: "cash", status: "OPEN" })
   db.cashSession.update.mockResolvedValue({ id: "cash", status: "CLOSED" })
