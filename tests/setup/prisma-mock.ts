@@ -2,14 +2,37 @@ import { vi } from "vitest"
 
 function forbiddenPrismaCall(model: string, method: string) {
   return vi.fn((..._args: unknown[]): unknown => {
+    void _args
     throw new Error(`Unexpected Prisma call: ${model}.${method}`)
   })
 }
 
+function checkoutDelegate(model: string) {
+  return { findFirst: forbiddenPrismaCall(model, "findFirst"), findFirstOrThrow: forbiddenPrismaCall(model, "findFirstOrThrow"), findUnique: forbiddenPrismaCall(model, "findUnique"), findMany: forbiddenPrismaCall(model, "findMany"), create: forbiddenPrismaCall(model, "create"), createMany: forbiddenPrismaCall(model, "createMany"), update: forbiddenPrismaCall(model, "update"), updateMany: forbiddenPrismaCall(model, "updateMany"), groupBy: forbiddenPrismaCall(model, "groupBy") }
+}
+
 export const prismaMock = {
   barbershopCustomer: {
+    findMany: forbiddenPrismaCall("barbershopCustomer", "findMany"),
     count: forbiddenPrismaCall("barbershopCustomer", "count"),
+    findFirst: forbiddenPrismaCall("barbershopCustomer", "findFirst"),
   },
+  $queryRaw: forbiddenPrismaCall("prisma", "$queryRaw"),
+  product: checkoutDelegate("product"),
+  inventoryBalance: checkoutDelegate("inventoryBalance"),
+  inventoryMovement: checkoutDelegate("inventoryMovement"),
+  sale: checkoutDelegate("sale"),
+  saleItem: checkoutDelegate("saleItem"),
+  saleServiceComponent: checkoutDelegate("saleServiceComponent"),
+  saleTip: checkoutDelegate("saleTip"),
+  payment: checkoutDelegate("payment"),
+  commissionEntry: checkoutDelegate("commissionEntry"),
+  cashRegister: checkoutDelegate("cashRegister"),
+  cashSession: checkoutDelegate("cashSession"),
+  cashMovement: checkoutDelegate("cashMovement"),
+  checkoutActor: checkoutDelegate("checkoutActor"),
+  checkoutAuditEvent: checkoutDelegate("checkoutAuditEvent"),
+  checkoutIdempotency: checkoutDelegate("checkoutIdempotency"),
   $transaction: forbiddenPrismaCall("prisma", "$transaction"),
   user: {
     findUnique: forbiddenPrismaCall("user", "findUnique"),

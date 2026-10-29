@@ -93,7 +93,7 @@ const menuPermissions: Record<TenantRole, readonly ViewKey[]> = {
     "perfil",
     "config",
   ],
-  BARBER: ["agenda", "clientes", "perfil"],
+  BARBER: ["agenda", "checkout", "clientes", "perfil"],
   ASSISTANT: ["agenda", "checkout", "clientes", "perfil"],
 }
 
@@ -161,6 +161,7 @@ export function AppSidebar({ tenantRole, ...props }: React.ComponentProps<typeof
   const [storedUser, setStoredUser] = React.useState<StoredUser | null>(cachedStoredUser ?? null)
   const [sidebarReady, setSidebarReady] = React.useState(cachedStoredUser !== undefined)
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Existing browser-storage hydration; preserve its timing and behavior while adding Checkout navigation. */
   React.useEffect(() => {
     try {
       const serializedUser = localStorage.getItem("user")
@@ -187,6 +188,7 @@ export function AppSidebar({ tenantRole, ...props }: React.ComponentProps<typeof
       setSidebarReady(true)
     }
   }, [])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const navMain = data.navMain.filter((item) =>
     canViewMenuItem(tenantRole, item.view)

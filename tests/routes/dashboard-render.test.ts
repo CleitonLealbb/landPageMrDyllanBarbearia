@@ -17,7 +17,7 @@ describe("Estados do dashboard", () => {
     expect(renderToStaticMarkup(createElement(InsufficientData, { reason: "Faltam pagamentos" }))).toContain("Faltam pagamentos")
   })
   it("distingue zero real de dados ausentes e compara com base zero", () => {
-    const data = { compare: true, professionalId: null, metrics: { newCustomers: 0, previousNewCustomers: 0, grossCents: null, netCents: null, appointments: null, averageTicketCents: null, servedCustomers: null, cancellations: null, occupancy: null } } as DashboardSummary
+    const data = { compare: true, professionalId: null, metrics: { newCustomers: 0, previousNewCustomers: 0, grossCents: 0, netCents: null, appointments: null, averageTicketCents: 0, servedCustomers: null, cancellations: null, occupancy: null } } as DashboardSummary
     const html = renderToStaticMarkup(createElement(DashboardMetrics, { data }))
     expect(html).toContain("Dados insuficientes")
     expect(html).toContain("sem base percentual")

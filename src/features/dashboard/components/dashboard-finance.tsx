@@ -1,0 +1,35 @@
+import { Card } from "@/components/ui/card"
+import type { DashboardSummary, CheckoutFinancePeriod } from "../types"
+import { currency, comparison } from "../format"
+
+const methods = { CASH: "Dinheiro", PIX: "PIX", CREDIT_CARD: "Cartão de crédito", DEBIT_CARD: "Cartão de débito" }
+const kinds = { SERVICE: "Serviço", PACKAGE: "Combo", PRODUCT: "Produto" }
+const indicators: { label: string; field: keyof Pick<CheckoutFinancePeriod, "paidSales" | "servicesRevenueCents" | "productsRevenueCents" | "discountsCents" | "tipsCents" | "postedCommissionsCents" | "commissionReversalsCents" | "canceledSales" | "canceledAmountCents" | "refundedPaymentCents" | "productsQuantity" | "servicesQuantity">; money: boolean }[] = [
+  { label: "Vendas pagas", field: "paidSales", money: false },
+  { label: "Receita de serviços e combos", field: "servicesRevenueCents", money: true },
+  { label: "Receita de produtos", field: "productsRevenueCents", money: true },
+  { label: "Descontos concedidos", field: "discountsCents", money: true },
+  { label: "Gorjetas", field: "tipsCents", money: true },
+  { label: "Comissões geradas · POSTED", field: "postedCommissionsCents", money: true },
+  { label: "Reversões de comissão", field: "commissionReversalsCents", money: true },
+  { label: "Vendas canceladas", field: "canceledSales", money: false },
+  { label: "Valor das comandas canceladas", field: "canceledAmountCents", money: true },
+  { label: "Pagamentos estornados", field: "refundedPaymentCents", money: true },
+  { label: "Produtos vendidos · unidades", field: "productsQuantity", money: false },
+  { label: "Serviços vendidos · componentes", field: "servicesQuantity", money: false },
+]
+export function DashboardFinance({ data }: { data: DashboardSummary }) {
+  const { current: f, previous } = data.finance
+  return <section className="space-y-4" aria-label="Relatórios financeiros do Checkout">
+    <div><h2 className="text-lg font-semibold">Resultados reais · Checkout</h2><p className="mt-1 text-xs text-muted-foreground">Somente vendas pagas por finalização. Serviços e produtos após descontos; gorjetas separadas, já incluídas no total pago. Componentes de combos contam como serviços vendidos, não como atendimentos da agenda.</p>{data.finance.scope === "SALES_WITH_PROFESSIONAL" && <p className="mt-2 rounded-lg border border-primary/40 p-3 text-xs">Filtro profissional: comandas com serviços desse profissional. Os totais, produtos e pagamentos são da comanda inteira, inclusive de outros profissionais. Comissões e produção individual referem-se somente ao profissional selecionado.</p>}</div>
+    {!f.paidSales && <p role="status" className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">Nenhuma venda paga no período selecionado.</p>}
+    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">{indicators.map(({ label, field, money }) => <Card key={field} className="p-4"><h3 className="text-xs font-medium text-muted-foreground">{label}</h3><p className="mt-3 break-words text-xl font-semibold text-primary">{money ? currency(f[field]) : f[field]}</p>{previous && <p className="mt-2 text-xs text-muted-foreground">Anterior: {money ? currency(previous[field]) : previous[field]} · {comparison(f[field], previous[field])}</p>}</Card>)}</div>
+    <div className="grid gap-4 lg:grid-cols-2">
+      <Card className="min-w-0 space-y-4 p-5"><h3 className="font-semibold">Evolução do faturamento pago · Checkout</h3><p className="text-xs text-muted-foreground">Dia local da barbearia; dias sem movimento têm valor zero.</p>{f.daily.length ? <div className="max-h-72 space-y-3 overflow-y-auto">{f.daily.map(day => <div key={day.date} className="space-y-1"><div className="flex justify-between gap-2 text-xs"><span>{day.date} · {day.sales} vendas</span><strong>{currency(day.paidTotalCents)}</strong></div><div className="h-1.5 rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: `${f.paidTotalCents ? day.paidTotalCents / f.paidTotalCents * 100 : 0}%` }} /></div></div>)}</div> : <p className="text-sm text-muted-foreground">{currency(0)} · Sem movimento.</p>}</Card>
+      <Card className="min-w-0 space-y-4 p-5"><h3 className="font-semibold">Formas de pagamento · Checkout</h3><p className="text-xs text-muted-foreground">Valor aplicado ativo, sem dinheiro recebido excedente ou troco. Uma venda mista participa de mais de um método, mas conta uma vez no total de vendas.</p><dl className="space-y-3">{f.payments.map(method => <div key={method.method} className="flex items-start justify-between gap-3 text-sm"><dt>{methods[method.method]}<span className="block text-xs text-muted-foreground">{method.sales} vendas com este método</span></dt><dd className="shrink-0 font-semibold text-primary">{currency(method.appliedCents)}</dd></div>)}</dl></Card>
+    </div>
+    <Card className="min-w-0 p-5"><h3 className="font-semibold">Produção e comissões reais · Checkout</h3><p className="mt-1 text-xs text-muted-foreground">Rateio histórico dos serviços após descontos. Comissões EARNED/POSTED, sem gorjetas e sem reversões.</p><div className="mt-3 overflow-x-auto"><table className="w-full text-left text-sm"><caption className="sr-only">Produção individual registrada nas vendas pagas</caption><thead><tr><th className="p-3">Profissional</th><th className="p-3">Serviços</th><th className="p-3">Receita de serviços</th><th className="p-3">Comissão gerada</th></tr></thead><tbody>{f.professionals.map(pro => <tr key={pro.id} className="border-t"><td className="p-3">{pro.name}</td><td className="p-3">{pro.services}</td><td className="p-3">{currency(pro.servicesRevenueCents)}</td><td className="p-3 text-primary">{currency(pro.postedCommissionsCents)}</td></tr>)}</tbody></table>{!f.professionals.length && <p className="p-3 text-sm text-muted-foreground">Nenhuma produção de serviço paga no período.</p>}</div></Card>
+    <Card className="p-5"><h3 className="font-semibold">Ranking de serviços, combos e produtos vendidos</h3><p className="mt-1 text-xs text-muted-foreground">Snapshots de vendas PAID; receita dos itens após descontos, sem gorjetas.</p>{f.ranking.length ? <ol className="mt-4 max-h-96 space-y-3 overflow-y-auto">{f.ranking.map((row, index) => <li key={`${row.kind}:${row.name}`} className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-muted/40 p-3 text-sm"><div className="min-w-0 break-words"><strong className="mr-2 text-primary">{index + 1}.</strong>{row.name}<p className="mt-1 text-xs text-muted-foreground">{kinds[row.kind]} · {row.quantity} unidades</p></div><strong className="text-primary">{currency(row.revenueCents)}</strong></li>)}</ol> : <p className="mt-3 text-sm text-muted-foreground">Nenhum item vendido no período.</p>}</Card>
+    <p className="text-xs text-muted-foreground">Cancelamentos e estornos usam a data de cancelamento e os lançamentos existentes; não são somados nem subtraídos novamente do faturamento PAID atual. Comandas pendentes canceladas podem não ter pagamentos ou reversões.</p>
+  </section>
+}

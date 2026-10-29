@@ -1,0 +1,15 @@
+.scrollArea {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--border)) transparent;
+  scrollbar-gutter: stable;
+  overscroll-behavior-y: contain;
+  overflow-wrap: anywhere;
+}
+.scrollArea::-webkit-scrollbar { width: 7px; }
+.scrollArea::-webkit-scrollbar-track { background: transparent; }
+.scrollArea::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border: 2px solid hsl(var(--card));
+  border-radius: 999px;
+}
+.scrollArea::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground)); }
