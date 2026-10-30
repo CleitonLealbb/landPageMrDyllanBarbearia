@@ -82,6 +82,11 @@ model Professional {
   saleTip_professional              SaleTip[]              @relation("SaleTip_professional")
   commissionEntry_professional      CommissionEntry[]      @relation("CommissionEntry_professional")
 
+  appointments      Appointment[]
+  appointmentItems  AppointmentItem[]
+  scheduleEntries   ScheduleEntry[]
+  scheduleCalendars ScheduleCalendar[]
+
   @@unique([barbershopId, id])
   @@unique([barbershopId, userId])
 }
@@ -104,22 +109,30 @@ model Barbershop {
   serviceCategories               ServiceCategory[]
   servicePackages                 ServicePackage[]
   tvMedia                         TvMedia[]
-  checkoutActor_barbershop        CheckoutActor[]        @relation("CheckoutActor_barbershop")
-  productCategory_barbershop      ProductCategory[]      @relation("ProductCategory_barbershop")
-  product_barbershop              Product[]              @relation("Product_barbershop")
-  inventoryBalance_barbershop     InventoryBalance[]     @relation("InventoryBalance_barbershop")
-  inventoryMovement_barbershop    InventoryMovement[]    @relation("InventoryMovement_barbershop")
-  sale_barbershop                 Sale[]                 @relation("Sale_barbershop")
-  saleItem_barbershop             SaleItem[]             @relation("SaleItem_barbershop")
-  saleServiceComponent_barbershop SaleServiceComponent[] @relation("SaleServiceComponent_barbershop")
-  saleTip_barbershop              SaleTip[]              @relation("SaleTip_barbershop")
-  payment_barbershop              Payment[]              @relation("Payment_barbershop")
-  commissionEntry_barbershop      CommissionEntry[]      @relation("CommissionEntry_barbershop")
-  cashRegister_barbershop         CashRegister[]         @relation("CashRegister_barbershop")
-  cashSession_barbershop          CashSession[]          @relation("CashSession_barbershop")
-  cashMovement_barbershop         CashMovement[]         @relation("CashMovement_barbershop")
-  checkoutAuditEvent_barbershop   CheckoutAuditEvent[]   @relation("CheckoutAuditEvent_barbershop")
-  checkoutIdempotency_barbershop  CheckoutIdempotency[]  @relation("CheckoutIdempotency_barbershop")
+  checkoutActor_barbershop        CheckoutActor[]               @relation("CheckoutActor_barbershop")
+  productCategory_barbershop      ProductCategory[]             @relation("ProductCategory_barbershop")
+  product_barbershop              Product[]                     @relation("Product_barbershop")
+  inventoryBalance_barbershop     InventoryBalance[]            @relation("InventoryBalance_barbershop")
+  inventoryMovement_barbershop    InventoryMovement[]           @relation("InventoryMovement_barbershop")
+  sale_barbershop                 Sale[]                        @relation("Sale_barbershop")
+  saleItem_barbershop             SaleItem[]                    @relation("SaleItem_barbershop")
+  saleServiceComponent_barbershop SaleServiceComponent[]        @relation("SaleServiceComponent_barbershop")
+  saleTip_barbershop              SaleTip[]                     @relation("SaleTip_barbershop")
+  payment_barbershop              Payment[]                     @relation("Payment_barbershop")
+  commissionEntry_barbershop      CommissionEntry[]             @relation("CommissionEntry_barbershop")
+  cashRegister_barbershop         CashRegister[]                @relation("CashRegister_barbershop")
+  cashSession_barbershop          CashSession[]                 @relation("CashSession_barbershop")
+  cashMovement_barbershop         CashMovement[]                @relation("CashMovement_barbershop")
+  checkoutAuditEvent_barbershop   CheckoutAuditEvent[]          @relation("CheckoutAuditEvent_barbershop")
+  checkoutIdempotency_barbershop  CheckoutIdempotency[]         @relation("CheckoutIdempotency_barbershop")
+  appointments                    Appointment[]
+  appointmentItems                AppointmentItem[]
+  appointmentComponents           AppointmentServiceComponent[]
+  scheduleEntries                 ScheduleEntry[]
+  scheduleCalendars               ScheduleCalendar[]
+  scheduleWeeklyWindows           ScheduleWeeklyWindow[]
+  scheduleDateExceptions          ScheduleDateException[]
+  scheduleExceptionWindows        ScheduleExceptionWindow[]
 }
 
 model BarbershopUser {
@@ -164,6 +177,8 @@ model BarbershopCustomer {
   customerAccount CustomerAccount @relation(fields: [customerAccountId], references: [id])
   sale_customer   Sale[]          @relation("Sale_customer")
 
+  appointments Appointment[]
+
   @@unique([barbershopId, customerAccountId])
   @@unique([barbershopId, id])
   @@index([barbershopId, status])
@@ -190,6 +205,9 @@ model Service {
   saleItem_service             SaleItem[]             @relation("SaleItem_service")
   saleServiceComponent_service SaleServiceComponent[] @relation("SaleServiceComponent_service")
 
+  appointmentItems      AppointmentItem[]
+  appointmentComponents AppointmentServiceComponent[]
+
   @@unique([barbershopId, id])
   @@unique([barbershopId, name])
   @@index([barbershopId, status, displayOrder])
@@ -210,6 +228,8 @@ model ServicePackage {
   barbershop       Barbershop           @relation(fields: [barbershopId], references: [id])
   items            ServicePackageItem[]
   saleItem_package SaleItem[]           @relation("SaleItem_package")
+
+  appointmentItems AppointmentItem[]
 
   @@unique([barbershopId, id])
   @@unique([barbershopId, name])
@@ -280,6 +300,247 @@ model TvMedia {
 enum CheckoutIdentityType {
   USER
   PROFESSIONAL
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELED
+  NO_SHOW
+}
+
+enum AppointmentOrigin {
+  ADMIN
+  MOBILE
+  PUBLIC_WEB
+  WALK_IN
+}
+
+enum AppointmentItemKind {
+  SERVICE
+  PACKAGE
+}
+
+enum ScheduleEntryKind {
+  APPOINTMENT
+  BLOCK
+}
+
+enum ScheduleBlockReason {
+  LUNCH
+  ABSENCE
+  PERSONAL
+  MAINTENANCE
+  MANUAL
+  OTHER
+}
+
+enum ScheduleCalendarScope {
+  SHOP
+  PROFESSIONAL
+}
+
+enum ScheduleExceptionKind {
+  CLOSED
+  REPLACE_WINDOWS
+}
+
+model Appointment {
+  sales                    Sale[]
+  id                       String              @id @default(uuid())
+  barbershopId             String
+  professionalId           String
+  customerId               String?
+  customerNameSnapshot     String
+  customerContactSnapshot  String?
+  professionalNameSnapshot String
+  timezoneSnapshot         String
+  origin                   AppointmentOrigin
+  status                   AppointmentStatus   @default(SCHEDULED)
+  version                  Int                 @default(0)
+  plannedDurationMinutes   Int
+  adjustedDurationMinutes  Int?
+  durationAdjustmentReason String?
+  durationAdjustedById     String?
+  internalNotes            String?
+  createdById              String
+  updatedById              String
+  startedById              String?
+  createdAt                DateTime            @default(now()) @db.Timestamptz(3)
+  updatedAt                DateTime            @updatedAt @db.Timestamptz(3)
+  startedAt                DateTime?           @db.Timestamptz(3)
+  completedAt              DateTime?           @db.Timestamptz(3)
+  canceledAt               DateTime?           @db.Timestamptz(3)
+  cancellationReason       String?
+  cancellationOrigin       AppointmentOrigin?
+  noShowAt                 DateTime?           @db.Timestamptz(3)
+  noShowReason             String?
+  barbershop               Barbershop          @relation(fields: [barbershopId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  professional             Professional        @relation(fields: [barbershopId, professionalId], references: [barbershopId, id], onDelete: Restrict, onUpdate: Restrict)
+  customer                 BarbershopCustomer? @relation(fields: [barbershopId, customerId], references: [barbershopId, id], onDelete: Restrict, onUpdate: Restrict)
+  createdBy                CheckoutActor       @relation("AppointmentCreated", fields: [barbershopId, createdById], references: [barbershopId, id], onDelete: Restrict, onUpdate: Restrict)
+  updatedBy                CheckoutActor       @relation("AppointmentUpdated", fields: [barbershopId, updatedById], references: [barbershopId, id], onDelete: Restrict, onUpdate: Restrict)
+  startedBy                CheckoutActor?      @relation("AppointmentStarted", fields: [barbershopId, startedById], references: [barbershopId, id], onDelete: Restrict, onUpdate: Restrict)
+  durationAdjustedBy       CheckoutActor?      @relation("AppointmentDurationAdjusted", fields: [barbershopId, durationAdjustedById], references: [barbershopId, id], onDelete: Restrict, onUpdate: Restrict)
+  items                    AppointmentItem[]
+  entries                  ScheduleEntry[]
+
+  @@unique([barbershopId, id])
+  @@index([barbershopId, professionalId, status])
+  @@index([barbershopId, customerId, createdAt])
+}
+
+model AppointmentItem {
+  componentCountSnapshot   Int
+  saleItems                SaleItem[]
+  id                       String                        @id @default(uuid())
+  barbershopId             String
+  appointmentId            String
+  professionalId           String
+  serviceId                String?
+  packageId                String?
+  kind                     AppointmentItemKind
+  nameSnapshot             String
+  professionalNameSnapshot String
+  priceCentsSnapshot       Int
+  durationMinutesSnapshot  Int
+  quantity                 Int
+  ordinal                  Int
+  createdById              String
+  removedById              String?
+  removedAt                DateTime?                     @db.Timestamptz(3)
+  removedReason            String?
+  createdAt                DateTime                      @default(now()) @db.Timestamptz(3)
+  barbershop               Barbershop                    @relation(fields: [barbershopId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  appointment              Appointment                   @relation(fields: [barbershopId, appointmentId], references: [barbershopId, id], onDelete: Restrict, onUpdate: Restrict)
+  professional             Professional                  @relation(fields: [barbershopId, professionalId], references: [barbershopId, id], onDelete: Restrict, onUpdate: Restrict)
+  service                  Service?                      @relation(fields: [barbershopId, serviceId], references: [barbershopId, id], onDelete: Restrict, onUpdate: Restrict)
+  package                  ServicePackage?               @relation(fields: [barbershopId, packageId], references: [barbershopId, id], onDelete: Restrict, onUpdate: Restrict)
+  createdBy                CheckoutActor                 @relation("AppointmentItemCreated", fields: [barbershopId, createdById], references: [barbershopId, id], onDelete: Restrict, onUpdate: Restrict)
+  removedBy                CheckoutActor?                @relation("AppointmentItemRemoved", fields: [barbershopId, removedById], references: [barbershopId, id], onDelete: Restrict, onUpdate: Restrict)
+  components               AppointmentServiceComponent[]
+
+  @@unique([barbershopId, id])
+  @@unique([barbershopId, id, professionalId])
+  @@index([barbershopId, appointmentId, removedAt])
+}
+
+model AppointmentServiceComponent {
+  id                       String          @id @default(uuid())
+  barbershopId             String
+  appointmentItemId        String
+  professionalId           String
+  serviceId                String
+  serviceNameSnapshot      String
+  professionalNameSnapshot String
+  priceCentsSnapshot       Int
+  durationMinutesSnapshot  Int
+  ordinal                  Int
+  createdAt                DateTime        @default(now()) @db.Timestamptz(3)
+  barbershop               Barbershop      @relation(fields: [barbershopId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  item                     AppointmentItem @relation(fields: [barbershopId, appointmentItemId, professionalId], references: [barbershopId, id, professionalId], onDelete: Restrict, onUpdate: Restrict)
+  service                  Service         @relation(fields: [barbershopId, serviceId], references: [barbershopId, id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([barbershopId, appointmentItemId, serviceId], map: "AppointmentComponent_one_service")
+  @@unique([barbershopId, id])
+  @@unique([barbershopId, appointmentItemId, ordinal])
+}
+
+model ScheduleEntry {
+  version        Int                  @default(0)
+  id             String               @id @default(uuid())
+  barbershopId   String
+  professionalId String
+  appointmentId  String?
+  kind           ScheduleEntryKind
+  blockReason    ScheduleBlockReason?
+  reason         String?
+  startsAt       DateTime             @db.Timestamptz(3)
+  endsAt         DateTime             @db.Timestamptz(3)
+  createdById    String
+  releasedById   String?
+  releasedAt     DateTime?            @db.Timestamptz(3)
+  releaseReason  String?
+  createdAt      DateTime             @default(now()) @db.Timestamptz(3)
+  barbershop     Barbershop           @relation(fields: [barbershopId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  professional   Professional         @relation(fields: [barbershopId, professionalId], references: [barbershopId, id], onDelete: Restrict, onUpdate: Restrict)
+  appointment    Appointment?         @relation(fields: [barbershopId, appointmentId], references: [barbershopId, id], onDelete: Restrict, onUpdate: Restrict)
+  createdBy      CheckoutActor        @relation("ScheduleEntryCreated", fields: [barbershopId, createdById], references: [barbershopId, id], onDelete: Restrict, onUpdate: Restrict)
+  releasedBy     CheckoutActor?       @relation("ScheduleEntryReleased", fields: [barbershopId, releasedById], references: [barbershopId, id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([barbershopId, id])
+  @@index([barbershopId, professionalId, startsAt])
+  @@index([barbershopId, appointmentId])
+}
+
+model ScheduleCalendar {
+  timezoneSnapshot String
+  id               String                  @id @default(uuid())
+  barbershopId     String
+  professionalId   String?
+  scope            ScheduleCalendarScope
+  version          Int
+  changeReason     String
+  createdById      String
+  supersededById   String?
+  effectiveFrom    DateTime                @default(now()) @db.Timestamptz(3)
+  effectiveUntil   DateTime?               @db.Timestamptz(3)
+  publishedAt      DateTime?               @db.Timestamptz(3)
+  barbershop       Barbershop              @relation(fields: [barbershopId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  professional     Professional?           @relation(fields: [barbershopId, professionalId], references: [barbershopId, id], onDelete: Restrict, onUpdate: Restrict)
+  createdBy        CheckoutActor           @relation("ScheduleCalendarCreated", fields: [barbershopId, createdById], references: [barbershopId, id], onDelete: Restrict, onUpdate: Restrict)
+  supersededBy     CheckoutActor?          @relation("ScheduleCalendarSuperseded", fields: [barbershopId, supersededById], references: [barbershopId, id], onDelete: Restrict, onUpdate: Restrict)
+  weeklyWindows    ScheduleWeeklyWindow[]
+  dateExceptions   ScheduleDateException[]
+
+  @@unique([barbershopId, id])
+  @@index([barbershopId, professionalId, effectiveFrom])
+}
+
+model ScheduleWeeklyWindow {
+  id           String           @id @default(uuid())
+  barbershopId String
+  calendarId   String
+  weekday      Int
+  startMinute  Int
+  endMinute    Int
+  validFrom    DateTime         @db.Date
+  validUntil   DateTime?        @db.Date
+  barbershop   Barbershop       @relation(fields: [barbershopId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  calendar     ScheduleCalendar @relation(fields: [barbershopId, calendarId], references: [barbershopId, id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([barbershopId, id])
+  @@index([barbershopId, calendarId, weekday])
+}
+
+model ScheduleDateException {
+  id           String                    @id @default(uuid())
+  barbershopId String
+  calendarId   String
+  date         DateTime                  @db.Date
+  kind         ScheduleExceptionKind
+  reason       String
+  barbershop   Barbershop                @relation(fields: [barbershopId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  calendar     ScheduleCalendar          @relation(fields: [barbershopId, calendarId], references: [barbershopId, id], onDelete: Restrict, onUpdate: Restrict)
+  windows      ScheduleExceptionWindow[]
+
+  @@unique([barbershopId, id])
+  @@unique([barbershopId, calendarId, date])
+}
+
+model ScheduleExceptionWindow {
+  id           String                @id @default(uuid())
+  barbershopId String
+  exceptionId  String
+  startMinute  Int
+  endMinute    Int
+  barbershop   Barbershop            @relation(fields: [barbershopId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  exception    ScheduleDateException @relation(fields: [barbershopId, exceptionId], references: [barbershopId, id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([barbershopId, id])
+  @@index([barbershopId, exceptionId])
 }
 
 enum ProductStatus {
@@ -383,6 +644,17 @@ model CheckoutActor {
   checkoutAuditEvent_actor  CheckoutAuditEvent[]  @relation("CheckoutAuditEvent_actor")
   checkoutIdempotency_actor CheckoutIdempotency[] @relation("CheckoutIdempotency_actor")
 
+  appointmentsCreated            Appointment[]      @relation("AppointmentCreated")
+  appointmentsUpdated            Appointment[]      @relation("AppointmentUpdated")
+  appointmentsStarted            Appointment[]      @relation("AppointmentStarted")
+  appointmentDurationAdjustments Appointment[]      @relation("AppointmentDurationAdjusted")
+  appointmentItemsCreated        AppointmentItem[]  @relation("AppointmentItemCreated")
+  appointmentItemsRemoved        AppointmentItem[]  @relation("AppointmentItemRemoved")
+  scheduleEntriesCreated         ScheduleEntry[]    @relation("ScheduleEntryCreated")
+  scheduleEntriesReleased        ScheduleEntry[]    @relation("ScheduleEntryReleased")
+  scheduleCalendarsCreated       ScheduleCalendar[] @relation("ScheduleCalendarCreated")
+  scheduleCalendarsSuperseded    ScheduleCalendar[] @relation("ScheduleCalendarSuperseded")
+
   @@unique([barbershopId, id])
   @@index([barbershopId, userId])
   @@index([barbershopId, professionalId])
@@ -467,6 +739,8 @@ model InventoryMovement {
 }
 
 model Sale {
+  appointmentId            String?
+  appointment              Appointment?          @relation(fields: [barbershopId, appointmentId], references: [barbershopId, id], onDelete: Restrict, onUpdate: Restrict)
   id                       String                @id @default(uuid())
   barbershopId             String
   customerId               String?
@@ -505,6 +779,7 @@ model Sale {
   voidedBy                 CheckoutActor?        @relation("Sale_voidedBy", fields: [barbershopId, voidedById], references: [barbershopId, id], onDelete: Restrict, onUpdate: Restrict)
 
   @@unique([barbershopId, id])
+  @@index([barbershopId, appointmentId])
   @@index([barbershopId, status, createdAt])
   @@index([barbershopId, customerId, createdAt])
   @@index([barbershopId, operatorId, createdAt])
@@ -513,6 +788,8 @@ model Sale {
 }
 
 model SaleItem {
+  appointmentItemId             String?
+  appointmentItem               AppointmentItem?       @relation(fields: [barbershopId, appointmentItemId], references: [barbershopId, id], onDelete: Restrict, onUpdate: Restrict)
   id                            String                 @id @default(uuid())
   barbershopId                  String
   saleId                        String
@@ -544,6 +821,7 @@ model SaleItem {
   @@unique([barbershopId, id])
   @@unique([barbershopId, id, saleId])
   @@unique([barbershopId, id, productId])
+  @@index([barbershopId, appointmentItemId])
   @@index([barbershopId, saleId])
   @@index([barbershopId, saleId, removedAt])
   @@index([barbershopId, removedById])

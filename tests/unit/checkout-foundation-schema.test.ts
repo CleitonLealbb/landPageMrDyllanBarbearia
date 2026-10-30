@@ -9,7 +9,8 @@ const durationMigrationName = "20261022130000_checkout_duration_snapshots"
 const durationSql = readFileSync(`prisma/migrations/${durationMigrationName}/migration.sql`, "utf8")
 const voidGuardsSql = readFileSync("prisma/migrations/20261024160100_checkout_sale_voided_guards/migration.sql", "utf8")
 const pendingSql = readFileSync("prisma/migrations/20261024170000_checkout_pending_snapshots/migration.sql", "utf8")
-const additionsSql = `${durationSql}\n${voidGuardsSql}\n${pendingSql}`
+const agendaLinksSql = readFileSync("prisma/migrations/20261029120100_agenda_checkout_links/migration.sql", "utf8")
+const additionsSql = `${durationSql}\n${voidGuardsSql}\n${pendingSql}\n${agendaLinksSql}`
 const completeSql = `${sql}\n${additionsSql}`
 const schema = readFileSync("prisma/schema.prisma", "utf8")
 const models = Prisma.dmmf.datamodel.models
@@ -230,8 +231,7 @@ describe("Checkout: tenant, identidade e snapshots", () => {
     expect(field("SaleTip", "professional").relationFromFields).toEqual(["barbershopId", "professionalId"])
   })
 
-  it("não cria agenda nem modifica autenticação", () => {
-    expect(models.some(m => m.name === "Appointment")).toBe(false)
+  it("a migration histórica da fundação não cria agenda nem modifica autenticação", () => {
     expect(sql).not.toMatch(/CREATE TABLE "Appointment/)
     expect(sql).toContain('"Sale_origin_phase2_check" CHECK ("origin" = \'WALK_IN\')')
     expect(sql).toContain('"Sale_coupon_phase2_check" CHECK ("discountKind" <> \'COUPON\')')
@@ -336,7 +336,7 @@ describe("Checkout: migration exclusivamente aditiva", () => {
     }
     expect(sql).toContain('CREATE UNIQUE INDEX "BarbershopCustomer_barbershopId_id_key"')
     expect([...sql.matchAll(/CREATE TABLE "(\w+)"/g)].map(m => m[1]).sort()).toEqual([...newModels].sort())
-    expect(schema).not.toMatch(/model Appointment\s*\{/)
+    expect(sql).not.toMatch(/CREATE TABLE "Appointment"/)
   })
 
   it("preserva o conteúdo de todas as migrations anteriores em qualquer convenção de newline", () => {
